@@ -4,7 +4,7 @@
   "description": "Not installed by anything. The three libraries CAIA's page loads from jsDelivr, at the versions pinned in next/src/caia/web/app.py (PAGE_LIBS), listed here so that Dependabot proposes an update when one of them gets a new version. A proposal fails next/tests until PAGE_LIBS has the same version and the new file's hash: docs/RUNBOOK.md, 'Bibliotek i sidan'.",
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",
-    "dompurify": "3.4.16",
+    "dompurify": "3.4.17",
     "marked": "14.1.3"
   }
 }
