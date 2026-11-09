@@ -60,12 +60,12 @@ Allt som gör en installation till en viss kommun ligger i en mapp: `kommun.toml
 
 | Tjänst | Används till | Kostnad |
 |---|---|---|
-| **OpenRouter** → Anthropic (Claude Opus 5.5, Claude Sonnet 5.5) | Alla modellanrop | Per token. Listpris hos Anthropic: Opus 5.5 4 USD per miljon tokens in och 20 USD ut, Sonnet 5.5 2 respektive 10 USD. En analys med två drivare är nio anrop och kostar typiskt 2–3 USD, tak omkring 4 USD. Varje extra drivare lägger till ett Opus-anrop (omkring 0,5 USD), och varje omkörning vid en grind kostar steget en gång till. |
+| **OpenRouter** → Claude Opus 5.5 och Claude Sonnet 5.5 (i Karlstads installation via OpenRouters EU-ingång till Google Vertex AI i EU) | Alla modellanrop | Per token. Listpris hos Anthropic: Opus 5.5 4 USD per miljon tokens in och 20 USD ut, Sonnet 5.5 2 respektive 10 USD. En analys med två drivare är nio anrop och kostar typiskt 2–3 USD, tak omkring 4 USD. Varje extra drivare lägger till ett Opus-anrop (omkring 0,5 USD), och varje omkörning vid en grind kostar steget en gång till. |
 | **Supabase** | Inloggning (e-post och lösenord) och tabellen `reports` för sparade analyser | Gratisnivån räcker för en kommun. Karlstad delar projekt med AIda. |
-| **Vercel** (Karlstad) | Hosting, Python-funktion med 800 s tak (Fluid compute), region arn1 (Stockholm) | Pro-plan sedan 2026-10-13 (Hobby fram till dess, med 300 s tak och villkor som bara gäller icke-kommersiellt personligt bruk). En kommun i drift behöver Pro eller egen server, se INSTALL.md. |
+| **Vercel** | Hosting, Python-funktion med 300 s tak (Fluid compute), region arn1 (Stockholm) | Beror på planen. Gratisplanen Hobby gäller bara icke-kommersiellt personligt bruk, så en kommun i drift behöver en betald plan eller egen server, se [next/DEPLOY.md](../next/DEPLOY.md) och [next/INSTALL.md](../next/INSTALL.md). |
 | **jsDelivr, Google Fonts** | Webbläsaren hämtar marked, DOMPurify, supabase-js och typsnittet Roboto | Gratis. Användarens IP-adress når dessa tjänster. |
 
-Allt användaren skriver och allt analysen tar fram går via OpenRouter till Anthropic. Sidan säger inte det till användaren. Be användarna att inte skriva personuppgifter; vad det betyder i praktiken står i [ANVANDARGUIDE.md](ANVANDARGUIDE.md).
+Allt användaren skriver och allt analysen tar fram går via OpenRouter till leverantören som kör modellerna. Med `CAIA_OPENROUTER_REGION=eu` går anropen via OpenRouters EU-ingång, och i Karlstads installation körs modellerna då hos Google Vertex AI i EU ([next/DEPLOY.md](../next/DEPLOY.md)). Startsidan säger att texten går till en extern leverantör och ber om inga personuppgifter; vad det betyder i praktiken står i [ANVANDARGUIDE.md](ANVANDARGUIDE.md).
 
 Hur talen räknas, steg för steg och utan kod, står i [METOD.md](METOD.md).
 

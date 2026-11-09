@@ -8,7 +8,7 @@ För dig som är tjänsteperson och ska köra en analys själv i CAIA (Climate A
 
 **Håll fliken öppen.** En pågående analys finns bara i den öppna fliken. Stänger du den eller laddar om sidan innan rapporten är klar är analysen borta, och du får börja om.
 
-**Skriv inga personuppgifter.** Allt du skriver, och allt analysen tar fram, skickas till en språkmodell hos en extern leverantör. I Karlstads installation stannar texten i EU: den går via OpenRouters EU-ingång till Google Vertex AI i Europa, där modellen körs (detaljerna i [säkerhetsgranskningen](security-review-2026-10.md)). Startsidan påminner om detta, men skriv ändå inte:
+**Skriv inga personuppgifter.** Allt du skriver, och allt analysen tar fram, skickas till en språkmodell hos en extern leverantör. I Karlstads installation stannar texten i EU: den går via OpenRouters EU-ingång till Google Vertex AI i EU, där modellen körs (detaljerna i [DEPLOY.md](../next/DEPLOY.md)). Startsidan påminner om detta, men skriv ändå inte:
 
 - namn på enskilda personer, till exempel anställda, sökande eller boende,
 - personnummer, adresser, telefonnummer eller e-postadresser,

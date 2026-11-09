@@ -225,8 +225,8 @@ def compute(model: CalcModel) -> dict:
             'net': round(med['avg_net'], 1),
         }
     else:
-        # The reduction in the target year (Henric 2026-10-13: "Huvudresultatet
-        # ... ska vara minskningen under målåret, dvs 2030 som standard"). The
+        # The reduction in the target year, 2030 by default (2026-10-13: a
+        # climate target is set for one year). The
         # average per year is still computed and shown, under it. 'year' says
         # which year the number is for; a headline without it is an average.
         ty = model.target_year

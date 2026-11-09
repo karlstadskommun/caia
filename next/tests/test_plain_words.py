@@ -1,6 +1,6 @@
 """What the models write in their working vocabulary (field names, parameter
 codes, BAU, A0, ΔA, 7,8e7) is put in words on the page and in the download
-(Henric 2026-10-13, after a run as a miljöstrateg). The fixtures are the report
+(2026-10-13, after a run as a miljöstrateg). The fixtures are the report
 and evidens text of a real run on the workshop address that evening."""
 from __future__ import annotations
 

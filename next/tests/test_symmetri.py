@@ -270,7 +270,7 @@ def test_potential_mode_charges_the_equipment_in_full():
 
 
 def test_without_a_catch_up_the_equipment_is_written_off_to_the_target_year():
-    # Henric 2026-10-22: the benefit counts to 2030, so does the equipment.
+    # 2026-10-22: the benefit counts to 2030, so does the equipment.
     m = _model(_benefit(), _screens(lifetime=10))
     s = m.drivers[1]
     assert s.catch_up == Triple(2030, 2030, 2030) and s.catch_up_from == 'målåret'
@@ -434,7 +434,7 @@ def test_the_follow_up_rules_name_the_symmetry_the_money_and_the_pilot():
 
 
 def test_the_follow_up_rules_after_the_review_of_omgang_3():
-    # Henric 2026-10-22: no double deductions, measured persistence first, a
+    # 2026-10-22: no double deductions, measured persistence first, a
     # cost never a benefit, follow-on effects shown, Klimatklivet's electricity
     # factor and equipment written off to the target year.
     flat = " ".join(KARNA.split())

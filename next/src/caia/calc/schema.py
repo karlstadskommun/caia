@@ -736,7 +736,7 @@ def write_off_to(drivers: list[Driver], target_year: int) -> None:
     """In a follow-up, charge equipment only for the years of its lifetime
     that fall within the window, as its benefit is only counted to the target
     year: the catch-up year is capped at the target year, and a piece of
-    equipment without one gets the target year. Henric 2026-10-22, after the
+    equipment without one gets the target year. 2026-10-22, after the
     review of omgång 3: the battery store was charged with the whole battery
     against a benefit counted to 2030 (−4,9 ton). catch_up_from becomes
     "målåret" when the cap set medel."""

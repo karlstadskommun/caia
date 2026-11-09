@@ -190,7 +190,7 @@ def _row_text(pid: str, row: dict) -> str:
     """One library row as the Underlag column shows it.
 
     A data-file row's value_used is a LOOKUP expression, which reads as
-    neither a number nor a source (Henric 2026-10-13). It shows what the
+    neither a number nor a source (2026-10-13). It shows what the
     parameter view shows instead, from parameter_view(), so the expression is
     interpreted in one place: the number in the file and the line saying what
     was read from which file, or "Läses ur datafilen vid varje analys" when the

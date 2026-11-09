@@ -160,13 +160,12 @@ THINKING_HEADROOM = {EFFORT_MEDIUM: 12000, EFFORT_HIGH: 24000}
 # budget must still fail inside the function's own lifetime, with room for
 # Flask around the call. It was 240 s, set when the slowest step took 75 s; by
 # 2026-09-23 evidens took 195-222 s on Opus 5 and 216 s on Opus 5.5 (at ~100
-# output tokens/s), so 240 s had shrunk to a 10 % margin, and 280 s under the
-# Hobby plan's 300 s left QA, the evidens merge and baslinje close to the edge.
-# 2026-10-13 the team moved to Vercel Pro and raised this to 760 s against an
-# 800 s maxDuration, but Vercel's own logs showed functionMaxDuration: 300 on
-# every workshop call (maxDuration under builds[].config was not applied). Pro
-# is being dropped (2026-10-15), so the budget is back to 280 s under 300 s:
-# steps stay under the limit by being leaner, not by a longer limit.
+# output tokens/s), so 240 s had shrunk to a 10 % margin. 280 s under the
+# function's 300 s leaves QA, the evidens merge and baslinje close to the
+# edge: steps stay under the limit by being leaner, not by a longer limit.
+# A longer limit must show as functionMaxDuration in Vercel's own logs;
+# maxDuration under builds[].config was not applied when it was tried
+# (DEPLOY.md).
 #
 # Retries are ours, not the SDK's. The SDK retries a timeout too, which here
 # means a second full-budget call inside the same function: the platform kills it

@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use CAIA, please cite it as below."
+title: "CAIA: Climate Action Impact Analysis"
+type: software
+authors:
+  - family-names: Barkman
+    given-names: Henric
+    affiliation: Karlstads kommun
+version: 1.0.1
+date-released: 2026-11-09
+license: EUPL-1.2
+repository-code: "https://github.com/karlstadskommun/caia"
+abstract: >-
+  CAIA estimates the climate effect of a municipal climate action.
+  A seven-step pipeline of language model calls produces an action profile,
+  a baseline and sourced assumptions, which the user approves or corrects;
+  a deterministic calculation in Python then gives tonnes CO2e per year and
+  a report that shows where every number came from.
+keywords:
+  - climate
+  - municipality
+  - greenhouse gas emissions
+  - sweden

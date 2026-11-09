@@ -1,7 +1,7 @@
-"""tools/credit_routes.py: the Max credits first in test runs, OpenRouter last (2026-11-06).
+"""tools/credit_routes.py: the Anthropic keys first in batch runs, OpenRouter last.
 
 The calls go through the real api_client.complete and the real _create for
-OpenRouter; only the network is fake. What is pinned: the work account first,
+OpenRouter; only the network is fake. What is pinned: the first key first,
 the second when it is out, OpenRouter when both are, a closed key tried again
 after ten minutes, the route in every usage record, and that nothing changes
 without CAIA_ANTHROPIC_KEYS (the web app never sets it)."""
@@ -222,7 +222,7 @@ def test_no_route_is_tried_with_less_than_ten_seconds_left(setup, monkeypatch):
     clock = {'t': 1000.0}
     monkeypatch.setattr(credit_routes.time, 'monotonic', lambda: clock['t'])
 
-    def slow_out():  # the work account spends the whole budget, then says it is out
+    def slow_out():  # the first key spends the whole budget, then says it is out
         clock['t'] += api_client.REQUEST_TIMEOUT_S
         return _out()
 

@@ -1,19 +1,15 @@
-"""The Max credits first in CAIA's test runs: each Anthropic key in turn, OpenRouter last.
+"""Several Anthropic keys in turn for CAIA's batch runs, OpenRouter last.
 
-Henric 2026-11-06: one rule for every service. Anthropic calls go on the Max
-accounts' monthly API credits first (the work account, then the second) and on
-OpenRouter when they are out, without anything checking the balance in advance.
+A list of Anthropic API keys is tried in order, and OpenRouter takes the call
+when they are all out, without anything checking the balance in advance.
 
 The web app is the exception and never comes here: its one route is
-OpenRouter's EU entry, a promise in the security review. This module lives in
-tools/, is imported only by the batch tools (run_batch.py, replay_step.py), and
-does something only when CAIA_ANTHROPIC_KEYS is set. Demi's
-scripts/max_credits_run.py sets it; anyone else can set it by hand
-(comma-separated keys, in the order to try them).
+OpenRouter's EU entry (DEPLOY.md, "Hur deployen fungerar"). This module lives
+in tools/, is imported only by the batch tools (run_batch.py, replay_step.py),
+and does something only when CAIA_ANTHROPIC_KEYS is set (comma-separated keys,
+in the order to try them).
 
-The rules are Aida's (src/aida/api_client.py, create_message, in production
-since 2026-10-22) and PAC's (src/lib/modellanrop.ts), so all three behave the
-same:
+The rules:
 
 - failure classes that hand the call on: credits (402, or 400 with credit
   words, the console's spend limit included), auth (401), permission (403),

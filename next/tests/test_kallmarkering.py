@@ -231,7 +231,7 @@ def _table_cells(md: str) -> list[str]:
 
 
 def test_every_data_file_row_shows_what_the_parameter_view_shows():
-    """Henric 2026-10-13: Talens ursprung printed the LOOKUP expression in the
+    """2026-10-13: Talens ursprung printed the LOOKUP expression in the
     Underlag column. It now prints the parameter view's number and line, read
     through parameter_view(), so the expression is interpreted in one place."""
     rows = _datafil_rows()

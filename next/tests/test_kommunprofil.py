@@ -264,7 +264,7 @@ def test_exempel_login_page_names_no_karlstad(use_kommun):
 @pytest.mark.karlstad
 @pytest.mark.parametrize('has_supabase', [True, False])
 def test_the_login_box_carries_the_name_and_no_plan_line(use_kommun, has_supabase):
-    """Henric 2026-10-13: the box says CAIA and what the letters stand for. The
+    """2026-10-13: the box says CAIA and what the letters stand for. The
     line naming the municipality's plan is gone from both login boxes."""
     from flask import render_template_string
     use_kommun('karlstad')

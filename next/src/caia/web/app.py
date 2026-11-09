@@ -1341,7 +1341,7 @@ body {
 .hero-interp p { margin: 0; }
 .hero-interp p + p { margin-top: 6px; }
 /* The button sits centred under the warning it answers, like everything else
-   in the card, with what it does in a line under it (Henric 2026-10-14: a
+   in the card, with what it does in a line under it (2026-10-14: a
    left-set button beside its note read as misplaced). */
 .recalc { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; }
 .recalc button { font: inherit; font-size: 13px; font-weight: 600; color: white; background: var(--kk-orange);
@@ -1394,7 +1394,7 @@ body {
 .report-container pre code { background: none; padding: 0; }
 .report-container strong { font-weight: 600; }
 
-/* The report as parts (Henric 2026-10-15, after the workshop 14/10): the
+/* The report as parts (2026-10-15, after the workshop 14/10): the
    title, the number and the report's own verdict are read first, and each
    part of the report is a row that opens with one click, with a line saying
    what is in it. The rows are the report's own sections, in its own order. */
@@ -2456,7 +2456,7 @@ function markdownParts(md) {
 }
 // Step 2 is called Utsläppskällor on the page. Its prompt, and the prompts of
 // the steps that read it, still say EMAP (no framework by that name exists;
-// Henric 2026-10-13), and so does the text the model writes. The prompts and
+// 2026-10-13), and so does the text the model writes. The prompts and
 // the history stay as they are: the next step reads the field names, and a
 // prompt change needs reference runs. What the person reads is put in words
 // here instead, in everything drawn from model text and in the download.
@@ -2494,7 +2494,7 @@ function plainTerms(text) {
 // The models write their working vocabulary into what the person reads: field
 // names (Scenario_medel, ΔE_2030_total), parameter codes (TR_mode_share_car),
 // BAU, A0, ΔA and numbers as 7,8e7. A miljöstrateg trying the tool stopped at
-// every one of them (Henric 2026-10-13). They are put in words here, in what
+// every one of them (2026-10-13). They are put in words here, in what
 // is shown and downloaded only: the history the next step reads keeps them, so
 // no number and no prompt changes. Links are left alone (split above).
 const PARAM_NAMES = {{ param_names|tojson }};
@@ -2581,7 +2581,7 @@ function plainWords(text, say) {
     .replace(/ \((?:A0|EF0)\)/g, '')
     // ...and "aktivitet A0 och emissionsfaktor EF0" without the brackets, which
     // read "aktivitet nulägesaktivitet och emissionsfaktor utsläppsfaktor i
-    // nuläget" (Henric 2026-10-14).
+    // nuläget" (2026-10-14).
     .replace(/\b(aktivitet(?:en|ens)?|emissionsfaktor(?:n|ns)?|utsläppsfaktor(?:n|ns)?) (?:A0|EF0)(?![\wåäö])/g, '$1')
     .replace(/\b(av|i|för|med) EF0(?![\wåäö])/g, '$1 utsläppsfaktorn i nuläget')
     .replace(/\b(av|i|för|med) A0(?![\wåäö])/g, '$1 nulägesaktiviteten')
@@ -2816,7 +2816,7 @@ function panelStepStart(step) {
 // The steps write for the next agent as much as for the person reading, so
 // their text carries field names (A0, EF0_enhet, BAU_trend_A) and numbers in
 // the form 1,36e6. The history keeps that text as it is; only what is drawn
-// is made readable (Henric 2026-10-13: "Texten är inte jättelätt att läsa").
+// is made readable (2026-10-13: the numbers were hard to read).
 function readableNumber(mantissa, exponent) {
   const v = parseFloat(mantissa.replace(',', '.')) * Math.pow(10, parseInt(exponent, 10));
   if (!isFinite(v)) return null;
@@ -2890,8 +2890,8 @@ const QUESTIONS_RE = /^Frågor till (miljöstrateg(en)?|användaren|dig)( för d
 
 // The parts of a step's text that talk to the person rather than analyse:
 // what the step does, the gaps in the data, the questions it has. They go to
-// the chat, where the person answers; the panel keeps the analysis (Henric
-// 2026-10-13). Only baslinje is split today: EMAP's prompt asks for neither
+// the chat, where the person answers; the panel keeps the analysis
+// (2026-10-13). Only baslinje is split today: EMAP's prompt asks for neither
 // gaps nor questions, and evidens draws its own structured view.
 const CHAT_SECTIONS = {
   baslinje: [
@@ -2913,8 +2913,8 @@ function trimBlock(lines) {
 // The baslinje prompt names its sections (agents/baslinje_bau.py). The model
 // writes them as "## X", as "**X**" or as a bare line, and a bare line was
 // drawn as prose, run together with the paragraph under it, while the split
-// below never found "Kort om detta steg" to send it to the chat (Henric
-// 2026-10-14, the morning of the demo). Whatever the form, the page gets the
+// below never found "Kort om detta steg" to send it to the chat
+// (2026-10-14, the morning of the demo). Whatever the form, the page gets the
 // same headings: the title line as one, the sections as the next level. A
 // line already written as a heading, a driver's block and anything in a list
 // are left as written.
@@ -3008,8 +3008,8 @@ function readablePanel(md, step) {
 // EMAP_Åtgärdstyp", driver fields like aktivitet_matt (agents/emap.py). That
 // text stays in the history as it is. What the person at the gate needs is
 // another order: what the measure is, which emissions it touches, how it was
-// classified and why, what is uncertain (Henric 2026-10-13: "inte så lätt att
-// läsa"). parseEmap reads the text into that shape; anything it does not
+// classified and why, what is uncertain (2026-10-13: the step's
+// text was hard to read). parseEmap reads the text into that shape; anything it does not
 // recognise is kept and drawn under the section it stood in, and a text it
 // cannot read at all is drawn as text.
 const EMAP_CLASS_LABELS = [
@@ -3238,8 +3238,8 @@ function panelStepDone(step, markdown, keyPoints) {
 
 // ---------- "Det viktigaste" at the top of each step ----------
 // Each step opens with what the person at the gate should know before reading
-// the rest (Henric 2026-10-13: "mycket information och antaganden att bedöma.
-// De ska finnas kvar, men ... en sammanfattning är viktig"). The points are
+// the rest (2026-10-13: a lot of information and assumptions to judge;
+// they stay, but a summary comes first). The points are
 // read out of what the step already produced, not written by a model: the
 // prompts are unchanged, so nothing the next step reads moves. A step whose
 // text cannot be read into points gets no box, never a wrong one.
@@ -3363,7 +3363,7 @@ function baselineKeyPoints(md, followUp) {
       return v + (u ? ' ' + u : '');
     };
     // shortValue drops the "(ANTAGANDE: ...)" after the number, so an assumed
-    // level would read as a known one. Henric 2026-10-15: an amount the user
+    // level would read as a known one. 2026-10-15: an amount the user
     // could not give is assumed, and the analysis must show it.
     const assumed = /ANTAGANDE/i.test(d.f.A0 || '') ? ' (antaget)' : '';
     const today = withUnit(d.f.A0, 30, d.f.A0_enhet) + assumed + ' med ' + withUnit(d.f.EF0, 20, d.f.EF0_enhet);
@@ -3383,13 +3383,13 @@ function evidenceKeyPoints(drivers) {
   const weak = params.filter(({p}) => /^l[åa]g/i.test((p.kvalitet || '').trim()));
   params.slice(0, 4).forEach(({p}) => {
     if (!p.med) return;
-    // A share reads as percent, as the factors above it do (Henric 2026-10-13).
+    // A share reads as percent, as the factors above it do (2026-10-13).
     const bare = (v) => {
       const n = shortValue(v, 20).replace(/−/g, '-').match(/^\s*(-?\d+(?:[.,]\d+)?)\s*$/);
       return n ? parseFloat(n[1].replace(',', '.')) : null;
     };
     // A share given as 0 to 1 reads as percent, as the factors above it do
-    // (Henric 2026-10-13); all three values, or none of them.
+    // (2026-10-13); all three values, or none of them.
     const nums = [p.med, p.min, p.max].filter(Boolean).map(bare);
     const share = /^\s*andel/i.test(p.enhet || '') && !/%|procent/i.test(p.enhet || '')
       && nums.every(x => x != null && Math.abs(x) <= 1);
@@ -3476,8 +3476,8 @@ function qaKeyPoints(verdict) {
 // ---------- recalculate with QA's remarks ----------
 // When QA warns, or the calculation warns about itself (units that do not fit
 // together), the user can have the calculation redone on the same approved
-// assumptions with the remarks as a correction (Henric 2026-10-13: "Ska inte
-// QA-analysen kunna få åtminstone kalkylen att räknas om?"). It is a button,
+// assumptions with the remarks as a correction (2026-10-13: the quality
+// review should be able to have at least the calculation redone). It is a button,
 // not automatic: QA is a model and can be wrong, and an automatic re-run
 // would change numbers the user approved without them seeing it, and could
 // loop. Only the reading of the assumptions into the calculation is redone;
@@ -3601,8 +3601,8 @@ function markHeroWithQa(verdict) {
   warn.style.display = '';
 }
 // One short line that is never cut, everything else behind "Läs mer"
-// (Henric 2026-10-15: the remark cut at 160 characters and "Se steg 6" read as
-// broken and pointed nowhere he could find).
+// (2026-10-15: the remark cut at 160 characters and "Se steg 6" read as
+// broken and pointed nowhere a reader could find).
 const QA_GIST_MAX = 150;
 function qaGist(remark) {
   const text = plainTerms(readableNumbers(remark || '')).trim();
@@ -3705,7 +3705,7 @@ function panelStepPutBack(step, snapshot) {
 
 // A comment at a gate re-runs the step. The version stays on screen, dimmed,
 // until the new one is drawn: the user is reading it, and the comment is
-// about it (Henric 2026-10-13: the analysis used to vanish behind a
+// about it (2026-10-13: the analysis used to vanish behind a
 // spinner). The line saying so is a node of its own, so putting the snapshot
 // back takes it away with everything else.
 function panelStepUpdating(step) {
@@ -3751,8 +3751,8 @@ function panelStepRestore(step, snapshot, msg) {
 // in follow-up mode run from the first grant year rather than 2026. Without
 // the calc's window (a saved report, the LLM fallback) a follow-up label
 // names no years rather than the wrong ones.
-// Since 2026-10-13 a potential-mode headline is the target year (Henric:
-// "minskningen under målåret"), and says so; a headline without a year is an
+// Since 2026-10-13 a potential-mode headline is the reduction in the target
+// year, and says so; a headline without a year is an
 // average, as follow-ups, the LLM fallback and reports saved before are.
 function setHeroLabel(modeName, win, year) {
   const m = MODES[modeName] || MODES.potential;
@@ -4119,8 +4119,8 @@ const SOURCE_CHIP_MAXLEN = 46;
 
 // What a parameter is called on its card. The agent names it like a variable
 // (ADOPTION_EXTRA_HANDLARE) and says what it is in parentheses after the name;
-// the card leads with what it is (Henric 2026-10-13: "Undvik
-// variabel-benämningar ... med understreck och utan å, ä, ö"). A name with no
+// the card leads with what it is (2026-10-13: no
+// variable names with underscores and without å, ä, ö as titles). A name with no
 // description is at least written as words.
 function paramTitle(parameter) {
   const detail = (parameter.detail || '').trim();
@@ -4165,7 +4165,7 @@ function evidenceDriverHtml(driver) {
   const f = driver.factors || {};
   // The three are shares of the effect (0 to 1 in the agent's text), so they
   // read as percent: "5 %" says at once what "0,05" makes the reader work out
-  // (Henric 2026-10-13). Note 0 % is a real value here (an enabler whose
+  // (2026-10-13). Note 0 % is a real value here (an enabler whose
   // effect is counted on another driver), not a missing one.
   const factorText = (value) => {
     if (value == null) return '–';
@@ -4630,7 +4630,7 @@ async function finishReport(markdown) {
 // The report's short interpretation of the medel scenario ("Kort
 // tolkning_medel: ..." in Beräknad klimatnytta) is shown under the headline
 // number, which is the number it explains, and taken out of the report body
-// so it is read once (Henric 2026-10-14). The min and max interpretations
+// so it is read once (2026-10-14). The min and max interpretations
 // stay with their scenarios, and the download keeps the text as written.
 // The models write the line in one piece; a wrapped one is joined up to the
 // next blank line or field.
@@ -4663,8 +4663,8 @@ function setHeroInterpretation(text) {
 // The workshop at Transition Lab Forum (2026-10-14) met the report as one
 // long page and lost the result in it. The page now shows the title, the
 // number and the report's own verdict, and every part of the report as a row
-// that opens with one click, with a line saying what is in it (Henric
-// 2026-10-15). Display only: the report text, the save and the download are
+// that opens with one click, with a line saying what is in it
+// (2026-10-15). Display only: the report text, the save and the download are
 // as the model and the program wrote them, so no prompt changes.
 // The parts are the report prompt's sections (agents/rapport.py, and
 // agents/uppfoljning.py for a follow-up) and the two the program appends. A
@@ -5695,7 +5695,7 @@ def api_kalkyl():
                     'headline_year': head_year,
                     'cum_net': round(result['med']['total']['cumulative_net']),
                     # Their low and high, so the card shows each number with
-                    # its range and not only the headline's (Henric 2026-10-13).
+                    # its range and not only the headline's (2026-10-13).
                     'avg_lo': round(result['min']['total']['avg_net'], 1),
                     'avg_hi': round(result['max']['total']['avg_net'], 1),
                     'cum_lo': round(result['min']['total']['cumulative_net']),

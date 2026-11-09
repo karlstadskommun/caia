@@ -1,6 +1,6 @@
 """The report's short interpretation of the medel scenario ("Kort
 tolkning_medel") is shown under the headline number and taken out of the
-report body (Henric 2026-10-14). Run in node against the saved reports in
+report body (2026-10-14). Run in node against the saved reports in
 tests/fixtures, like test_key_points.
 """
 from __future__ import annotations

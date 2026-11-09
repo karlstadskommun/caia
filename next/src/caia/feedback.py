@@ -6,8 +6,8 @@ turn. Before this module the agent read the comment as an ordinary message
 and answered it the way it pleased: often with a few lines about what it had
 changed, sometimes with only the answer to a question. Whatever it wrote
 replaced the analysis in the panel and went into the history, where the next
-step read it as the analysis (Henric 2026-10-13: "analysen togs bort och jag
-fick ett svar i resultatfönstret").
+step read it as the analysis (2026-10-13: the analysis was replaced by a
+reply in the result panel).
 
 So the comment goes to the model inside a frame that asks for two parts: a
 short reply to the person, and the whole updated version. The reply goes to

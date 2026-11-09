@@ -2,7 +2,7 @@
 
 Egen server utan Vercel (till exempel en annan kommuns installation): se [INSTALL.md](INSTALL.md). Drift, rollback och nycklar: [docs/RUNBOOK.md](../docs/RUNBOOK.md).
 
-Så här körs CAIA (Climate Action Impact Analysis) på Vercel. `<er-adress>` nedan är produktionsadressen och `<projekt>` Vercel-projektets namn. Karlstads egen uppsättning står i ett internt driftdokument hos kommunen.
+Så här körs CAIA (Climate Action Impact Analysis) på Vercel. `<er-adress>` nedan är produktionsadressen och `<projekt>` Vercel-projektets namn. Karlstads egen uppsättning står i ett internt driftdokument som inte är publikt.
 
 ## Hur deployen fungerar
 
@@ -10,7 +10,7 @@ Så här körs CAIA (Climate Action Impact Analysis) på Vercel. `<er-adress>` n
 - Vercel-projektets Root Directory är `.`; det är mappen man kör `vercel` i (`next/`) som laddas upp. `next/.vercel/project.json` binder mappen till projektet och skapas av `vercel link`. Den ska inte checkas in.
 - `vercel.json` använder `builds` med `@vercel/python` och `maxDuration: 300`. Projektet har Fluid compute påslaget. Modellanropet avbryts efter 280 sekunder (`REQUEST_TIMEOUT_S` i `api_client.py`), så att funktionen hinner svara med ett fel i stället för att dödas. Vi prövade 800 och 760 på Pro 13–15/10, men Vercels logg visade 300 som gräns på varje anrop: `maxDuration` under `builds` togs inte upp. Ska gränsen höjas igen måste den sättas så att loggens `functionMaxDuration` visar det nya värdet.
 - Funktionen körs i region **arn1** (Stockholm), satt med `regions` i `vercel.json` sedan 2026-10-08. Tidigare iad1 (USA öst). Supabase-projektet ligger också i Stockholm.
-- Modellanropen går till OpenRouters EU-ingång (`CAIA_OPENROUTER_REGION=eu`), som bara låter leverantörer i EU svara. Tillsammans med regionen ovan stannar användarens text och analysen fysiskt i EU hela vägen. Juridiskt är OpenRouter, Vercel och leverantören som kör Claude (Google) amerikanska bolag.
+- Modellanropen går till OpenRouters EU-ingång (`CAIA_OPENROUTER_REGION=eu`), som bara låter leverantörer i EU svara: modellerna körs hos Google Vertex AI i EU. Tillsammans med regionen ovan stannar användarens text och analysen fysiskt i EU hela vägen. Juridiskt är OpenRouter, Vercel och Google amerikanska bolag.
 - **Plan:** Vercels villkor tillåter Hobby bara för icke-kommersiellt personligt bruk, och kod skriven av en anställd räknas som kommersiell. En kommun väljer Pro eller kör på egen server.
 
 ## Engångs-setup (nytt Vercel-projekt)

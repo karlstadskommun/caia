@@ -1,6 +1,6 @@
 """Step 1 holds what the user knows (scale, maturity), step 2 what CAIA
 concludes about the emissions: the drivers, a mechanism per driver, and the
-kind of effect that decides how it is counted (Henric 2026-10-13). An enabling
+kind of effect that decides how it is counted (2026-10-13). An enabling
 measure is counted as a chain, not left without effect.
 """
 from __future__ import annotations

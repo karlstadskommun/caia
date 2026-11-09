@@ -11,7 +11,7 @@ För den som driftar CAIA (Climate Action Impact Analysis). Installation på ege
 | Modellanrop | En nyckel hos OpenRouter | Nyckelns månadsgräns och kontots saldo är de enda hårda kostnadsgränserna. |
 | Kommunprofil | `next/src/caia/kommuner/<slug>/`, eller en mapp utanför repot | `CAIA_KOMMUN=<slug>` eller `CAIA_KOMMUN_DIR=<sökväg>`. |
 
-Karlstads egen uppsättning (konton, adresser, listan över tillåtna konton) står i ett internt driftdokument hos kommunen.
+Karlstads egen uppsättning (konton, adresser, listan över tillåtna konton) står i ett internt driftdokument som inte är publikt.
 
 ## Deploy
 
@@ -27,7 +27,7 @@ Produktionen deployas för hand. En push eller merge till `main` deployar ingent
 
 **Varje deploys egen adress kräver inloggning hos Vercel** (Vercel Authentication med Standard Protection). Produktionsadressen är öppen. Utan skyddet svarar varje gammal deploy för vem som helst som har adressen, med den gamla koden: så låg bygget från före säkerhetsrättningarna kvar öppet samma dag som de driftsattes. Stäng inte av skyddet, för då öppnas alla gamla deployer på en gång. Kontroll: `curl -s -o /dev/null -w "%{http_code}\n" https://<en deploys egen adress>/` ska ge `302` eller `401`, inte `200`. Adresserna står i `vercel ls <projekt>`.
 
-**Vercels Hobby-plan har begränsad lagring för deployer.** Samla ändringar och deploya en gång, och ta bort gamla förhandsversioner: `vercel ls <projekt>` listar dem, `vercel remove <adress>` tar bort en.
+**Varje deploy tar lagring hos Vercel, och hur mycket som ryms beror på planen.** Samla ändringar och deploya en gång, och ta bort gamla förhandsversioner: `vercel ls <projekt>` listar dem, `vercel remove <adress>` tar bort en.
 
 ## Rollback
 
@@ -37,7 +37,7 @@ Produktionen deployas för hand. En push eller merge till `main` deployar ingent
 
 ## Loggar
 
-- Vercel: `vercel logs <produktionsadressen>`, eller projektets Logs-flik. Hobby sparar loggar en kort tid; det som ska finnas kvar måste sparas direkt.
+- Vercel: `vercel logs <produktionsadressen>`, eller projektets Logs-flik. Vercel sparar loggarna en kort tid, hur länge beror på planen; det som ska finnas kvar måste sparas direkt.
 - Egen server: `journalctl -u caia -f`.
 
 Loggen har inga adresser, lösenord eller inloggningsbevis: användare står med sitt id och besökare med en hashad adress. Hashen är en pseudonym, inte en anonymisering: den som har `CAIA_SECRET_KEY` kan räkna fram vilken adress den står för. Vid fel kan loggen innehålla stycken ur en analys (ett drivarnamn i ett kalkylfel, modelltjänstens felsvar, Supabases felsvar), så behandla den som analyserna.
@@ -85,8 +85,8 @@ Det som är värt att leta efter:
 | Nyckel | Var den bor | Byta |
 |---|---|---|
 | `OPENROUTER_API_KEY` | Vercel (Production och Preview) | Skapa en ny nyckel hos OpenRouter med samma kreditgräns, byt värdet i Vercel, deploya om, radera den gamla hos OpenRouter. |
-| `SUPABASE_ANON_KEY` | Vercel | Publik, syns i sidan. Byts bara om Supabase-projektet byter nycklar, och då för AIda samtidigt. |
-| `SUPABASE_JWT_SECRET` | Inte hos CAIA | Borttagen ur CAIA:s Vercel-projekt 2026-10-07. Projektet signerar inloggningar med ES256, som CAIA kontrollerar mot Supabases publika nycklar, så hemligheten behövdes inte och gav bara ett ställe till där den kunde läcka. AIda har den kvar. |
+| `SUPABASE_ANON_KEY` | Vercel | Publik, syns i sidan. Byts bara om Supabase-projektet byter nycklar, och då samtidigt för andra verktyg som delar projektet. |
+| `SUPABASE_JWT_SECRET` | Inte hos CAIA | Borttagen ur CAIA:s Vercel-projekt 2026-10-07. Projektet signerar inloggningar med ES256, som CAIA kontrollerar mot Supabases publika nycklar, så hemligheten behövdes inte och gav bara ett ställe till där den kunde läcka. Ett annat verktyg som delar projektet kan ha den kvar. |
 | `CAIA_SECRET_KEY` | Vercel / `caia.env` | Byte loggar ut alla i lösenordsläge, och ger nya hashar för adresserna i loggen. |
 | `CAIA_PASSWORD` | `caia.env` | Byte loggar ut alla. |
 
@@ -102,8 +102,8 @@ Med Supabase:
 - **Ett konto utanför listan** får beskedet att be den som driftar CAIA lägga till adressen. Står en adress i `CAIA_CONTACT` säger beskedet vart.
 - **Workshop med deltagare utanför listan:** öppna inte listan för deras domäner. Sätt upp en egen instans i lösenordsläge (INSTALL.md, steg 4B) med ett gemensamt lösenord, `CAIA_RATE_LIMIT_PER_MIN` och `_PER_DAY` höjda och `CAIA_LOGIN_FAILURES_PER_WINDOW=50`, eftersom hela rummet delar en nätadress. Byt lösenordet mot ett slumpat när workshoppen är slut. Öppna domäner kräver bekräftelsemejl, och Supabases inbyggda utskick klarar bara några mejl i timmen.
 - **Bekräftad adress:** en domän i listan släpper bara in konton vars adress inte är markerad som obekräftad. Det egentliga skyddet är att Supabase-projektet kräver bekräftelse via e-post; kontrollen står i DEPLOY.md under smoke-testet.
-- **Vad en domän i listan betyder:** den som kan ta emot mejl på en adress i domänen kan skaffa ett konto och köra analyser. Registreringen är öppen och den som registrerar väljer lösenordet, så ett konto kan också förberedas för en adress man inte äger: det går inte att logga in på förrän någon öppnat länken i bekräftelsemejlet, men då går det. Vill ni inte ha det så, lista namngivna adresser i stället för domänen.
-- **Bekräftelsemejlet** pekar tillbaka till sidan där kontot skapades, under förutsättning att adressen finns bland Supabases Redirect URLs (Authentication, URL Configuration). Saknas den hamnar användaren på projektets Site URL, som är AIda.
+- **Vad en domän i listan betyder:** den som kan ta emot mejl på en adress i domänen kan skaffa ett konto och köra analyser. Är registreringen öppen väljer den som registrerar lösenordet, så ett konto kan också förberedas för en adress man inte äger: det går inte att logga in på förrän någon öppnat länken i bekräftelsemejlet, men då går det. Vill ni inte ha det så, lista namngivna adresser i stället för domänen.
+- **Bekräftelsemejlet** pekar tillbaka till sidan där kontot skapades, under förutsättning att adressen finns bland Supabases Redirect URLs (Authentication, URL Configuration). Saknas den hamnar användaren på projektets Site URL, som kan vara ett annat verktygs adress om projektet delas.
 
 ## Säkerhetskopior
 
@@ -130,7 +130,7 @@ Ordningen spelar roll, eftersom de gamla inställningarna inte läses längre:
 
 Inloggningen sparas per adress i webbläsaren, så den som var inloggad på den gamla adressen loggar in en gång till på den nya. Sparade analyser ligger i databasen och följer med kontot.
 
-Det som står kvar som Zaid är historik: rapporter som sparades före bytet (bilagans rad "skriven av Zaids kalkylmotor"), de daterade granskningarna och de två äldre migreringarna. I Karlstads interna repo gäller det också de första prototyperna och utvecklingsloggen.
+Det som står kvar som Zaid är historik: rapporter som sparades före bytet (bilagans rad "skriven av Zaids kalkylmotor"), de daterade granskningarna och de två äldre migreringarna. I den interna utvecklingshistoriken, som inte är publik, gäller det också de första prototyperna och utvecklingsloggen.
 
 ## Ändra en prompt, parameterbiblioteket eller en datafil
 
@@ -197,7 +197,7 @@ Tid, svarslängd och kostnad per analys, likadant i varje körning:
 
 Den läser `run.log` (varje anrop till sidan, intag per runda, evidensdelarna och sammanslagningen var för sig; raden "evidens Xs" efter dem är väggtid och räknas inte) och `usage.jsonl` i analysens katalog. Per analys: längsta anrop per steg, flaggat NÄRA från 240 s, ÖVER VÅR GRÄNS från 280 s (`REQUEST_TIMEOUT_S`) och ÖVER VERCELS GRÄNS från `maxDuration` i `vercel.json`; kalkylens modellanrop summerade (TVÅ MODELLANROP när reserven körde i samma anrop, S29); sammanslagningens `output` mot taket 26 000 (I TAKET vid `stop_reason` max_tokens); kostnaden mot 3,9 USD. Sist längsta anrop per steg och kostnad min, median och max över alla analyser. En `run.log` som återanvänts läses från den sista körningen av analysen. `usage.jsonl` finns bara i körningar från 2026-10-13 kväll och senare.
 
-`--estimate` skriver ut vad omkörningarna kostar enligt analysens egen `usage.jsonl` och stannar där, utan något modellanrop. Ur workshopens 334 anrop (oktober 2026, listpris) kostar en omkörning ungefär: kalkyl 0,20 USD, evidens med kalkyl 2,65 USD (evidensdelarna 0,31 USD per drivare, sammanslagningen 0,56), baslinje med evidens och kalkyl 2,90 USD, intag och allt till kalkylen 3,20 USD. Det är evidenssteget som kostar, även när det är baslinjen som mäts, eftersom huvudsiffran kräver att evidens körs om efter den. Kontrollera potten före en betald mätning.
+`--estimate` skriver ut vad omkörningarna kostar enligt analysens egen `usage.jsonl` och stannar där, utan något modellanrop. Ur workshopens 334 anrop (oktober 2026, listpris) kostar en omkörning ungefär: kalkyl 0,20 USD, evidens med kalkyl 2,65 USD (evidensdelarna 0,31 USD per drivare, sammanslagningen 0,56), baslinje med evidens och kalkyl 2,90 USD, intag och allt till kalkylen 3,20 USD. Det är evidenssteget som kostar, även när det är baslinjen som mäts, eftersom huvudsiffran kräver att evidens körs om efter den. Kontrollera budgeten före en betald mätning.
 
 ## Följa upp genomförda insatser
 

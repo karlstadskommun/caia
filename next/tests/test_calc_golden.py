@@ -62,7 +62,7 @@ def test_single_driver_average_window_and_cumulative():
 
 
 def test_headline_is_the_medel_scenario_in_the_target_year():
-    # Potential mode: the target year (Henric 2026-10-13), medel scenario.
+    # Potential mode: the target year (2026-10-13), medel scenario.
     # 2030 medel: net 0,4, terr 0,4, cons 0,2. From min it would be 0,2 / 0,1.
     assert compute(_model())['headline'] == {'terr': 0.4, 'cons': 0.2, 'net': 0.4, 'year': 2030}
     assert compute(_model(target=2035))['headline']['year'] == 2035

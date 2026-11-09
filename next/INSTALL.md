@@ -18,7 +18,7 @@ En analys går i sju steg. Varje steg är ett eget anrop till servern och kan ta
 - Ett domännamn och ett certifikat för HTTPS.
 - Utgående trafik från servern till `openrouter.ai` och till ert Supabase-projekt (`<projekt>.supabase.co`).
 - Användarnas webbläsare hämtar typsnittet Roboto från `fonts.googleapis.com` och `fonts.gstatic.com`, och tre små bibliotek (marked, DOMPurify, supabase-js) från `cdn.jsdelivr.net`. De måste gå att nå från kommunens nät.
-- Koden (git-repot). Adressen och åtkomst får ni av Karlstads kommun. Så länge repot är privat behöver servern en läsnyckel, se steg 1.
+- Koden, från det publika repot `https://github.com/karlstadskommun/caia`.
 
 ## 1. Hämta koden och installera
 
@@ -26,18 +26,10 @@ En analys går i sju steg. Varje steg är ett eget anrop till servern och kan ta
 sudo useradd --system --home-dir /opt/caia --shell /usr/sbin/nologin caia
 sudo mkdir -p /opt/caia /etc/caia
 sudo chown caia:caia /opt/caia
-sudo -u caia git clone <repo-adress> /opt/caia/app
+sudo -u caia git clone https://github.com/karlstadskommun/caia.git /opt/caia/app
 sudo -u caia python3 -m venv /opt/caia/venv
 sudo -u caia /opt/caia/venv/bin/pip install -U pip
 sudo -u caia /opt/caia/venv/bin/pip install -r /opt/caia/app/next/requirements-server.txt
-```
-
-Är repot privat kan användaren `caia` inte klona det utan en nyckel. Skapa en och be Karlstads kommun lägga in den publika delen som *deploy key* med läsrätt på repot, och klona sedan med ssh-adressen (`git@github.com:<ägare>/aik-caia.git`):
-
-```
-sudo -u caia mkdir -p /opt/caia/.ssh
-sudo -u caia ssh-keygen -t ed25519 -N "" -f /opt/caia/.ssh/id_ed25519
-sudo cat /opt/caia/.ssh/id_ed25519.pub
 ```
 
 ## 2. Kommunprofil
@@ -231,7 +223,7 @@ Alla inställningar CAIA läser:
 | `CAIA_OPENROUTER_REGION` | Nej | `eu` skickar anropen till OpenRouters EU-ingång (kräver Business-plan). Tom betyder den globala. Ett annat värde stoppar analysen med ett fel. |
 | `CAIA_ANTHROPIC_API_KEY` | Nej | Bara för batchkörningar med `tools/run_batch.py`, aldrig i webbappen. Satt skickas alla anrop direkt till Anthropics API i stället för via OpenRouter, till exempel för API-krediter som ingår i ett Claude-abonnemang. Den vägen har ingen EU-ingång, så `CAIA_OPENROUTER_REGION` gäller inte. |
 | `CAIA_KOMMUN_DIR` | Ja, med profil utanför repot | Sökväg till kommunprofilen. Vinner över `CAIA_KOMMUN`. |
-| `CAIA_KOMMUN` | Ja, om inte `CAIA_KOMMUN_DIR` är satt | Namnet på en profil som ligger i repot (`exempel` eller `karlstad`). Utan någon av de två startar appen inte: den gissar inte vilken kommun den är. |
+| `CAIA_KOMMUN` | Ja, om inte `CAIA_KOMMUN_DIR` är satt | Namnet på en profil som ligger i repot (i det publika repot finns bara `exempel`). Utan någon av de två startar appen inte: den gissar inte vilken kommun den är. |
 | `CAIA_SECRET_KEY` | Ja med lösenord, rekommenderas alltid | Signerar inloggningskakan. Samma värde i alla serverprocesser, annars loggas användare ut slumpvis. Appen startar inte i lösenordsläge utan den. Den är också nyckeln till de hashade adresserna i loggen: utan den får varje process en egen, och samma besökare ser olika ut efter en omstart. |
 | `SUPABASE_URL` | Med Supabase | Projektets adress. När den är satt gäller Supabase-inloggning. |
 | `SUPABASE_ANON_KEY` | Med Supabase | Den publika nyckeln från steg 4. Sidan skickar den till varje besökare, så CAIA startar inte om en hemlig nyckel (`service_role` eller `sb_secret_...`) står här. |

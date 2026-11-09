@@ -4,7 +4,7 @@ CAIA estimates the climate effect of a municipal climate action. The user descri
 
 CAIA has two analysis modes, chosen before the analysis starts: *forecast* (potentialläge) for an action that has not been carried out yet, and *follow-up* (uppföljningsläge) for an intervention that has already been made, where the question is what that particular money actually achieved and what remains.
 
-CAIA was developed by Karlstads kommun (the Municipality of Karlstad, Sweden) within Klimatneutrala Karlstad 2030, supported by Viable Cities. This is the first public release, version 1.0.0.
+CAIA was developed by Karlstads kommun (the Municipality of Karlstad, Sweden) within Klimatneutrala Karlstad 2030, supported by Viable Cities. Henric Barkman, process manager at Karlstads kommun, brought the tool about: he commissioned it and made the method decisions. The code was written with the AI assistant Demi, which runs on Claude. This is version 1.0.1; the first public release was 1.0.0.
 
 **Language.** The user interface, the prompts and most of the documentation are in Swedish. This README is also available in Swedish: [README.sv.md](README.sv.md).
 
@@ -77,7 +77,7 @@ The same analysis without a browser, on one of the reference packages:
 - **Vercel**: [next/DEPLOY.md](next/DEPLOY.md).
 - **A new municipality profile**: copy `next/src/caia/kommuner/exempel/`, fill it in, and point CAIA at it with `CAIA_KOMMUN` or `CAIA_KOMMUN_DIR`. INSTALL.md step 2, and the data file formats in [docs/DATAFORMAT.md](docs/DATAFORMAT.md).
 
-Before an installation is opened to staff: the text users write is sent to a language model provider outside the municipality (via OpenRouter; with `CAIA_OPENROUTER_REGION=eu` it stays with providers in the EU). Tell users not to write personal data, as the user guide does.
+Before an installation is opened to staff: the text users write is sent to a language model provider outside the municipality, through your own OpenRouter account. By default OpenRouter may route the calls to providers outside the EU. To keep them in the EU you need OpenRouter's Business plan and `CAIA_OPENROUTER_REGION=eu`, and the server must be in the EU too ([next/INSTALL.md](next/INSTALL.md)). What the documentation says about Karlstad's installation staying in the EU describes Karlstad's settings, not the code. Tell users not to write personal data, as the user guide does.
 
 ## Documentation (Swedish)
 
@@ -101,7 +101,7 @@ The method's limitations, with the measured spread between runs, are in [docs/ME
 - **An analysis takes 10 to 15 minutes**, each step up to just under five. If the user cancels in the middle of a step, the call continues on the server and is still paid for.
 - **Rate limits are counted per server process.** On Vercel each instance has its own counter. That stops a looping client, not a determined abuser; the hard limit is the credit limit on the OpenRouter key.
 - **The API has no versioning yet**, beyond the release numbers in [CHANGELOG.md](CHANGELOG.md).
-- **Open items from the handover review (September 2026):** the calculation input is not compared automatically with every approved assumption; the extraction takes the first JSON candidate in a model answer; the page has no Content-Security-Policy and loads fonts and libraries from Google and jsDelivr; a parameter library row without a closing pipe shifts its columns; the spread between runs is not shown to the user.
+- **Open items from the handover review (September 2026):** the comparison of the calculation input with the approved assumptions does not catch every misreading ([docs/METOD.md](docs/METOD.md#jämförelsen-med-det-som-godkändes)); the extraction takes the first JSON object with drivers in a model answer; the page loads fonts and libraries from Google and jsDelivr; the spread between runs is not shown to the user.
 
 ## Security
 

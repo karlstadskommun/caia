@@ -192,7 +192,7 @@ def _gist(remark: str) -> str:
 
 
 def test_the_short_line_is_a_whole_sentence_or_nothing():
-    # Henric 2026-10-15: the remark cut at 160 characters read as broken.
+    # 2026-10-15: the remark cut at 160 characters read as broken.
     remark = ('Kalkylen räknar bara 2026–2030, trots att evidenssteget anger effektår till och med 2040. '
               'Det kumulativa resultatet (245 / 899 / 2 109 ton) underskattar därför nyttan.')
     assert _gist(remark) == 'Kalkylen räknar bara 2026–2030, trots att evidenssteget anger effektår till och med 2040.'

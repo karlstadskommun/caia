@@ -294,7 +294,7 @@ def intake_status(text: str) -> tuple[str, str]:
     ends in a question mark means the agent is still asking, so the answer is
     a clarification whatever else it contains. So does a profile whose
     Omfattning holds no number: the agent asks for the scope before it
-    finishes (Henric 2026-10-15), and a request worded without a question
+    finishes (2026-10-15), and a request worded without a question
     mark ("Ange antal fordon.") would otherwise get the approve button. That
     path is logged, because a model that stops emitting the sentinel is a
     contract drift worth seeing.

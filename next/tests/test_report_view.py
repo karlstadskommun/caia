@@ -1,4 +1,4 @@
-"""The report in parts (Henric 2026-10-15, after the workshop 14/10): the
+"""The report in parts (2026-10-15, after the workshop 14/10): the
 title, the report's own verdict with three levels under it, and every part of
 the report as a row that opens with one click, with a line saying what is in
 it. Run in node against the saved reports in tests/fixtures, like
