@@ -1,0 +1,12 @@
+.venv/
+venv/
+.pytest_cache/
+__pycache__/
+**/__pycache__/
+.playwright-mcp/
+tests/
+mockup/
+*.log
+# Local settings with keys never go up with the code.
+.env
+.env.*

@@ -1,0 +1,38 @@
+# Kommunprofil för CAIA: mall för en ny kommun.
+#
+# Så här börjar en ny kommun:
+#   1. Kopiera den här mappen till kommuner/<er-kommun>/ (eller vart som helst,
+#      och peka ut den med CAIA_KOMMUN_DIR).
+#   2. Fyll i fälten nedan.
+#   3. Fyll i kolumnen Lokalt_värde i parameters_library.md där ni har egen
+#      data. Tomma rader använder standardvärdet (nationell schablon), och
+#      verktyget visar vilka som är schabloner.
+#   4. Lägg kommunens datafiler i data/ med de filnamn som står i
+#      parameterbibliotekets sektion 12, eller ändra filnamnen där.
+#   5. Sätt CAIA_KOMMUN=<er-kommun> och kör `python -m caia.kommun` för att
+#      se att allt hittas.
+#
+# Den här mallen körs också av testerna: med den som profil får ordet
+# Karlstad inte nå någon agent eller webbsidan (tests/test_kommunprofil.py).
+
+slug = "exempel"
+
+# Kommunens namn som det skrivs i löptext ("Utgå ifrån att åtgärden handlar om ...").
+namn = "Exempelkommun"
+
+# Ortnamnet. Används i "Exempelstad-specifika värden", i rubrikerna i
+# datakontexten och som kolumnnamn i Konsumtionskompassens export.
+ort = "Exempelstad"
+
+# Länet som det står i den nationella utsläppsexporten (SMHI/RUS).
+lan = "Exempels län"
+
+# Planen åtgärderna tillhör (startsidan: "... klimatnytta av åtgärder i ...").
+plan = "Exempelkommunens klimatplan"
+
+# Det agenterna får veta om kommunen: storlek, organisation, mål. Baslinjeagenten
+# räknar med talen här, till exempel antalet anställda när en åtgärd gäller
+# kommunens egen verksamhet, så skriv bara det ni vet.
+lokal_kontext = """
+Alla åtgärder gäller Exempelkommun, en påhittad svensk kommun som används för att prova CAIA. Uppgifter om invånarantal och kommunkoncernens storlek saknas; gör rimliga antaganden och markera dem.
+"""

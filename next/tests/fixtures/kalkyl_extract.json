@@ -1,0 +1,91 @@
+{
+ "action_name": "Krav på laddbara tjänstebilar och laddinfrastruktur vid kommunala arbetsplatser",
+ "target_year": 2030,
+ "key_years": [
+  2026,
+  2030
+ ],
+ "drivers": [
+  {
+   "name": "Körsträcka med icke-laddbara (fossildrivna) tjänstebilar i kommunens flotta",
+   "baseline_year": 2023,
+   "a0": 3000000,
+   "a0_unit": "km/år",
+   "ef0": 0.13,
+   "ef0_unit": "kg CO2e/km",
+   "g_a": {
+    "min": -0.02,
+    "med": -0.05,
+    "max": -0.08
+   },
+   "g_ef": {
+    "min": -0.01,
+    "med": -0.02,
+    "max": -0.03
+   },
+   "delta_a": {
+    "min": 0,
+    "med": 0,
+    "max": 0
+   },
+   "delta_ef": {
+    "min": -0.154,
+    "med": -0.385,
+    "max": -0.85
+   },
+   "terr": 1.0,
+   "cons": 1.0,
+   "overlap": 1.0,
+   "ramp": {
+    "start_year": 2027,
+    "full_effect_year": 2030,
+    "profile": "linjär"
+   },
+   "kallor": {
+    "a0": {
+     "ursprung": "antagande",
+     "parametrar": [],
+     "kalla": "",
+     "not": "Flottstorlek (~400 fordon, varav ~50% icke-laddbara) och körsträcka (~15 000 km/fordon/år) är antagna i brist på fordonsregister; 200 fordon × 15 000 km = 3,0e6 km/år."
+    },
+    "ef0": {
+     "ursprung": "parameterbibliotek",
+     "parametrar": [
+      "EF_passenger_car_avg",
+      "EF_municipal_cars_avg"
+     ],
+     "kalla": "",
+     "not": "EF0 avser den icke-laddbara delflottans genomsnitt, uppskattat utifrån EF_passenger_car_avg (0,12–0,18 kg CO2/km) eftersom EF_municipal_cars_avg avser hela flottan inkl. redan laddbara fordon."
+    },
+    "g_a": {
+     "ursprung": "antagande",
+     "parametrar": [],
+     "kalla": "",
+     "not": "BAU-trend för minskning av fossil körsträcka baserad på antagen naturlig flottaomsättning driven av nationella styrmedel (bonus-malus, EU-krav), ingen exakt parameter i biblioteket."
+    },
+    "g_ef": {
+     "ursprung": "antagande",
+     "parametrar": [],
+     "kalla": "",
+     "not": "Svag årlig effektivisering av kvarvarande fossila fordon (nyare motorer, ökad biodrivmedelsinblandning) antagen i brist på specifik parameter."
+    },
+    "delta_a": {
+     "ursprung": "antagande",
+     "parametrar": [],
+     "kalla": "",
+     "not": "Sätts till 0 eftersom åtgärdens effekt modelleras via delta_ef (kombinerad adoption × EF-skillnad) snarare än som separat aktivitetsminskning."
+    },
+    "delta_ef": {
+     "ursprung": "antagande",
+     "parametrar": [
+      "EF_ev_per_km",
+      "EF_el_Karlstad_product_guaranteed",
+      "TR_share_evs_fleet_2030"
+     ],
+     "kalla": "",
+     "not": "Beräknad som adoption (andel av kvarvarande fossil delflotta som ställs om utöver BAU: 0,25/0,50/0,85) multiplicerat med relativ EF-minskning per omställt fordon (ΔEF/ef0 ≈ 0,615/0,769/1,0, baserat på skillnad mellan fossil EF och el-EF från EF_ev_per_km respektive EF_el_Karlstad_product_guaranteed). Ger viktat genomsnittligt EF-fall för hela drivarens aktivitet."
+    }
+   }
+  }
+ ]
+}

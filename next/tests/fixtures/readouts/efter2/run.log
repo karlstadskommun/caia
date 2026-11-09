@@ -1,0 +1,29 @@
+[21:13:00] 04-laddpunkter: intake  20.7s status=clarifying profiles=0
+[21:13:10] 02-aterbruk: intake  30.9s status=clarifying profiles=0
+[21:13:36] 04-laddpunkter: intake  36.0s status=complete profiles=1
+[21:13:46] 02-aterbruk: intake  36.1s status=complete profiles=1
+[21:13:49] 04-laddpunkter: emap       13.0s 3655 chars
+[21:14:00] 02-aterbruk: emap       13.7s 4325 chars
+[21:15:10] 02-aterbruk: baslinje   70.6s 9467 chars
+[21:15:12] 04-laddpunkter: baslinje   83.1s 8710 chars
+[21:16:40] 04-laddpunkter:   evidens part 1  68.2s status=200 Körsträcka med bensin- och dieselbilar bland boend
+[21:16:40] 04-laddpunkter:   evidens part 2  87.9s status=200 Elbilars körsträcka och elanvändning för laddning 
+[21:16:40] 02-aterbruk:   evidens part 1  78.1s status=200 Tillverkning av nyproducerat byggmaterial i kommun
+[21:16:40] 02-aterbruk:   evidens part 2  89.8s status=200 Transport, lagring och rekonditionering av återbru
+[21:16:40] 02-aterbruk:   evidens part 3  75.7s status=200 Byggavfall från renoveringar
+[21:18:05] 04-laddpunkter:   evidens merge  84.9s status=200 corrected=[1, 2]
+[21:18:05] 04-laddpunkter: evidens   172.9s 14813 chars
+[21:18:12] 02-aterbruk:   evidens merge  91.8s status=200 corrected=[1, 2, 3]
+[21:18:12] 02-aterbruk: evidens   181.7s 19378 chars
+[21:18:45] 04-laddpunkter: kalkyl deterministic=True headline={'cons': 175.2, 'net': 175.2, 'terr': 182.9, 'year': 2030}
+[21:18:45] 04-laddpunkter: kalkyl     40.6s 10586 chars
+[21:18:53] 02-aterbruk: kalkyl deterministic=True headline={'cons': 261.1, 'net': 261.1, 'terr': 2.3, 'year': 2030}
+[21:18:53] 02-aterbruk: kalkyl     41.0s 13973 chars
+[21:22:40] 04-laddpunkter: qa        235.0s 19452 chars
+[21:23:27] 02-aterbruk: qa        273.9s 16944 chars
+[21:23:33] 04-laddpunkter: rapport    52.6s 22738 chars
+[21:23:33] 04-laddpunkter: DONE 654s
+[21:24:14] 02-aterbruk: rapport    47.1s 24693 chars
+[21:24:14] 02-aterbruk: DONE 695s
+04-laddpunkter      10    288017     65873         0     722     1.99
+02-aterbruk         11    345415     75828         0     848     2.41

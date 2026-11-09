@@ -1,0 +1,4 @@
+# The app plus the WSGI server for a self-hosted install (INSTALL.md).
+# Vercel does not use this file.
+-r requirements.txt
+gunicorn==26.2.0

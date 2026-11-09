@@ -1,0 +1,29 @@
+CAIA (Climate Action Impact Analysis)
+Copyright Karlstads kommun
+Licensed under the EUPL
+Licensierat enligt EUPL
+
+The licence is the European Union Public Licence v. 1.2 (EUPL-1.2).
+LICENSE holds the English text and LICENSE.sv.txt the Swedish text. All
+language versions approved by the European Commission are equally valid
+(EUPL, article 13).
+
+Sources of the licence texts: the English text as published by the European
+Commission on Joinup (EUPL-1.2 EN.txt); the Swedish text from the annex to
+Commission Implementing Decision (EU) 2017/863, Official Journal of the
+European Union L 128, 19.5.2017, p. 59.
+
+Data and third-party material: see "Licence" and "Data" in README.md.
+
+Karlstad's municipality profile and its data files are not part of this
+release. Some of them come from third parties under their own terms, among
+them Konsumtionskompassen (Stockholm Environment Institute, CC BY-NC-ND 4.0),
+which cannot be distributed under the EUPL. A municipality that wants
+consumption-based data exports its own from https://konsumtionskompassen.se/
+and cites it as "Stockholm Environment Institute (SEI), Konsumtionskompassen,
+2025".
+
+The Svalna figure in docs/METOD.md (consumption-based emissions from the
+municipal group's building construction, 2022) and the figures from Karlstads
+kommun's citizen survey 2024 quoted in the exempel profile come from work
+Karlstads kommun commissioned itself. They are the municipality's own data.

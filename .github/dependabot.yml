@@ -1,0 +1,28 @@
+# Security review S10: propose updates, not only alert on known flaws.
+# next/requirements*.txt pin exact versions; a proposal is a PR that CI tests.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /next
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # pydantic pins pydantic-core to one exact version, so a proposal for
+    # pydantic-core alone cannot be installed (security review S35, PR #23).
+    # The two are proposed together.
+    groups:
+      pydantic:
+        patterns:
+          - pydantic
+          - pydantic-core
+  # The libraries the page loads in the browser (re-review 2026-10-07). The
+  # file is a list for this purpose only; next/tests ties it to the page.
+  - package-ecosystem: npm
+    directory: /clientlibs
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

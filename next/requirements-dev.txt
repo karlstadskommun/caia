@@ -1,0 +1,8 @@
+# The app plus what the test suite needs. Node.js 18+ is needed too, for the
+# tests that run the page's JavaScript; without it they are skipped.
+-r requirements.txt
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0
+pytest==9.1.1

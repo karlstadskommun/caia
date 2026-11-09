@@ -1,0 +1,6 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from caia.web.app import app  # noqa: E402  (Vercel @vercel/python entrypoint expects `app`)
