@@ -4,7 +4,7 @@ CAIA (Climate Action Impact Analysis) räknar ut klimatnyttan av en kommunal åt
 
 CAIA har två analystyper, som väljs innan analysen börjar: *prognos* (potentialläget) för en åtgärd som inte är genomförd än, och *uppföljning* (uppföljningsläget) för en insats som redan är gjord, där frågan är vad just de pengarna faktiskt har gett och vad som återstår.
 
-CAIA är utvecklat av Karlstads kommun inom Klimatneutrala Karlstad 2030, som stöds av Viable Cities. Henric Barkman, processledare på Karlstads kommun, tog fram verktyget: han beställde det och fattade metodbesluten. Koden skrevs med AI-assistenten Demi, som bygger på Claude. Det här är version 1.1.0; den första offentliga versionen var 1.0.0. Verktyget hette Zaid till oktober 2026, och det namnet står kvar på några ställen i dokumentationen.
+CAIA är utvecklat av Karlstads kommun inom Klimatneutrala Karlstad 2030, som stöds av Viable Cities. Henric Barkman, processledare på Karlstads kommun, tog fram verktyget: han beställde det och fattade metodbesluten. Koden skrevs med AI-assistenten Demi, som bygger på Claude. Det här är version 1.1.1; den första offentliga versionen var 1.0.0. Verktyget hette Zaid till oktober 2026, och det namnet står kvar på några ställen i dokumentationen.
 
 English: [README.md](README.md).
 

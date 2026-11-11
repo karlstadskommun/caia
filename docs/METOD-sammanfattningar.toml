@@ -162,9 +162,9 @@ Lägger ihop sparade analyser utan att räkna samma ton två gånger inom en uts
 
 [[avsnitt]]
 rubrik = "CAIA och DIN SPEC 91637"
-hash = "cb3d2177940d"
+hash = "9f5792bd87bf"
 sammanfattning = """
-DIN SPEC 91637 är en tysk standard för hur kommuner beskriver och följer upp klimatåtgärder, ett ramverk och ingen räknemetod. CAIA bygger på samma ryggrad (åtgärd, ändrad aktivitet, aktivitet gånger emissionsfaktor, direkta, indirekta och stödjande åtgärder) och har tagit efter fyra saker, sedan 1.1 även standardens klassning av åtgärden (nivå, instrumentkategori, verkningstid och aktivitetsförändring per drivare), men räknar inte attribut och beteende som egna tal. CAIA påstår inte att den följer standarden.
+DIN SPEC 91637 är en tysk standard för hur kommuner beskriver och följer upp klimatåtgärder, ett ramverk och ingen räknemetod. CAIA bygger på samma ryggrad (åtgärd, ändrad aktivitet, aktivitet gånger emissionsfaktor, direkta, indirekta och stödjande åtgärder) och har tagit efter fyra saker, bland dem sedan 1.1 standardens klassning av åtgärden (nivå, instrumentkategori, verkningstid och aktivitetsförändring per drivare), men räknar inte attribut och beteende som egna tal. CAIA påstår inte att den följer standarden.
 """
 
 [[avsnitt]]

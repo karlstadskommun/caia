@@ -2,6 +2,13 @@
 
 Every release of CAIA is recorded here, newest first. Version numbers follow [Semantic Versioning](https://semver.org/): a change to the HTTP API in [docs/API.md](docs/API.md) that can break an existing client is a new major version, a new feature a new minor version, and a fix a new patch version. A change that moves the numbers an analysis gives (a prompt, the calculation, a parameter library) is described in its own line, whatever the version step.
 
+## [1.1.1] - 2026-11-11
+
+Documentation only. No prompt, calculation, parameter or data file changed, so no analysis gives a different number.
+
+- METOD.md, *CAIA och DIN SPEC 91637*: a sentence left over from before 1.1 said that the classification followed CAIA's own lists and not the standard's levels, instrument categories and effective durations. It now says what the rest of the section says: since 1.1 the action is classed by the standard's level, instrument category and effective duration, and each driver by its activity shift, as text that changes no number; the sector and the time frame in years remain CAIA's own fields. `docs/METOD.html` is regenerated.
+- ANVANDARGUIDE.md lists the fields the profile card has shown since 1.1: level, instrument category and effective duration in place of the type of action, plus scope, maturity and comments, which were already on the card. It also says that step 2 gives each driver's activity shift from DIN SPEC 91637.
+
 ## [1.1.0] - 2026-11-10
 
 Changes that move the numbers an analysis gives: manufacturing is written off over the equipment's lifetime in the forecast mode, size words before a unit are converted, and a stepwise phasing is read as one. Prompts and Karlstad's parameter library changed too, so the reference analyses were run before and after the change (docs/RUNBOOK.md, "Ändra en prompt"). Measured on the four reference analyses, with the calculation step rerun on the same approved steps: the company-car action's net in 2030 went from 126 to 148 tonnes, the public charging points' from 51 to between 24 and 45, the leaf blowers' from 2.6 to 2.2, and the reuse requirement, which buys no equipment, did not move. One whole run read the fleet's three-year renewal as the cars' lifetime and got 15 tonnes again; the reading now says what a lifetime is not, and the same steps give 104 to 117. METOD.md has the details.

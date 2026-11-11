@@ -65,7 +65,7 @@ Det du godkänner bygger nästa steg vidare på. Ett fel du släpper igenom tidi
 
 ### 1. Åtgärdsprofilen
 
-Knappen heter **Godkänn profilen och fortsätt**. Panelen visar ett kort med sektor, drivare, målgrupp, utsläpp som påverkas, rådighet, typ av åtgärd, tidsram och kommun.
+Knappen heter **Godkänn profilen och fortsätt**. Panelen visar ett kort med omfattning, sektor, drivare, målgrupp, utsläpp som påverkas, rådighet, nivå, instrumentkategori, mognad, tidsram, verkningstid, kommun och kommentarer. Nivå, instrumentkategori och verkningstid är klasserna i DIN SPEC 91637 (sedan 1.1; en analys från före 1.1 visar i stället typ av åtgärd).
 
 Titta efter märkningen **ANTAGANDE**. Den står vid allt CAIA har antagit utan att du sagt det, och kortet visar hur många antaganden det är. Läs dem. Är omfattningen antagen står det i kommentarerna att resultatet skalar med den, och då är det det antagandet som är viktigast att rätta om du kan. Stämmer de inte, rätta nu. När du rättat visas de ändrade fälten med märkningen ÄNDRAD och det gamla värdet under.
 
@@ -73,7 +73,7 @@ Titta efter märkningen **ANTAGANDE**. Den står vid allt CAIA har antagit utan 
 
 Knappen heter **Godkänn utsläppskällorna och fortsätt**. Här har CAIA namngett drivarna, alltså de aktiviteter vars utsläpp åtgärden påverkar, och sagt hur effekten ska räknas. Inga tal är satta än.
 
-Panelen visar först en sammanfattning och sedan utsläppen som åtgärden påverkar. Varje drivare står som en uträkning: aktiviteten som mäts, gånger utsläppen per enhet, ger utsläpp av ett visst slag och på en viss plats. Under det står hur åtgärden påverkar drivaren (undvika, byta eller förbättra) och hur stor risken är att samma minskning räknas två gånger. Därefter kommer **Så räknas effekten**: rakt på drivaren, som en kedja av antaganden om hur många som ändrar sig, eller inget eget tal för en åtgärd som bara stödjer andra; klicka på **Varför?** för att läsa motiveringen. (Analyser från före 2026-10-14 visar i stället sex rutor under **Så klassas åtgärden**.) Sist står det som är osäkert. Underlag som skulle göra bedömningen säkrare frågar CAIA efter i chatten.
+Panelen visar först en sammanfattning och sedan utsläppen som åtgärden påverkar. Varje drivare står som en uträkning: aktiviteten som mäts, gånger utsläppen per enhet, ger utsläpp av ett visst slag och på en viss plats. Under det står hur åtgärden påverkar drivaren (undvika, byta eller förbättra), vilken av DIN SPEC 91637:s sex aktivitetsförändringar drivaren hör till (sedan 1.1), och hur stor risken är att samma minskning räknas två gånger. Därefter kommer **Så räknas effekten**: rakt på drivaren, som en kedja av antaganden om hur många som ändrar sig, eller inget eget tal för en åtgärd som bara stödjer andra; klicka på **Varför?** för att läsa motiveringen. (Analyser från före 2026-10-14 visar i stället sex rutor under **Så klassas åtgärden**.) Sist står det som är osäkert. Underlag som skulle göra bedömningen säkrare frågar CAIA efter i chatten.
 
 Kontrollera att drivarna är de rätta och att ingen saknas. Det är drivarna som räknas i resten av analysen. Uppdelningen följer en fast regel, så att två körningar av samma åtgärd får samma drivare: en aktivitet är en drivare även när den ger både territoriella och konsumtionsbaserade utsläpp, och en aktivitet delas bara upp om det finns ett eget tal för varje del eller om åtgärden ändrar delarna olika. Saknas till exempel tillverkningen av det som ska köpas in kommer den inte med i resultatet.
 
