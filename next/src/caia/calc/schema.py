@@ -195,6 +195,24 @@ class Triple:
 # "No catch-up year" for a scenario: a year the engine never reaches.
 UNBOUNDED_YEAR = 9999
 
+# The years an analysis can be about. A year outside them is a slip ("24" for
+# 2024, an amount in a year field) or an attack. The engine walks every year
+# from the first start year to the target year and writes a table row for
+# each, so nothing bounded the work: target_year 2 000 000 held a worker for
+# minutes on one counted request, and start_year 24 gave a headline of 10^15
+# ton without a warning (review 2026-11-10). The range is wide on purpose: it
+# refuses what no analysis means, not long horizons.
+YEAR_MIN, YEAR_MAX = 1950, 2200
+
+
+def in_years(year: int, what: str) -> int:
+    """`year` if it is a year an analysis can be about, else ValueError that
+    names the field. A bool is refused too: int(True) is 1."""
+    if isinstance(year, bool) or not YEAR_MIN <= year <= YEAR_MAX:
+        raise ValueError(f"{what}={year} ligger utanför {YEAR_MIN} till {YEAR_MAX}. "
+                         "Ett årtal skrivs med fyra siffror.")
+    return year
+
 
 def end_year_of(v) -> Triple | None:
     """Parse ramp.end_year, where a missing scenario means "unbounded".
@@ -213,14 +231,26 @@ def end_year_of(v) -> Triple | None:
         def pick(*keys):
             for k in keys:
                 if v.get(k) is not None:
-                    return int(v[k])
+                    return _end_year(v[k])
             return UNBOUNDED_YEAR
         t = Triple(pick('min', 'low'), pick('med', 'medel'), pick('max', 'high'))
         if t.min == t.med == t.max == UNBOUNDED_YEAR:
             return None
         return t
-    y = int(v)
+    y = _end_year(v)
     return Triple(y, y, y)
+
+
+def _end_year(v) -> int:
+    """One scenario's end year. Only the lower bound is checked: the engine
+    never walks to an end year, and one far away says "never", which is what
+    a missing one says. An end year of 28 for 2028 ended the effect before it
+    began and gave a zero without a word."""
+    y = int(v)
+    if isinstance(v, bool) or y < YEAR_MIN:
+        raise ValueError(f"ramp.end_year={v} ligger före {YEAR_MIN}. "
+                         "Ett årtal skrivs med fyra siffror.")
+    return y
 
 
 _KIND_ALIAS = {
@@ -246,7 +276,7 @@ class Ramp:
     """Implementation ramp-up. adoption(t) goes 0 -> 1 between the two years."""
     start_year: int
     full_effect_year: int
-    profile: str = "linjär"  # linjär | s-formad | stegvis
+    profile: str = "linjär"  # linjär | s-formad | stegvis (step, stepwise read as stegvis)
     # Ex-post evaluation: the year after which BAU has caught up and the
     # action no longer makes a difference (e.g. a fleet that a 2026 fossil-free
     # target would have electrified anyway). Scenario-specific because "when
@@ -313,7 +343,10 @@ class Ramp:
         # matching the raw string sent every non-linear profile silently down
         # the linear branch.
         profile = (self.profile or "").strip().lower()
-        if profile.startswith('steg'):
+        # English too: "step" began with an s, not with "steg", and went down
+        # the S-curve branch (4,7 / 50 / 95 % instead of 0 / 100 / 100 over a
+        # ramp 2026-2030; the review after 1.0.0, Henric 2026-11-10).
+        if profile.startswith(('steg', 'step')):
             # Stepwise: the effect lands as one discrete jump at the midpoint of
             # the ramp. The old `frac >= 1.0` was unreachable (the guard above
             # already returned for year >= full_effect_year), so a stepwise
@@ -373,11 +406,23 @@ class Driver:
     # Where catch_up came from: "" the analysis set it, "nyttan" the engine
     # took the latest end year among the drivers that lower emissions.
     catch_up_from: str = ""
+    # Potential mode: a driver that manufactures equipment with a lifetime
+    # (annual purchases or a one-off) is written off evenly over the lifetime,
+    # so each year carries a yearly share of the manufacture instead of the
+    # purchase year carrying all of it (Henric 2026-11-10, CAIA 1.1). Set by
+    # CalcModel.from_dict, see write_off_in_potential; the engine spreads it
+    # (engine._driver_year). False = charged the year it is bought, as before.
+    write_off: bool = False
     # A0 × a0_scale is in the unit EF0 is per (210 ton against kg CO2e/kg:
-    # 1000), and a0_scale_unit is that unit's word. Set from the units as
-    # written (calc.units.a0_scale). 1 = no conversion, as before.
+    # 1000; 500 tusen km against kg CO2e/km: 1000), and a0_scale_unit is that
+    # unit's word. EF0 × ef0_scale is per one of it (15 kg CO2e per 100 km:
+    # 0,01), and ef0_scale_unit is EF0's unit after it. Set from the units as
+    # written (calc.units.conversion). 1 = no conversion, as before.
     a0_scale: float = 1.0
     a0_scale_unit: str = ""
+    a0_scale_from: str = ""
+    ef0_scale: float = 1.0
+    ef0_scale_unit: str = ""
     # The attribution band as the extraction wrote it, when the engine turned
     # it the right way round (see orient_attribution). None = not turned.
     attribution_given: Triple | None = None
@@ -401,11 +446,13 @@ class Driver:
         """The share of a one-off the action is charged with: the years of
         the lifetime that came before BAU caught up, (catch-up year + 1 −
         purchase year) / lifetime, between 0 and 1. 1 without a lifetime and
-        a catch-up year, or when BAU never catches up in this scenario."""
+        a catch-up year, or when BAU never catches up in this scenario. 1 for
+        a driver that is written off (write_off): the engine spreads its
+        charge over the years instead, up to the catch-up year."""
         # Costs only: an avoided purchase is a benefit, and how much of it a
         # brought-forward action earns is not what this share measures.
-        if (not self.one_off or self.lifetime is None or self.catch_up is None
-                or self.direction() <= 0):
+        if (not self.one_off or self.write_off or self.lifetime is None
+                or self.catch_up is None or self.direction() <= 0):
             return 1.0
         cu = self.catch_up.get(scenario)
         if cu >= UNBOUNDED_YEAR:
@@ -513,31 +560,48 @@ class Driver:
         if kind == "engång":
             # One year, whole: the event year is the start year, nothing ramps.
             start = full = int(d.get('year', d.get('ar', start)))
+        # The start year (a one-off's year) is where the engine starts
+        # walking. The full-effect year has no upper bound: the engine never
+        # walks to it, and "9999" there is an extraction saying full effect
+        # never comes, which is computed and noted (test_calc_golden).
+        start = in_years(start, f"Drivare {name!r}: "
+                         + ("year" if kind == "engång" else "ramp.start_year"))
+        if kind == "engång":
+            full = start
         half_life = r.get('half_life', r.get('halveringstid'))
         share = r.get('first_year_share', r.get('andel_forsta_aret'))
         last_share = r.get('last_year_share', r.get('andel_sista_aret'))
         grant_year = d.get('grant_year', d.get('bidragsar'))
-        # Lifetime and catch-up year belong to a one-off (equipment); an
-        # annual driver's catch-up is ramp.end_year and its lifetime is the
-        # end year, so neither is read there.
+        # The catch-up year belongs to a one-off (equipment): an annual
+        # driver's is ramp.end_year. The lifetime is read for both, as an
+        # annual driver that manufactures equipment is written off over it
+        # in potential mode; a follow-up drops it there again
+        # (CalcModel.from_dict), as its end year is the lifetime.
         lifetime = catch_up = None
+        # Optional, so a value that cannot be read ("5 år", [5]) is dropped
+        # rather than refused: refusing sends the whole kalkyl to the language
+        # model's fallback. The warning about a one-off without a lifetime
+        # then says what is missing.
+        try:
+            lifetime = d.get('lifetime', d.get('livslangd', d.get('livslängd')))
+            lifetime = None if lifetime is None else Triple.of(lifetime)
+        except (TypeError, ValueError):
+            lifetime = None
+        if (kind != "engång" and lifetime is not None
+                and not all(math.isfinite(v) and v > 0 for v in (lifetime.min, lifetime.med, lifetime.max))):
+            # A one-off's lifetime has been checked since 2026-10; on an annual
+            # driver it is new in 1.1 and only spreads a charge, so a value
+            # that is no number of years is dropped, not refused.
+            lifetime = None
         if kind == "engång":
-            # Optional, so a value that cannot be read ("5 år", [5]) is
-            # dropped rather than refused: refusing sends the whole kalkyl
-            # to the language model's fallback. The warning about a one-off
-            # without a lifetime then says what is missing.
-            try:
-                lifetime = d.get('lifetime', d.get('livslangd', d.get('livslängd')))
-                lifetime = None if lifetime is None else Triple.of(lifetime)
-            except (TypeError, ValueError):
-                lifetime = None
             try:
                 catch_up = end_year_of(r.get('end_year', d.get('end_year')))
             except (TypeError, ValueError):
                 catch_up = None
         drv = cls(
             name=name,
-            baseline_year=int(d.get('baseline_year', 2023)),
+            baseline_year=in_years(int(d.get('baseline_year', 2023)),
+                                   f"Drivare {name!r}: baseline_year"),
             a0=float(d['a0']),
             ef0=float(d['ef0']),
             a0_unit=plain(d.get('a0_unit', '')),
@@ -564,7 +628,8 @@ class Driver:
             # null is absent, as for every other optional field.
             attribution=Triple.of(1.0 if d.get('attribution') is None else d['attribution']),
             kind=kind,
-            grant_year=None if grant_year in (None, "") else int(grant_year),
+            grant_year=(None if grant_year in (None, "")
+                        else in_years(int(grant_year), f"Drivare {name!r}: grant_year")),
             pot=pot_id_of(d.get('pot', d.get('pott'))),
             lifetime=lifetime,
             catch_up=catch_up,
@@ -573,11 +638,15 @@ class Driver:
         # A fault in the unit reading must not cost the calculation: the
         # warning step reports the same check failing (engine.sanity_warnings).
         try:
-            scale = units.a0_scale(drv.a0_unit, drv.ef0_unit)
+            conv = units.conversion(drv.a0_unit, drv.ef0_unit)
         except Exception:  # noqa: BLE001
-            scale = None
-        if scale is not None:
-            drv.a0_scale, drv.a0_scale_unit = scale['factor'], scale['ef0']
+            conv = None
+        if conv is not None:
+            if conv['a0_factor'] != 1.0:
+                drv.a0_scale, drv.a0_scale_unit = conv['a0_factor'], conv['a0_to']
+                drv.a0_scale_from = conv['a0_from']
+            if conv['ef0_factor'] != 1.0:
+                drv.ef0_scale, drv.ef0_scale_unit = conv['ef0_factor'], conv['ef0_to']
         drv.orient_attribution()
         return drv
 
@@ -653,7 +722,7 @@ class CalcModel:
 
     @classmethod
     def from_dict(cls, d: dict, mode: str = POTENTIAL) -> CalcModel:
-        target = int(d.get('target_year', 2030))
+        target = in_years(int(d.get('target_year', 2030)), "target_year")
         for drv in d.get('drivers', []):
             drv.setdefault('target_year', target)
         fy = d.get('followup_year', d.get('uppfoljningsar'))
@@ -665,16 +734,24 @@ class CalcModel:
                 x.unflip_cost()
             spend = [x for x in drivers if is_spend_post(x)]
             drivers = [x for x in drivers if not is_spend_post(x)]
+            for x in drivers:
+                # An annual driver's lifetime in a follow-up is its end year.
+                if not x.one_off:
+                    x.lifetime = None
+        else:
+            drop_same_year_catch_up(drivers)
         infer_catch_up(drivers)
         if mode == UPPFOLJNING:
             write_off_to(drivers, target)
+        else:
+            write_off_in_potential(drivers)
         return cls(
             action_name=plain(d.get('action_name', 'Namnlös åtgärd')),
             target_year=target,
-            key_years=[int(y) for y in d.get('key_years', [2026, target])],
+            key_years=[in_years(int(y), "key_years") for y in d.get('key_years', [2026, target])],
             drivers=drivers,
             mode=mode,
-            followup_year=None if fy in (None, "") else int(fy),
+            followup_year=None if fy in (None, "") else in_years(int(fy), "followup_year"),
             grants=grants_of(d.get('grants', d.get('bidrag'))),
             spend_posts=spend,
         )
@@ -732,6 +809,31 @@ def infer_catch_up(drivers: list[Driver]) -> None:
             x.catch_up_from = "nyttan"
 
 
+def drop_same_year_catch_up(drivers: list[Driver]) -> None:
+    """In a potential analysis, forget a one-off's catch-up year when it is
+    not later than the purchase year (medel). The forecast prompt does not
+    ask for one there, and an end year equal to the purchase year has meant
+    "the post exists that year only" (lövblåsare, 2026-11-09: 2026 / 2026 /
+    2026). Read as a catch-up year it would charge a written-off purchase
+    with one year of its lifetime. infer_catch_up may then give it the
+    benefit's end instead."""
+    for x in drivers:
+        if x.one_off and x.catch_up is not None and x.catch_up.med <= x.ramp.start_year:
+            x.catch_up = None
+            x.catch_up_from = ""
+
+
+def write_off_in_potential(drivers: list[Driver]) -> None:
+    """Mark the drivers a potential analysis writes off: those with a
+    lifetime that raise emissions (medel), annual or one-off. The
+    manufacture of equipment is then spread evenly over its lifetime, and a
+    one-off only up to its catch-up year, so the target year carries a
+    yearly share of it (Henric 2026-11-10). A follow-up keeps its own rule
+    (write_off_to): its result is the whole window, not one year."""
+    for x in drivers:
+        x.write_off = x.lifetime is not None and x.direction() > 0
+
+
 def write_off_to(drivers: list[Driver], target_year: int) -> None:
     """In a follow-up, charge equipment only for the years of its lifetime
     that fall within the window, as its benefit is only counted to the target
@@ -778,7 +880,7 @@ def grants_of(v) -> list[Grant]:
         amount = float(amount)
         if not (math.isfinite(amount) and amount >= 0):
             raise ValueError(f"Bidragsrad {g!r}: beloppet måste vara >= 0.")
-        out.append(Grant(int(year), amount))
+        out.append(Grant(in_years(int(year), "Bidragsrad: year"), amount))
     if sum(g.amount for g in out) <= 0:
         raise ValueError("Bidragsraderna summerar till 0 kr; fördelningen går inte att räkna.")
     per_year: dict[int, float] = {}

@@ -263,10 +263,112 @@ def test_the_analysis_own_catch_up_year_wins():
     assert s.catch_up_from == '' and s.charged_share('med') == approx(0.2)
 
 
-def test_potential_mode_charges_the_equipment_in_full():
+def test_potential_mode_writes_the_equipment_off_over_its_lifetime():
+    # Henric 2026-11-10 (CAIA 1.1): until then the whole 2 ton fell in 2023.
     m = _model(_benefit(), _screens(lifetime=10), mode=POTENTIAL)
-    assert m.drivers[1].catch_up is None
-    assert _driver_year(m.drivers[1], 'med', 2023).net == approx(-2.0)
+    s = m.drivers[1]
+    assert s.catch_up is None and s.write_off
+    assert [_driver_year(s, 'med', y).net for y in (2023, 2027, 2032)] == approx([-0.2] * 3)
+    assert _driver_year(s, 'med', 2033).net == 0.0
+    assert sum(_driver_year(s, 'med', y).net for y in range(2023, 2045)) == approx(-2.0)
+    # The year's own purchase stays visible beside the share it carries.
+    assert _driver_year(s, 'med', 2023).before_write_off == approx(-2.0)
+
+
+def test_a_lifetime_of_part_years_ends_with_the_part():
+    m = _model(_screens(lifetime=2.5), mode=POTENTIAL)
+    s = m.drivers[0]
+    assert [_driver_year(s, 'med', y).basis for y in range(2023, 2027)] == approx(
+        [-0.8, -0.8, -0.4, 0.0])
+
+
+def test_annual_purchases_carry_a_share_of_each_year_bought():
+    """Ten machines a year from 2026 at 100 kg: each year bought adds a
+    quarter of a ton to the next four years, so the target year carries
+    the whole yearly purchase only once four years have been bought."""
+    buy = {'name': 'Tillverkning av maskiner', 'baseline_year': 2025, 'a0': 10.0,
+           'a0_unit': 'st/år', 'ef0': 100.0, 'ef0_unit': 'kg CO2e/st', 'g_a': 0.0, 'g_ef': 0.0,
+           'delta_a': 1.0, 'delta_ef': 0.0, 'terr': 0.0, 'cons': 1.0, 'overlap': 0.0,
+           'ramp': {'start_year': 2026, 'full_effect_year': 2026, 'profile': 'stegvis'},
+           'lifetime': {'min': 3, 'med': 4, 'max': 5}}
+    m = _model(buy, mode=POTENTIAL)
+    s = m.drivers[0]
+    assert s.write_off
+    assert [_driver_year(s, 'med', y).net for y in range(2026, 2031)] == approx(
+        [-0.25, -0.5, -0.75, -1.0, -1.0])
+    # Shortest lifetime in min: the cautious scenario carries the most.
+    assert _driver_year(s, 'min', 2027).net == approx(-2 / 3)
+    assert compute(m)['headline']['net'] == approx(-1.0)
+
+
+def test_a_potential_one_off_is_written_off_only_to_the_benefits_end():
+    ends = {'min': 2027, 'med': 2027, 'max': 2027}
+    m = _model(_benefit(ramp={'start_year': 2024, 'full_effect_year': 2024, 'end_year': ends}),
+               _screens(lifetime=10), mode=POTENTIAL)
+    s = m.drivers[1]
+    assert s.catch_up == Triple(2027, 2027, 2027) and s.catch_up_from == 'nyttan'
+    assert _driver_year(s, 'med', 2027).net == approx(-0.2)
+    assert _driver_year(s, 'med', 2028).net == 0.0
+    assert sum(_driver_year(s, 'med', y).net for y in range(2023, 2040)) == approx(-1.0)
+
+
+def test_a_potential_end_year_on_the_purchase_year_is_not_a_catch_up():
+    # Lövblåsare 2026-11-09: 2026 / 2026 / 2026 on a one-off from 2026 meant
+    # "that year only". As a catch-up year it would charge a tenth.
+    m = _model(_screens(lifetime=10, end_year=2023), mode=POTENTIAL)
+    s = m.drivers[0]
+    assert s.catch_up is None
+    assert sum(_driver_year(s, 'med', y).net for y in range(2023, 2040)) == approx(-2.0)
+
+
+def test_a_catch_up_at_the_purchase_in_one_scenario_is_said():
+    # Review 2026-11-10: medel 2027 keeps the catch-up, but min 2023 caps the
+    # post at its purchase year, so min carries a tenth of it.
+    m = _model(_screens(lifetime=10, end_year={'min': 2023, 'med': 2027, 'max': 2030}), mode=POTENTIAL)
+    s = m.drivers[0]
+    assert s.catch_up == Triple(2023, 2027, 2030)
+    assert sum(_driver_year(s, 'min', y).net for y in range(2023, 2040)) == approx(-0.2)
+    said = [w for w in sanity_warnings(compute(m), m) if 'ikapp-året' in w]
+    assert len(said) == 1 and 'ikapp-året i min är inte senare än inköpsåret 2023' in said[0], said
+    m = _model(_benefit(ramp={'start_year': 2024, 'full_effect_year': 2024,
+                              'end_year': {'min': 2027, 'med': 2027, 'max': 2027}}),
+               _screens(lifetime=10), mode=POTENTIAL)
+    assert not [w for w in sanity_warnings(compute(m), m) if 'ikapp-året' in w]
+
+
+def test_a_follow_up_does_not_write_off_an_annual_driver():
+    m = _model(_benefit(delta_a=0.5, lifetime=8))
+    assert m.drivers[0].lifetime is None and not m.drivers[0].write_off
+
+
+def test_a_benefit_with_a_lifetime_is_not_written_off():
+    m = _model(_benefit(lifetime=8), mode=POTENTIAL)
+    assert m.drivers[0].lifetime is not None and not m.drivers[0].write_off
+
+
+def test_an_annual_lifetime_that_is_no_number_of_years_is_dropped_not_refused():
+    m = _model(_benefit(delta_a=0.5, lifetime={'min': 0, 'med': 8, 'max': 10}), mode=POTENTIAL)
+    assert m.drivers[0].lifetime is None and not m.drivers[0].write_off
+
+
+def test_the_appendix_shows_the_purchase_beside_the_written_off_share():
+    m = _model(_benefit(), _screens(lifetime=10), mode=POTENTIAL)
+    app = render_appendix(m, compute(m))
+    assert '| ΔE före avskrivning (ton) | ΔE (ton) |' in app
+    assert 'skrivs av jämnt över livslängden' in app
+    assert '| Andel av livslängden |' not in app
+    assert ('engångspost 2023, livslängd 10 år, skrivs av jämnt över livslängden'
+            in render_markdown(m, compute(m)))
+
+
+def test_an_annual_write_off_lifetime_is_a_bearing_assumption():
+    buy = _benefit(name='Tillverkning', delta_a=1.0, attribution=1.0,
+                   lifetime={'min': 2, 'med': 4, 'max': 8})
+    m = _model(_benefit(), buy, mode=POTENTIAL)
+    items = bearing(m, compute(m))['items']
+    life = [it for it in items if it['field'] == 'lifetime']
+    assert life and life[0]['driver'] == 'Tillverkning' and life[0]['on_ramp']
+    assert life[0]['low'] < life[0]['high']
 
 
 def test_without_a_catch_up_the_equipment_is_written_off_to_the_target_year():

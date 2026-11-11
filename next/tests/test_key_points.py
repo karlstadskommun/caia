@@ -243,3 +243,22 @@ def test_the_outcome_says_before_and_after():
     assert '86 blev 215' in _recalc('recalcOutcome({net: 86}, {net: 215})')
     assert 'samma resultat' in _recalc('recalcOutcome({net: 86.04}, {net: 85.96})')
     assert 'språkmodellens' in _recalc('recalcOutcome({net: 86}, null)')
+
+
+def test_kalkyl_points_say_what_changes_in_the_activitys_own_unit():
+    """The engine's sentences (calc.engine.activity_changes), largest first,
+    three at most; warnings stay last."""
+    rows = [{'driver': f'Drivare {i}', 'text': f'{i} km mindre år 2030 än utan åtgärden'}
+            for i in range(1, 5)]
+    span = {'net_lo': 1, 'net_hi': 3, 'activity': {'rows': rows, 'notes': []}}
+    points = _texts(_run(f'kalkylKeyPoints({{"net": 2, "year": 2030}}, {json.dumps(span)}, ["Varning"])'))
+    assert points[-5:] == [
+        'Drivare 1: 1 km mindre år 2030 än utan åtgärden.',
+        'Drivare 2: 2 km mindre år 2030 än utan åtgärden.',
+        'Drivare 3: 3 km mindre år 2030 än utan åtgärden.',
+        'Och 1 utsläppskälla till under Vad åtgärden ändrar i verksamheten.',
+        'Varning',
+    ]
+    # A saved analysis from before has no activity and reads as it did.
+    old = _texts(_run('kalkylKeyPoints({"net": 2, "year": 2030}, {"net_lo": 1, "net_hi": 3}, [])'))
+    assert not any('km' in p for p in old)

@@ -8,8 +8,10 @@ All emissions are returned in **ton CO2e/year** (kg ÷ 1000).
 """
 from __future__ import annotations
 
+import dataclasses
 import logging
 import math
+import re
 from dataclasses import dataclass
 
 from ..logsafe import log_failure
@@ -49,24 +51,75 @@ class YearResult:
     d_ef: float = 0.0      # ΔEF × adoption
     attribution: float = 1.0  # share of the change the action caused
     charged: float = 1.0      # share of a one-off's lifetime the action brought forward
+    # ΔE this year before a write-off (the manufacture bought this year).
+    # Equal to basis for a driver that is not written off.
+    before_write_off: float = 0.0
 
 
 def _driver_year(drv: Driver, scenario: str, year: int) -> YearResult:
-    """Compute one driver, one scenario, one year. BAU uses the medel trend;
-    the action effect (delta) varies by scenario (min/med/max)."""
-    # In the unit EF0 is per (ton against kg CO2e/kg); 1 when they agree.
+    """Compute one driver, one scenario, one year: _flow_year, and for a
+    driver that is written off (Driver.write_off) its ΔE spread evenly over
+    the lifetime. A year then carries 1/lifetime of what was bought in each
+    year of the lifetime before it, itself included, and the part of a year
+    that remains when the lifetime is no whole number of years; a one-off
+    only up to its catch-up year. The other fields are the year's own."""
+    r = _flow_year(drv, scenario, year)
+    if not drv.write_off or drv.lifetime is None:
+        return r
+    life = drv.lifetime.get(scenario)
+    last = drv.catch_up.get(scenario) if drv.one_off and drv.catch_up is not None else None
+    basis = 0.0
+    if last is None or year <= last:
+        for k in range(0, year - drv.ramp.start_year + 1):
+            w = _write_off_share(life, k)
+            if w <= 0.0:
+                break
+            basis += w * (r.basis if k == 0 else _flow_year(drv, scenario, year - k).basis)
+    terr, cons, overlap, net = _factored(drv, basis)
+    return dataclasses.replace(r, basis=basis, terr=terr, cons=cons, overlap=overlap, net=net)
+
+
+def _write_off_share(lifetime: float, k: int) -> float:
+    """The share of a purchase written off in year k of its lifetime (0 =
+    the purchase year): 1/lifetime in each whole year, then the rest of a
+    lifetime that is no whole number of years, then nothing."""
+    whole = math.floor(lifetime)
+    if k < whole:
+        return 1.0 / lifetime
+    if k == whole:
+        return (lifetime - whole) / lifetime
+    return 0.0
+
+
+def _factored(drv: Driver, basis: float) -> tuple[float, float, float, float]:
+    """Territorial, consumption, overlap and net from ΔE."""
+    terr = basis * drv.terr
+    cons = basis * drv.cons
+    # overlap removed so the same reduction isn't double-counted territorial+consumption
+    overlap = min(abs(basis * drv.overlap), abs(terr), abs(cons))
+    overlap = overlap if basis >= 0 else -overlap
+    return terr, cons, overlap, terr + cons - overlap
+
+
+def _flow_year(drv: Driver, scenario: str, year: int) -> YearResult:
+    """Compute one driver, one scenario, one year, charged the year it
+    happens. BAU uses the medel trend; the action effect (delta) varies by
+    scenario (min/med/max)."""
+    # In the unit EF0 is per (ton against kg CO2e/kg, tusen km against kg
+    # CO2e/km), and EF0 per one of it (per 100 km); 1 when they agree.
     a0 = drv.a0 * drv.a0_scale
+    ef0 = drv.ef0 * drv.ef0_scale
     if drv.one_off:
         # A one-off quantity exists in its own year only, without a trend.
         a_bau = a0 if year == drv.ramp.start_year else 0.0
-        ef_bau = drv.ef0
+        ef_bau = ef0
         adoption = 1.0 if year == drv.ramp.start_year else 0.0
     else:
         dt = year - drv.baseline_year
         g_a = drv.g_a.med   # BAU is the shared reference across action scenarios
         g_ef = drv.g_ef.med
         a_bau = a0 * ((1.0 + g_a) ** dt)
-        ef_bau = drv.ef0 * ((1.0 + g_ef) ** dt)
+        ef_bau = ef0 * ((1.0 + g_ef) ** dt)
         adoption = drv.ramp.adoption(year, scenario)
     e_bau_kg = a_bau * ef_bau
 
@@ -81,16 +134,11 @@ def _driver_year(drv: Driver, scenario: str, year: int) -> YearResult:
     # ton; positive = reduction. Attribution scales the change, never BAU, and
     # so does the brought-forward share of a one-off.
     basis = (e_bau_kg - e_act_kg) / KG_PER_TON * attribution * charged
-    terr = basis * drv.terr
-    cons = basis * drv.cons
-    # overlap removed so the same reduction isn't double-counted territorial+consumption
-    overlap = min(abs(basis * drv.overlap), abs(terr), abs(cons))
-    overlap = overlap if basis >= 0 else -overlap
-    net = terr + cons - overlap
+    terr, cons, overlap, net = _factored(drv, basis)
     return YearResult(year, e_bau_kg / KG_PER_TON, e_act_kg / KG_PER_TON,
                       basis, terr, cons, overlap, net,
                       a_bau=a_bau, ef_bau=ef_bau, adoption=adoption, d_a=d_a, d_ef=d_ef,
-                      attribution=attribution, charged=charged)
+                      attribution=attribution, charged=charged, before_write_off=basis)
 
 
 def _cum_years(model: CalcModel) -> list[int]:
@@ -359,6 +407,12 @@ def _factor(f: float) -> str:
     return f"{round(f):,}".replace(',', ' ')
 
 
+def _qty(x: float, unit: str) -> str:
+    """An amount and its unit; "2 000 × 100 kg" when the unit starts with a
+    number, so that it never reads as one number."""
+    return f"{_num(x)} × {unit}" if unit[:1].isdigit() else f"{_num(x)} {unit}"
+
+
 def unit_warnings(model: CalcModel) -> list[str]:
     """One warning per driver whose A0 and EF0 units do not fit together.
 
@@ -371,16 +425,29 @@ def unit_warnings(model: CalcModel) -> list[str]:
     out: list[str] = []
     for i, d in enumerate(model.drivers, 1):
         who = f"drivare {i} ({d.name})"
-        m = units.mismatch(d.a0_unit, d.ef0_unit)
-        if m is not None and m['kind'] == 'prefix' and d.a0_scale != 1.0:
-            a, e = m['a0'], m['ef0']
+        conv = (units.conversion(d.a0_unit, d.ef0_unit)
+                if d.a0_scale != 1.0 or d.ef0_scale != 1.0 else None)
+        m = conv['mismatch'] if conv is not None else units.plain_mismatch(d.a0_unit, d.ef0_unit)
+        if conv is not None and (m is None or m['kind'] == 'prefix'):
+            # Converted by the engine (calc.units.conversion): ton against kg,
+            # a size word (tusen km) or a factor per a number of units (per
+            # 100 km). Say what was done and how wrong it is if the number
+            # had already been converted.
+            done = []
+            if d.a0_scale != 1.0:
+                done.append(f"aktiviteten: {_qty(d.a0, d.a0_scale_from)} = "
+                            f"{_qty(d.a0 * d.a0_scale, d.a0_scale_unit)}")
+            if d.ef0_scale != 1.0:
+                done.append(f"utsläppsfaktorn: {_num(d.ef0)} {d.ef0_unit} = "
+                            f"{_sig(d.ef0 * d.ef0_scale, 3)} {d.ef0_scale_unit}")
+            total = d.a0_scale * d.ef0_scale
             out.append(
-                f"VARNING: enheterna går inte ihop för {who}: aktiviteten är i {a}, men "
-                f"utsläppsfaktorn gäller per {e}. Kalkylen har räknat om aktiviteten: "
-                f"{_num(d.a0)} {a} = {_num(d.a0 * d.a0_scale)} {e}. Stämmer enheterna i underlaget "
-                "är resultatet rätt nu. Var talet redan omräknat men enheten fel angiven, är "
-                f"resultatet fel med en faktor {_factor(m['factor'])}; kontrollera aktiviteten (A0) "
-                "under Indata per drivare.")
+                f"VARNING: enheterna går inte ihop för {who}: aktiviteten är i {conv['a0_from']}, "
+                f"men utsläppsfaktorn gäller per {conv['ef0_per']}. Kalkylen har räknat om "
+                f"{' och '.join(done)}. Stämmer enheterna i underlaget är resultatet rätt nu. Var "
+                "talet redan omräknat men enheten fel angiven, är resultatet fel med en faktor "
+                f"{_factor(max(total, 1 / total))}; kontrollera aktiviteten (A0) och "
+                "utsläppsfaktorn (EF0) under Indata per drivare.")
         elif m is not None:
             a, e = m['a0'], m['ef0']
             if m['kind'] == 'prefix':
@@ -389,6 +456,10 @@ def unit_warnings(model: CalcModel) -> list[str]:
                 tail = "Det ena går inte att räkna om till det andra, så resultatet kan vara helt fel."
             else:
                 tail = "Resultatet kan vara helt fel."
+            if d.a0_scale != 1.0:
+                # A size word is still converted ("tusen handlare").
+                tail += (f" Kalkylen har räknat om aktiviteten: {_qty(d.a0, d.a0_scale_from)} = "
+                         f"{_qty(d.a0 * d.a0_scale, d.a0_scale_unit)}.")
             out.append(
                 f"VARNING: enheterna går inte ihop för {who}: aktiviteten är i {a}, men "
                 f"utsläppsfaktorn gäller per {e}. {tail} Kontrollera aktiviteten (A0) och "
@@ -446,6 +517,20 @@ def sanity_warnings(result: dict, model: CalcModel | None = None) -> list[str]:
                 out.append(
                     f"OBS: engångsposten {d.name} ({d.ramp.start_year}) ligger efter målåret "
                     f"{model.target_year} och räknas inte.")
+            # A catch-up year at or before the purchase charges that scenario
+            # with at most one year of the lifetime, so the post nearly
+            # vanishes there while the other scenarios carry it. The medel
+            # case is dropped in potential mode (schema.drop_same_year_catch_up);
+            # min or max alone is said, not changed.
+            if d.one_off and d.catch_up is not None and d.lifetime is not None and d.direction() > 0:
+                early = [n for sc, n in (('min', 'min'), ('med', 'medel'), ('max', 'max'))
+                         if d.catch_up.get(sc) <= d.ramp.start_year]
+                if early:
+                    out.append(
+                        f"OBS: engångsposten {d.name}: ikapp-året i {' och '.join(early)} "
+                        f"är inte senare än inköpsåret {d.ramp.start_year}, så posten belastar "
+                        f"{'det scenariot' if len(early) == 1 else 'de scenarierna'} med högst "
+                        "ett år av livslängden. Kontrollera ikapp-åren under Indata per drivare.")
             elif not d.one_off and d.ramp.first_year_share != 1.0 and not d.ramp.first_year_share_used:
                 out.append(
                     f"OBS: {d.name}: andelen av startåret ({_num(d.ramp.first_year_share * 100)} %) "
@@ -753,12 +838,234 @@ def _span(a: int, b: int) -> str:
     return str(a) if a == b else f"{a}–{b}"
 
 
+# --- Vad åtgärden ändrar i verksamheten ---------------------------------------
+#
+# DIN SPEC 91637 5.2 asks that a result can be stated in the activity's own
+# unit (kilometres, litres, m²), so that it can be followed up and set against
+# a goal; the tons alone could not. The engine already has A_BAU and ΔA ×
+# adoption per year. This turns them into one sentence per driver for the
+# target year and the averaging window (2026-11-09, recommendation 2 in
+# the DIN SPEC comparison). The numbers come from _driver_year, attribution and
+# a one-off's charged share included, so the units describe the same change as
+# the tons beside them.
+
+ACTIVITY_HEADING = "**Vad åtgärden ändrar i verksamheten**"
+ACTIVITY_STAMP = "Skrivet av CAIA:s kalkylmotor ur samma tal som tonnen, scenario medel."
+ACTIVITY_INTRO = ("Samma förändring som tonnen, räknad i det som går att följa i "
+                  "verksamheten.")
+_ACTIVITY_LOWER_NOTE = ("Minst: talen räknar med att det som ersätter inte släpper ut något "
+                        "alls. Ger det också utsläpp behöver en större del byta. Blir i stället "
+                        "allt lite renare är talet bara en jämförelse.")
+_ACTIVITY_SHARE_NOTE = ("Talen är åtgärdens egen del av förändringen, med samma andel som "
+                        "tonnen räknas med.")
+_ACTIVITY_WRITE_OFF_NOTE = ("Tillverkning räknas här det år den köps. Tonnen skriver av den "
+                            "jämnt över utrustningens livslängd.")
+# A unit that is itself an emission ("kg CO2e/år", a lumped driver) has no
+# other unit to show: the change in it is the tons again.
+_CO2_UNIT = re.compile(r"co\s*(?:2|₂)", re.IGNORECASE)
+# "100 kr" as a unit: an amount per unit, read as the number times the word
+# so that "50 100 kr" never appears.
+_COUNTED_UNIT = re.compile(r"^(\d+(?:[.,]\d+)?)\s+(\S.*)$")
+# Smaller than this, in the unit shown, is no change.
+_ACTIVITY_EPS = 1e-9
+
+
+def activity_unit(unit_text: str) -> tuple[str, float] | None:
+    """The activity's unit as a reader counts it, and what one unit of A0 is
+    in it. "km/år" -> ("km", 1); "tusen km/år" -> ("km", 1000);
+    "kWh batterikapacitet per år (400 kWh ...)"
+    -> ("kWh batterikapacitet", 1); "100 kr" -> ("kr", 100); "" -> ("enheter",
+    1). None when the unit is an emission (CO2e): its change is the tons."""
+    text = (unit_text or "").split("(")[0]
+    if _CO2_UNIT.search(text):
+        return None
+    part = re.split(r"\s*/\s*|\s+per\s+", text, maxsplit=1, flags=re.IGNORECASE)[0]
+    part = part.strip(" ,.;:")
+    if not part:
+        return ("enheter", 1.0)
+    # "tusen km": counted in km, a thousand to each unit of A0.
+    size, _, rest = units.size_of(part)
+    if size != 1.0 and rest:
+        return (rest, size)
+    m = _COUNTED_UNIT.match(part)
+    if m:
+        return (m.group(2).strip(), float(m.group(1).replace(",", ".")))
+    return (part, 1.0)
+
+
+def _amount(x: float) -> str:
+    """An amount of activity for a reader: two significant digits, space
+    thousands, decimal comma. 108 000 -> '110 000', 1 380 -> '1 400', 0,042 ->
+    '0,042'. The result rests on assumptions; more digits would claim more."""
+    x = abs(x)
+    if x < _ACTIVITY_EPS:
+        return "0"
+    if x >= 100:
+        step = 10 ** (math.floor(math.log10(x)) - 1)
+        return f"{round(x / step) * step:,.0f}".replace(",", " ")
+    return _sig(x, 2)
+
+
+def _share(x: float) -> str:
+    return f"{_sig(abs(x) * 100, 2)} %"
+
+
+def _activity_year(drv: Driver, scenario: str, year: int, factor: float) -> dict:
+    """One driver's activity this year in the unit shown: without the action
+    ('bau'), the action's change in it ('change', negative = less), with the
+    action ('act'), the action's share of the change in emissions per unit
+    ('ef', negative = lower), and the least amount that must go without
+    emissions for that ('zero'). Attribution and a one-off's charged share
+    scale the change as they scale ΔE."""
+    r = _driver_year(drv, scenario, year)
+    k = r.attribution * r.charged
+    bau = r.a_bau / drv.a0_scale * factor
+    act = bau * (1.0 + r.d_a)
+    ef = r.d_ef * k
+    return {'bau': bau, 'change': bau * r.d_a * k, 'act': act, 'ef': ef,
+            'zero': act * -ef if ef < 0 else 0.0}
+
+
+def _more_less(x: float) -> str:
+    return "mindre" if x < 0 else "mer"
+
+
+def _activity_text(drv: Driver, model: CalcModel, unit: str, factor: float) -> tuple[str, bool]:
+    """The sentence for one driver, and whether it states a least amount.
+    '' when the driver changes nothing in its own unit."""
+    window = avg_years(model)
+    when = _span(window[0], window[-1])
+    year = drv.ramp.start_year if drv.one_off else model.target_year
+    at = {sc: _activity_year(drv, sc, year, factor) for sc in SCENARIOS}
+    med = at['med']
+    mean = None
+    if not drv.one_off:
+        ys = [_activity_year(drv, 'med', y, factor) for y in window]
+        mean = {k: sum(v[k] for v in ys) / len(ys) for k in ('change', 'ef', 'zero')}
+    label = f"år {year}"
+    parts = []
+    lower = False
+
+    has_a = any(drv.delta_a.get(sc) != 0 for sc in SCENARIOS)
+    if has_a and (abs(med['change']) > _ACTIVITY_EPS
+                  or (mean is not None and abs(mean['change']) > _ACTIVITY_EPS)):
+        c = med['change']
+        if abs(c) > _ACTIVITY_EPS:
+            text = f"{_amount(c)} {unit} {_more_less(c)} {label} än utan åtgärden"
+            notes = ["engångspost"] if drv.one_off else []
+            if med['bau'] > 0 and not drv.one_off:
+                notes.append(_share(c / med['bau']))
+            ends = sorted(abs(at[sc]['change']) for sc in ('min', 'max'))
+            if (all(at[sc]['change'] * c > 0 for sc in ('min', 'max'))
+                    and _amount(ends[0]) != _amount(ends[1])):
+                notes.append(f"spann {_amount(ends[0])}–{_amount(ends[1])}")
+            if notes:
+                text += f" ({', '.join(notes)})"
+        else:
+            text = f"ingen ändring {label}"
+        if mean is not None:
+            m = mean['change']
+            text += (f", i snitt {_amount(m)} {unit} {_more_less(m)} per år {when}"
+                     if abs(m) > _ACTIVITY_EPS else f", ingen ändring i snitt {when}")
+        parts.append(text)
+
+    has_ef = any(drv.delta_ef.get(sc) != 0 for sc in SCENARIOS)
+    if has_ef and (abs(med['ef']) > _ACTIVITY_EPS
+                   or (mean is not None and abs(mean['ef']) > _ACTIVITY_EPS)):
+        e = med['ef']
+        per = f"utsläppen per {unit}"
+        if e < -_ACTIVITY_EPS:
+            text = (f"{per} är {_share(e)} lägre {label}, som om minst {_amount(med['zero'])} "
+                    f"av {_amount(med['act'])} {unit} gick helt utan utsläpp")
+            if mean is not None:
+                text += (f", i snitt minst {_amount(mean['zero'])} {unit} per år {when}"
+                         if mean['zero'] > _ACTIVITY_EPS else f", ingen ändring i snitt {when}")
+            lower = True
+        elif e > _ACTIVITY_EPS:
+            text = f"{per} är {_share(e)} högre {label}"
+            if mean is not None:
+                m = mean['ef']
+                text += (f", i snitt {_share(m)} {'lägre' if m < 0 else 'högre'} per år {when}"
+                         if abs(m) > _ACTIVITY_EPS else f", ingen ändring i snitt {when}")
+        else:
+            text = f"{per} ändras inte {label}"
+            m = mean['ef']
+            if m < -_ACTIVITY_EPS:
+                text += (f", i snitt {_share(m)} lägre per år {when}, som om minst "
+                         f"{_amount(mean['zero'])} {unit} per år gick helt utan utsläpp")
+                lower = True
+            else:
+                text += f", i snitt {_share(m)} högre per år {when}"
+        parts.append(text)
+    return "; ".join(parts), lower
+
+
+def _plain_line(text: str) -> str:
+    """A driver name on one line: a newline in it would end the bullet."""
+    return " ".join(str(text).split())
+
+
+def activity_changes(model: CalcModel) -> dict:
+    """What the action changes in each driver's own unit (medel scenario).
+
+    Returns {'rows': [{'driver', 'text', 'weight'}], 'notes': [...]}. 'text'
+    follows the driver's name and a colon; 'weight' is the absolute net of the
+    driver in the year its text is about, for a reader that shows only the
+    largest. A driver with no ΔA or ΔEF in any scenario is left out; one whose
+    activity is counted in emissions says so."""
+    rows = []
+    lower = shared = written = False
+    for drv in model.drivers:
+        if all(drv.delta_a.get(sc) == 0 and drv.delta_ef.get(sc) == 0 for sc in SCENARIOS):
+            continue
+        year = drv.ramp.start_year if drv.one_off else model.target_year
+        # A written-off one-off's text is about the whole purchase, so it is
+        # weighed by the purchase, not by the first year's share of it.
+        flow = _flow_year if drv.one_off and drv.write_off else _driver_year
+        weight = abs(flow(drv, 'med', year).net)
+        name = _plain_line(drv.name)
+        unit = activity_unit(drv.a0_unit)
+        if unit is None:
+            rows.append({'driver': name, 'weight': weight,
+                         'text': "räknas direkt i utsläpp, så det finns ingen annan enhet att visa"})
+            continue
+        text, low = _activity_text(drv, model, *unit)
+        if not text:
+            continue
+        rows.append({'driver': name, 'text': text, 'weight': weight})
+        lower = lower or low
+        shared = shared or not _is_one(drv.attribution) or drv.charged_share('med') != 1.0
+        written = written or drv.write_off
+    notes = (([_ACTIVITY_LOWER_NOTE] if lower else []) + ([_ACTIVITY_SHARE_NOTE] if shared else [])
+             + ([_ACTIVITY_WRITE_OFF_NOTE] if written else []))
+    return {'rows': rows, 'notes': notes}
+
+
+def render_activity(model: CalcModel, changes: dict | None = None) -> str:
+    """The section as markdown, or '' when no driver changes anything. The
+    kalkyl text carries it between the result and the appendix, and
+    /api/rapport moves it into the report beside the tons (caia.appendix)."""
+    changes = activity_changes(model) if changes is None else changes
+    if not changes['rows']:
+        return ""
+    lines = [ACTIVITY_HEADING, "", ACTIVITY_INTRO, ""]
+    lines += [f"- {r['driver']}: {r['text']}." for r in changes['rows']]
+    lines += [""] + changes['notes'] + ([""] if changes['notes'] else []) + [f"*{ACTIVITY_STAMP}*"]
+    return "\n".join(lines)
+
+
 def _inputs(drv: Driver) -> str:
     """One driver's inputs as the engine used them, shared by the kalkyl text
     and the appendix so the two cannot describe different inputs. The parts
     after the ramp appear only when the analysis set them, so a potential
     analysis reads exactly as before."""
-    if drv.one_off:
+    if drv.one_off and drv.write_off:
+        timing = (f"engångspost {drv.ramp.start_year}, livslängd {_years(drv.lifetime)}, "
+                  "skrivs av jämnt över livslängden")
+        if drv.catch_up is not None and drv.catch_up.med < UNBOUNDED_YEAR:
+            source = " (nyttans sista år)" if drv.catch_up_from else ""
+            timing += f" till och med ikapp-år {_show_year(drv.catch_up.med)}{source}"
+    elif drv.one_off:
         timing = f"engångspost {drv.ramp.start_year}"
         if drv.lifetime is not None:
             timing += f", livslängd {_years(drv.lifetime)}"
@@ -787,6 +1094,9 @@ def _inputs(drv: Driver) -> str:
                            else f", sista året verkar {' / '.join(ends)} (min / medel / max)")
         if drv.ramp.half_life is not None:
             timing += f", avklingning med halveringstid {_years(drv.ramp.half_life)}"
+        if drv.write_off:
+            timing += (f"; livslängd {_years(drv.lifetime)}, varje års tillverkning skrivs av "
+                       "jämnt över livslängden")
     extra = ""
     if not _is_one(drv.attribution):
         extra += f"; attribution {_band(drv.attribution)}"
@@ -794,10 +1104,12 @@ def _inputs(drv: Driver) -> str:
         extra += f"; köpt med bidragsår {drv.grant_year}"
     if drv.pot is not None:
         extra += f"; utsläppspott {drv.pot}"
-    scaled = (f" (räknat som {_num(drv.a0 * drv.a0_scale)} {drv.a0_scale_unit})"
+    scaled = (f" (räknat som {_qty(drv.a0 * drv.a0_scale, drv.a0_scale_unit)})"
               if drv.a0_scale != 1.0 else "")
+    ef_scaled = (f" (räknat som {_sig(drv.ef0 * drv.ef0_scale, 3)} {drv.ef0_scale_unit})"
+                 if drv.ef0_scale != 1.0 else "")
     return (f"A0 {_num(drv.a0)} {drv.a0_unit}".rstrip() + scaled
-            + f", EF0 {_num(drv.ef0)} {drv.ef0_unit}; "
+            + f", EF0 {_num(drv.ef0)} {drv.ef0_unit}" + ef_scaled + "; "
             f"ΔA {_band(drv.delta_a)}, ΔEF {_band(drv.delta_ef)}; "
             # The medel only: it is the one the engine uses, in all three scenarios.
             + ("" if drv.one_off else
@@ -842,6 +1154,8 @@ _ONE_OFF_BANDED = (
     ('lifetime', "livslängd"),
     ('catch_up', "ikapp-år"),
 )
+# Timing fields that sit on the driver, not on its ramp.
+_DRIVER_TIMING = frozenset(f for f, _ in _ONE_OFF_BANDED)
 # Where a field's origin is stated in `kallor`, when the name differs.
 _KALLA_KEY = {'catch_up': 'end_year'}
 # An input that alone moves the cumulative result by this share of the
@@ -873,13 +1187,18 @@ def bearing(model: CalcModel, result: dict) -> dict:
                   if not drv.one_off]
         if drv.one_off and drv.lifetime is not None and drv.catch_up is not None:
             bands += [(f, label, getattr(drv, f), True) for f, label in _ONE_OFF_BANDED]
+        elif drv.write_off:
+            # Annual purchases, or a one-off without a catch-up year: the
+            # lifetime alone sets how much of the manufacture a year carries.
+            bands.append(('lifetime', "livslängd", drv.lifetime, True))
         for field, label, band, on_ramp in bands:
             if band is None or band.min == band.max:
                 continue
             ends = []
             for v in (band.min, band.max):
                 m = copy.deepcopy(model)
-                target = m.drivers[i].ramp if on_ramp and not drv.one_off else m.drivers[i]
+                target = (m.drivers[i].ramp if on_ramp and field not in _DRIVER_TIMING
+                          else m.drivers[i])
                 setattr(target, field, Triple(v, v, v))
                 ends.append(_cum_med(m))
             kalla = drv.kallor.get(_KALLA_KEY.get(field, field))
@@ -991,7 +1310,8 @@ def render_appendix(model: CalcModel, result: dict) -> str:
     follow_up = model.mode == UPPFOLJNING
     attributed = any(not _is_one(d.attribution) for d in model.drivers)
     charged = any(d.one_off and d.lifetime is not None and d.catch_up is not None
-                  for d in model.drivers)
+                  and not d.write_off for d in model.drivers)
+    written = any(d.write_off for d in model.drivers)
     lines = [
         APPENDIX_HEADING,
         "",
@@ -1022,7 +1342,10 @@ def render_appendix(model: CalcModel, result: dict) -> str:
                      "år, utan trend och utan ramp.")
     if any(d.a0_scale != 1.0 for d in model.drivers):
         lines.append("- Är aktiviteten angiven i en annan storlek än den utsläppsfaktorn gäller per "
-                     "(ton mot kg), räknas A0 först om till faktorns enhet.")
+                     "(ton mot kg, tusen km mot km), räknas A0 först om till faktorns enhet.")
+    if any(d.ef0_scale != 1.0 for d in model.drivers):
+        lines.append("- Gäller utsläppsfaktorn per ett antal enheter (per 100 km), räknas EF0 först "
+                     "om till per enhet.")
     if charged:
         lines.append("- En engångspost som är utrustning, och som insatsen bara köpte tidigare än "
                      "den annars hade köpts, belastar insatsen med andelen (ikapp-år + 1 − köpår) / "
@@ -1040,6 +1363,17 @@ def render_appendix(model: CalcModel, result: dict) -> str:
             if attributed else "")
          + ". Positivt tal är minskade utsläpp." if factors else
          "- ΔE = E_BAU − E_åtgärd. Positivt tal är minskade utsläpp."),
+    ]
+    if written:
+        lines.append(
+            "- Tillverkning av utrustning med en livslängd skrivs av jämnt över livslängden. För "
+            "en sådan drivare är talet ovan ΔE före avskrivning, det som köps det året, och ΔE "
+            "ett år är summan av 1 / livslängd av ΔE före avskrivning för vart och ett av "
+            "livslängdens år bakåt, året självt inräknat. Är livslängden inget helt antal år "
+            "bär det sista året den del som återstår. En engångspost skrivs av till och med "
+            "ikapp-året, när ett sådant finns. Så bär varje år en årlig andel av tillverkningen, "
+            "i stället för att hela hamnar det år den köps.")
+    lines += [
         "- Territoriell = ΔE × territoriell faktor, konsumtion = ΔE × konsumtionsfaktor, "
         "överlapp = det minsta av |ΔE × överlappsfaktor|, |territoriell| och |konsumtion|, med "
         "ΔE:s tecken. Netto = territoriell + konsumtion − överlapp.",
@@ -1064,7 +1398,7 @@ def render_appendix(model: CalcModel, result: dict) -> str:
                   else drv.a0_unit)
         unit = (" ({})".format(a_unit.replace("\\", "\\\\").replace("|", "\\|"))
                 if a_unit else "")
-        width = 13 + attributed + charged
+        width = 13 + attributed + charged + written
         for sc, label in SCENARIO_LABELS:
             lines += [
                 "",
@@ -1074,6 +1408,7 @@ def render_appendix(model: CalcModel, result: dict) -> str:
                 "ΔA × adoption | ΔEF × adoption | E_åtgärd (ton) | "
                 + ("Attribution | " if attributed else "")
                 + ("Andel av livslängden | " if charged else "")
+                + ("ΔE före avskrivning (ton) | " if written else "")
                 + "ΔE (ton) | Territoriell | Konsumtion | Överlapp | Netto |",
                 "|" + "---|" * width,
             ]
@@ -1084,6 +1419,7 @@ def render_appendix(model: CalcModel, result: dict) -> str:
                     f"{_pct(r.adoption)} | {_pct(r.d_a)} | {_pct(r.d_ef)} | {_ton(r.e_action)} | "
                     + (f"{_pct(r.attribution)} | " if attributed else "")
                     + (f"{_pct(r.charged)} | " if charged else "")
+                    + (f"{_ton(r.before_write_off)} | " if written else "")
                     + f"{_ton(r.basis)} | {_ton(r.terr)} | {_ton(r.cons)} | {_ton(r.overlap)} | "
                     f"{_ton(r.net)} |")
 

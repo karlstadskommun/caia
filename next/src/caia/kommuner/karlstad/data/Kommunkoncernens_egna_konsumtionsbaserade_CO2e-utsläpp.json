@@ -1,0 +1,390 @@
+{
+  "description": "Detta gäller Karlstads kommuns utsläpp av växthusgaser, konsumtionsbaserade utsläpp, från sina egna verksamheter för år 2022.",
+  "data": [
+    {
+      "Huvudkategori": "Energi",
+      "Kategori": "El",
+      "Kg CO2e": 10217811
+    },
+    {
+      "Huvudkategori": "Energi",
+      "Kategori": "El, gas, värme och kyla",
+      "Kg CO2e": 7948879
+    },
+    {
+      "Huvudkategori": "Energi",
+      "Kategori": "Fjärrvärme",
+      "Kg CO2e": 4925248
+    },
+    {
+      "Huvudkategori": "Energi",
+      "Kategori": "Stenkolsprodukter och raffinerade petroleumprodukter",
+      "Kg CO2e": 298016
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Husbyggande",
+      "Kg CO2e": 37748815
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Specialiserade bygg- och anläggningstjänster",
+      "Kg CO2e": 14219554
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Anläggningsarbeten",
+      "Kg CO2e": 9788456
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Köp, hyra och förvaltning av fastigheter",
+      "Kg CO2e": 7029517
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Vattenförsörjning",
+      "Kg CO2e": 877085
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Fastighetsservice samt skötsel och underhåll av grönytor",
+      "Kg CO2e": 808746
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Avfallshantering och återvinning",
+      "Kg CO2e": 436116
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Avloppsrening",
+      "Kg CO2e": 7207
+    },
+    {
+      "Huvudkategori": "Fastigheter & Anläggningsarbeten",
+      "Kategori": "Föroreningsbekämpning samt sanering av vatten och jord",
+      "Kg CO2e": 2153
+    },
+    {
+      "Huvudkategori": "Mat & logi",
+      "Kategori": "Livsmedel",
+      "Kg CO2e": 8152513
+    },
+    {
+      "Huvudkategori": "Mat & logi",
+      "Kategori": "Restaurang och catering",
+      "Kg CO2e": 631243
+    },
+    {
+      "Huvudkategori": "Mat & logi",
+      "Kategori": "Hotell och övernattning",
+      "Kg CO2e": 392979
+    },
+    {
+      "Huvudkategori": "Mat & logi",
+      "Kategori": "Drycker",
+      "Kg CO2e": 6897
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Utbildning",
+      "Kg CO2e": 11312919
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Öppna sociala insatser",
+      "Kg CO2e": 9452082
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Vård och omsorg",
+      "Kg CO2e": 2949578
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Administration och offentlig förvaltning",
+      "Kg CO2e": 2474339
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Juridiska och ekonomiska konsulttjänster",
+      "Kg CO2e": 2182774
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Dataprogrammering, datakonsulter samt andra IT- och datatjänster",
+      "Kg CO2e": 2158026
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Stödtjänster till finansiella tjänster och försäkring",
+      "Kg CO2e": 2037674
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Konsulttjänster inom arkitektur och teknik inkl. teknisk provning och analys",
+      "Kg CO2e": 1884894
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "PR, kommunikation, mm",
+      "Kg CO2e": 1330576
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Hälso- och sjukvård",
+      "Kg CO2e": 1046213
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Konst, kultur och underhållning",
+      "Kg CO2e": 1009476
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Kontorstjänster och andra företagstjänster",
+      "Kg CO2e": 761442
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Telekommunikation",
+      "Kg CO2e": 623836
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Intresseorganisationer",
+      "Kg CO2e": 523597
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Hyra och leasing av motorfordon, maskiner, utrustning, mm",
+      "Kg CO2e": 384716
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Säkerhets- och bevakningstjänster",
+      "Kg CO2e": 324532
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Tjänster inom juridik, ekonomi, vetenskap och teknik",
+      "Kg CO2e": 320486
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Sport, fritid och nöjen",
+      "Kg CO2e": 265211
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Reparation och installation av maskiner och apparater",
+      "Kg CO2e": 229056
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Reklam och marknadsundersökningar",
+      "Kg CO2e": 142780
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Post och kurirtjänster",
+      "Kg CO2e": 103975
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Finansiella tjänster (ej försäkring)",
+      "Kg CO2e": 90420
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Informationstjänster",
+      "Kg CO2e": 69856
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Arbetsförmedling, bemanning och andra personalrelaterade tjänster",
+      "Kg CO2e": 60819
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Diverse konsumenttjänster",
+      "Kg CO2e": 44923
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Reparation av datorer, kommunikationsutrustning, mm",
+      "Kg CO2e": 41625
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Bibliotek, arkiv och museum",
+      "Kg CO2e": 34497
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Vetenskaplig forskning och utveckling",
+      "Kg CO2e": 31921
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Försäkring",
+      "Kg CO2e": 24625
+    },
+    {
+      "Huvudkategori": "Tjänster",
+      "Kategori": "Veterinär",
+      "Kg CO2e": 245
+    },
+    {
+      "Huvudkategori": "Transport & resor",
+      "Kategori": "Bil, buss och tåg",
+      "Kg CO2e": 5888782
+    },
+    {
+      "Huvudkategori": "Transport & resor",
+      "Kategori": "Magasinering och stödtjänster till transport",
+      "Kg CO2e": 839771
+    },
+    {
+      "Huvudkategori": "Transport & resor",
+      "Kategori": "Resebyrå och andra resetjänster",
+      "Kg CO2e": 647464
+    },
+    {
+      "Huvudkategori": "Transport & resor",
+      "Kategori": "Båt",
+      "Kg CO2e": 3297
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Datorer, elektronikvaror och optik",
+      "Kg CO2e": 3370180
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Icke-metalliska mineraliska produkter",
+      "Kg CO2e": 3109978
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Möbler",
+      "Kg CO2e": 3039207
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Farmaceutiska basprodukter och läkemedel",
+      "Kg CO2e": 1764797
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Motorfordon, släpfordon och påhängsvagnar",
+      "Kg CO2e": 1665285
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Kemikalier och kemiska produkter",
+      "Kg CO2e": 1311297
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Dagstidningar och andra tryckta grafiska varor",
+      "Kg CO2e": 1258789
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Maskiner, motorer, ventiler, lager, pumpar, mm",
+      "Kg CO2e": 746352
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Böcker, tidskrifter, programvaror, mm",
+      "Kg CO2e": 231280
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Elapparatur",
+      "Kg CO2e": 213545
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Andra varor",
+      "Kg CO2e": 144822
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Gummi- och plastvaror",
+      "Kg CO2e": 115204
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Metallvaror (ej maskiner och apparater)",
+      "Kg CO2e": 109821
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Varor av trä, kork och rotting (ej möbler)",
+      "Kg CO2e": 107457
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Andra transportmedel",
+      "Kg CO2e": 84509
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Film, video, ljudinspelningar, mm",
+      "Kg CO2e": 76065
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Kläder",
+      "Kg CO2e": 43877
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Textilvaror",
+      "Kg CO2e": 34442
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Papper och pappersvaror",
+      "Kg CO2e": 6899
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Stål och metall",
+      "Kg CO2e": 6263
+    },
+    {
+      "Huvudkategori": "Varor",
+      "Kategori": "Läder- och skinnvaror",
+      "Kg CO2e": 122
+    },
+    {
+      "Huvudkategori": "Övrigt",
+      "Kategori": "Jordbruk och lantbruk",
+      "Kg CO2e": 701288
+    },
+    {
+      "Huvudkategori": "Övrigt",
+      "Kategori": "Skogsbruk",
+      "Kg CO2e": 43755
+    },
+    {
+      "Huvudkategori": "Övrigt",
+      "Kategori": "Utvinning av andra mineraler (ej metall)",
+      "Kg CO2e": 35405
+    },
+    {
+      "Huvudkategori": "Övrigt",
+      "Kategori": "Radio- och TV-program",
+      "Kg CO2e": 1844
+    },
+    {
+      "Huvudkategori": "Övrigt",
+      "Kategori": "Okategoriserat",
+      "Kg CO2e": 489
+    }
+  ]
+}

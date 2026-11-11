@@ -6,8 +6,8 @@ authors:
   - family-names: Barkman
     given-names: Henric
     affiliation: Karlstads kommun
-version: 1.0.1
-date-released: 2026-11-09
+version: 1.1.0
+date-released: 2026-11-10
 license: EUPL-1.2
 repository-code: "https://github.com/karlstadskommun/caia"
 abstract: >-

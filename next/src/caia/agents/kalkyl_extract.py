@@ -158,6 +158,36 @@ KLIMATFAKTORER (terr, cons, overlap):
   tumreglerna i enhetskontraktet gäller när analysen inte anger faktorerna.
 """
 
+# Potential mode only (the follow-up block has its own lifetime rules). Until
+# 1.1 a forecast booked the whole manufacture of equipment the year it was
+# bought: tjänstebilar's net in 2030 fell from 116 to 15 ton when the
+# extraction began to count the cars' manufacture, with the territorial
+# benefit unchanged at about 120 (2026-11-09). Henric 2026-11-10: write it
+# off over the lifetime, as the follow-up already does. In the 1.1 reference
+# run two of five readouts took the fleet's renewal cycle ("förnyelse på cirka
+# 3 år") as the cars' lifetime, which put the whole manufacture back in 2030
+# (net 15 ton again); hence the sentence on what a lifetime is not.
+_LIFETIME = r"""
+UTRUSTNING SOM TILLVERKAS (lifetime):
+- En drivare som räknar tillverkning eller byggande av utrustning som används i flera år
+  (fordon, batterier, maskiner, laddpunkter, solceller) och som ökar utsläppen får
+  "lifetime": {"min", "med", "max"}, utrustningens livslängd i år enligt analysen, KORTAST i
+  min (en kortare livslängd ger varje år en större andel). Kalkylen skriver av tillverkningen
+  jämnt över livslängden, så att varje år bär en årlig andel av den i stället för att hela
+  hamnar det år den köps. Ange källan i "kallor"."lifetime"; saknar analysen livslängd, gör
+  ett rimligt antagande och skriv det i "not".
+- Livslängden är hur många år utrustningen används innan den skrotas, inte hur länge
+  kommunen eller hushållet behåller den. En förnyelsecykel, en leasingtid eller en
+  avskrivningstid i bokföringen är inte livslängden: en tjänstebil som byts efter tre år
+  rullar vidare hos nästa ägare, så livslängden är bilens.
+- Köps utrustningen löpande (bilar som byts varje år): en årlig drivare med det som köps per
+  år som a0, som förut. Köps den en gång (laddpunkter som byggs ett visst år): "kind":
+  "engång", "year" = året den köps, a0 = mängden, ef0 = kg CO2e per enhet och delta_a = 1
+  när hela mängden tillkommer genom åtgärden, utan ramp.end_year. Lägg aldrig en
+  engångsinvestering som en årlig drivare: då räknas den en gång per år.
+- Ingen lifetime på en drivare som minskar utsläppen, eller på drift, el och bränsle.
+"""
+
 _TAIL = r"""
 REGLER:
 - Använd talen från analysen. Saknas ett värde: gör ett tydligt rimligt antagande utifrån
@@ -165,7 +195,7 @@ REGLER:
 - En drivare per utsläppsdrivare som åtgärden påverkar. Hoppa över opåverkade drivare.
 - Inget annat än JSON-objektet i svaret."""
 
-SYSTEM_PROMPT = _HEAD + _FLOOR + _BASE + _FACTORS + _TAIL
+SYSTEM_PROMPT = _HEAD + _FLOOR + _BASE + _FACTORS + _LIFETIME + _TAIL
 # The follow-up prompt has the factor rule but not the other two. Measured
 # 2026-11-08 on four approved follow-up analyses (omgång 5 of the driftsmedel
 # packages), four extractions each: without the rule, an approved

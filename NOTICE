@@ -15,15 +15,42 @@ European Union L 128, 19.5.2017, p. 59.
 
 Data and third-party material: see "Licence" and "Data" in README.md.
 
-Karlstad's municipality profile and its data files are not part of this
-release. Some of them come from third parties under their own terms, among
-them Konsumtionskompassen (Stockholm Environment Institute, CC BY-NC-ND 4.0),
-which cannot be distributed under the EUPL. A municipality that wants
-consumption-based data exports its own from https://konsumtionskompassen.se/
-and cites it as "Stockholm Environment Institute (SEI), Konsumtionskompassen,
-2025".
+Third-party data
+----------------
+The EUPL covers the code and documentation in this repository. These data
+files in Karlstad's municipality profile keep their own terms:
 
-The Svalna figure in docs/METOD.md (consumption-based emissions from the
-municipal group's building construction, 2022) and the figures from Karlstads
-kommun's citizen survey 2024 quoted in the exempel profile come from work
-Karlstads kommun commissioned itself. They are the municipality's own data.
+next/src/caia/kommuner/karlstad/data/Kommunrapport_karlstad_vaxthusgaser_totalt.csv
+  Source: SMHI, Nationella emissionsdatabasen (data from SMED, commissioned
+  by Naturvårdsverket), county report 2025-04-04. Licence: CC BY 4.0.
+  Changed: the Swedish letters å, ä and ö in the labels are replaced by the
+  replacement character U+FFFD; CAIA repairs the labels when it reads the
+  file. The figures are unchanged.
+
+next/src/caia/kommuner/karlstad/data/energianvandning_bostader_karlstad.csv
+  Source: SCB, Kommunal och regional energistatistik, table EN0203A, 2022
+  (rows Småhus, Flerbostadshus, Fritidshus). Licence: CC0. The rows Totalt
+  and Per person are calculated by Karlstads kommun.
+
+The parameter library (parameters_library.md) quotes individual figures from
+Resvaneundersökning Region Värmland 2023, municipal report Karlstad (Region
+Värmland and Enkätfabriken), with figure and page for each. The report
+itself is not included.
+
+Karlstads kommun's own data
+---------------------------
+The municipal group's consumption-based emissions 2022
+(Kommunkoncernens_egna_konsumtionsbaserade_CO2e-utsläpp.json, calculated by
+Svalna on the municipality's commission, also quoted in docs/METOD.md and
+potter.toml) and the citizen survey 2024 (medborgarundersokning_karlstad_2024.csv,
+also quoted in the exempel profile) are the municipality's own data, released
+with the code under the EUPL.
+
+Not included
+------------
+Karlstad's installation also reads five files from Konsumtionskompassen
+(Stockholm Environment Institute), licensed CC BY-NC-ND 4.0, which cannot be
+distributed under the EUPL. Without them the profile's CONS_* rows use their
+standard values. A municipality that wants consumption-based data exports its
+own from https://konsumtionskompassen.se/ and cites it as "Stockholm
+Environment Institute (SEI), Konsumtionskompassen, 2025".

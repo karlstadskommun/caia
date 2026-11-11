@@ -21,7 +21,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 import anthropic
-from flask import Flask, jsonify, redirect, render_template_string, request, session, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask.logging import default_handler, has_level_handler
 from werkzeug.exceptions import HTTPException
 
@@ -47,7 +47,8 @@ from caia.agents.kalkyl_extract import run_kalkyl_extract
 from caia.agents.rapport import run_rapport
 from caia.api_client import ConfigError, ModelOutputError
 from caia.appendix import with_engine_appendix
-from caia.calc import CalcModel, compute, portfolj, render_appendix, render_markdown
+from caia.calc import (CalcModel, activity_changes, compute, portfolj, render_activity,
+                        render_appendix, render_markdown)
 from caia.calc.engine import APPENDIX_HEADING, AVG_WINDOW, sanity_warnings, year_series
 from caia.calc.portfolj import PortfoljError
 from caia.calc.schema import plain
@@ -87,8 +88,8 @@ LICENSE_NOTE = 'Öppen källkod under EUPL 1.2.'
 PAGE_LIBS = {
     'marked': ('https://cdn.jsdelivr.net/npm/marked@14.1.3/marked.min.js',
                'sha384-k8o8HikHweyzW55Wd3wl18ovJj6vHVYNQeQbeSM0fxx+0WiH4TcccOG9uz8Xd2JR'),
-    'dompurify': ('https://cdn.jsdelivr.net/npm/dompurify@3.4.16/dist/purify.min.js',
-                  'sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL'),
+    'dompurify': ('https://cdn.jsdelivr.net/npm/dompurify@3.4.17/dist/purify.min.js',
+                  'sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx'),
     '@supabase/supabase-js': (
         'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js',
         'sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o'),
@@ -128,6 +129,19 @@ def _param_names() -> dict[str, str]:
         if r.get('id') and name:
             names[r['id']] = name
     return names
+
+
+# render_template_string compiles its source on every call, and the page is
+# 260 kB of template: 29 of the 33 ms a page view took. Each page is compiled
+# once per process and rendered with the request's own context.
+_compiled: dict = {}
+
+
+def _render(source: str, **context) -> str:
+    template = _compiled.get(source)
+    if template is None:
+        template = _compiled[source] = app.jinja_env.from_string(source)
+    return render_template(template, **context)
 
 
 def _page_context() -> dict:
@@ -1000,9 +1014,18 @@ MAX_HISTORY_TURNS = 120
 # 41 288. Both caps are a little over twice that, room for a few feedback
 # rounds on a long analysis.
 MAX_HISTORY_CHARS = 400_000
-MAX_TURN_CHARS = 100_000
-# The evidens parts sent to the merge, together (see api_evidens_merge).
-MAX_PARTS_CHARS = MAX_TURN_CHARS
+# One turn. The total above is what bounds the tokens a call can carry; this
+# one keeps a single paste from being the whole of it. It was 100 000 until
+# 2026-11-10, which the server's own kalkyl text passed: the engine's appendix
+# has a row per driver, scenario and year, so twelve drivers to 2045 gave
+# 112 000 characters and the next step refused the history ("Tur 11 är för
+# lång"). 200 000 holds twelve drivers to the middle of the 2060s; a kalkyl
+# longer than that is refused where it is made (see api_kalkyl).
+MAX_TURN_CHARS = 200_000
+# The evidens parts sent to the merge, together and each (see
+# api_evidens_merge). They are model input outside the history's total, so
+# they keep their own cap.
+MAX_PARTS_CHARS = 100_000
 
 
 def _history(data) -> list[dict]:
@@ -2295,7 +2318,18 @@ async function saveNewPassword() {
 
 async function signOut() { if (supabaseClient) await supabaseClient.auth.signOut(); }
 
+// The page keeps an analysis through a sign-out, so that the same person can
+// sign in again and go on (a session can run out at a gate). Another account
+// signing in on the same page used to find it too: the chat, the steps and
+// the report of the person before.
+let lastUserId = null;
 async function onLogin(session) {
+  if (lastUserId && session.user.id !== lastUserId) {
+    resetAll();
+    // The saved list of the person before stood until the new one had loaded.
+    const list = document.getElementById('savedList'); if (list) list.innerHTML = '';
+  }
+  lastUserId = session.user.id;
   currentUser = session.user;
   const ue = document.getElementById('userEmail'); if (ue) ue.textContent = currentUser.email;
   showApp(); loadSavedList();
@@ -2362,6 +2396,7 @@ async function loadSavedList() {
   }
 }
 
+let openSavedSeq = 0;
 async function openSaved(id) {
   document.getElementById('savedMenu').style.display = 'none';
   // Opening a saved report clears the panel a live analysis draws into, and
@@ -2370,15 +2405,26 @@ async function openSaved(id) {
   // must not cost the work it was asked to replace.
   const discard = analysisInProgress();
   if (discard && !confirmDiscard()) return;
+  // The answer can be slow. Only the last report asked for is shown, and not
+  // after "Ny analys": two clicks used to show whichever answered last.
+  const seq = ++openSavedSeq, token = runToken;
   try {
     const r = await authFetch('/api/reports/' + encodeURIComponent(id));
     const row = await r.jsonSafe();
+    if (seq !== openSavedSeq || token !== runToken) return;
     if (!r.ok || !row || !row.formatted_report) { addSystem('Kunde inte öppna analysen: ' + ((row && row.error) || 'okänt fel'), true); return; }
+    // An analysis begun while the report was on its way was never asked
+    // about, so the report does not replace it.
+    if (!discard && analysisInProgress()) return;
     if (discard) resetAll();
     state.reportMarkdown = row.formatted_report;
     // Another report: the parts start closed again. Its own QA status is in
     // its text, not in the last live run's verdict.
     reportOpen.clear();
+    // The number above the report is this row's or none. A row without one
+    // (the calc fell back to the model) used to stand under the number of
+    // the analysis or report shown before it.
+    hideHero();
     showReport(row.formatted_report, row.key_metric, {name: row.action_name});
     // The saved row has no mode; a follow-up report says so under its title.
     setHeroLabel(/Analysläge:\s*uppföljning/i.test(row.formatted_report) ? 'uppfoljning' : 'potential', null,
@@ -2856,6 +2902,7 @@ const FIELD_LABELS = [
   [/^utsläppstyp$/, 'Slag av utsläpp'],
   [/^locus$/, 'Var utsläppen uppstår'],
   [/^sektor$/, 'Sektor'],
+  [/^aktivitetsförändring$/, 'Aktivitetsförändring enligt DIN SPEC 91637'],
   [/^overlapp_risk$/, 'Risk för dubbelräkning'],
 ];
 // The three tiers as the baslinje prompt defines them (agents/baslinje_bau.py).
@@ -3021,7 +3068,7 @@ const EMAP_CLASS_LABELS = [
   [/effektkategori/i, 'Typ av effekt'],
 ];
 const EMAP_MECHANISM = {avoid: 'Undvika (Avoid)', shift: 'Byta (Shift)', improve: 'Förbättra (Improve)'};
-const EMAP_DRIVER_FIELDS = ['aktivitet_matt', 'EF_enhet', 'utsläppstyp', 'locus', 'sektor', 'mekanism', 'overlapp_risk'];
+const EMAP_DRIVER_FIELDS = ['aktivitet_matt', 'EF_enhet', 'utsläppstyp', 'locus', 'sektor', 'mekanism', 'aktivitetsförändring', 'overlapp_risk'];
 // Since 2026-10-13 the mechanism is given per driver ("Shift, ΔA: ..."); a
 // saved report from before has one for the whole measure, among the classes.
 function emapMechanism(text) {
@@ -3183,6 +3230,9 @@ function emapDriverHtml(d) {
   return '<li class="em-driver"><div class="em-dname"><span class="em-dnum">' + escapeHtml(d.num) + '</span>' +
     '<span>' + escapeHtml(d.name) + '</span></div>' + eq + mechHtml +
     (f.sektor ? '<p class="em-sector">Sektor: ' + escapeHtml(f.sektor) + '</p>' : '') +
+    // DIN SPEC 91637 annex C, since 1.1 (agents/emap.py).
+    (f['aktivitetsförändring'] ? '<p class="em-sector">Aktivitetsförändring enligt DIN SPEC 91637: ' +
+      escapeHtml(f['aktivitetsförändring']) + '</p>' : '') +
     emapRisk(f.overlapp_risk) +
     (d.rest.length ? '<div class="em-rest">' + renderMarkdownWithChips(d.rest.join('\n')) + '</div>' : '') +
     '</li>';
@@ -3434,6 +3484,14 @@ function kalkylKeyPoints(headline, span, warnings) {
   }
   if (span && span.cum_net != null) points.push('Sammanlagt till ' + (span.target_year || 'målåret') + ': ' +
     (headline.year && span.cum_net < 0 ? change(span.cum_net) : fmt(span.cum_net) + ' ton') + ' CO₂e.');
+  // What the change is in the activity's own unit, written by the engine
+  // (calc.engine.activity_changes), largest drivers first.
+  const act = span && span.activity;
+  if (act && act.rows && act.rows.length) {
+    act.rows.slice(0, 3).forEach(r => points.push(wordsUpTo(r.driver, 70) + ': ' + r.text + '.'));
+    if (act.rows.length > 3) points.push('Och ' + (act.rows.length - 3) +
+      (act.rows.length - 3 === 1 ? ' utsläppskälla' : ' utsläppskällor') + ' till under Vad åtgärden ändrar i verksamheten.');
+  }
   (warnings || []).forEach(t => points.push({warn: true, text: t}));
   return points;
 }
@@ -4252,6 +4310,11 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text || state.running) return;
 
+  // A first message with a saved report on screen starts a new analysis.
+  // openSaved hides the feed the steps draw into, so the analysis ran unseen
+  // behind the old report and its number, gates included.
+  if (state.phase === 'idle' && state.history.length === 0 && state.reportMarkdown) resetAll();
+
   input.value = ''; input.style.height = 'auto';
   addUser(text);
   lockMode(true);
@@ -4499,8 +4562,24 @@ function renderStepOutput(step, data) {
     }
   } catch (e) { keyPoints = ''; }
   panelStepDone(step, step === 'kalkyl' ? withKallmarkering(parts.panel, data.kallmarkering_md) : parts.panel, keyPoints);
-  if (step === 'kalkyl' && data.headline) renderKalkylHero(data.headline, data.span, data.warnings);
+  if (step === 'kalkyl') {
+    if (data.headline) renderKalkylHero(data.headline, data.span, data.warnings);
+    // The language model computed this one (the engine could not read the
+    // form): the number, range and warnings of an earlier kalkyl in the same
+    // run must not stand above it. A retry after a failed QA runs the kalkyl
+    // again and can end here.
+    else hideHero();
+  }
   return parts;
+}
+
+// Take the number down, with what belongs to it. resetAll does the same.
+function hideHero() {
+  document.getElementById('heroCard').style.display = 'none';
+  document.getElementById('heroScenario').style.display = 'none';
+  heroChartData = null;
+  document.getElementById('heroWarn').style.display = 'none';
+  setHeroInterpretation('');
 }
 
 // Park the user at a gate: button labelled for it, input open for feedback.
@@ -4600,6 +4679,7 @@ async function finishReport(markdown) {
   if (!HAS_SUPABASE || !currentUser) return;
   const ind = document.getElementById('saveIndicator');
   if (ind) ind.textContent = 'Sparar...';
+  const token = runToken;
   try {
     // The action name comes from the intake profile the user approved, and the
     // headline from the deterministic calc; the report text is what the model
@@ -4616,10 +4696,29 @@ async function finishReport(markdown) {
     // read as "Sparat" and the user walked away from an unsaved report.
     if (!r.ok) { const d = await r.jsonSafe(); throw new Error((d && d.error) || ('HTTP ' + r.status)); }
     const saved = await r.jsonSafe();
-    if (saved && saved.key_metric) updateHero(saved.key_metric);
+    // "Ny analys" while the save was on its way: the row is saved, and its
+    // number belongs to a report that is no longer on screen. Drawn anyway,
+    // it stood above the empty page of the new analysis.
+    if (token !== runToken) { if (ind) ind.textContent = ''; loadSavedList(); return; }
+    if (saved && saved.key_metric) {
+      updateHero(saved.key_metric);
+      // updateHero writes the label without the years the number covers. The
+      // kalkyl knows them: a follow-up's "medel per år 2023–2030" lost its
+      // years the moment the report was saved.
+      const k = state.lastKalkyl;
+      if (state.headline && k && k.span) setHeroLabel(k.span.mode || state.mode, k.span.window, saved.key_metric.year);
+    }
     if (ind) { ind.textContent = 'Sparat'; setTimeout(()=>{ind.textContent='';}, 2500); }
     loadSavedList();
   } catch(e) {
+    // "Ny analys" while the save was on its way: the report is gone from the
+    // screen, so "ladda ner den" beside the new analysis points at nothing.
+    // Said once in the chat instead: the report is not in the list.
+    if (token !== runToken) {
+      if (ind) ind.textContent = '';
+      addSystem('Rapporten från den förra analysen kunde inte sparas (' + e.message + ').', true);
+      return;
+    }
     // Left visible: a failed save is not a transient toast, and the user is
     // about to close the tab on a report that only exists in this DOM.
     // The server's reason says who can fix it (NOT_SAVED names the list).
@@ -4667,13 +4766,14 @@ function setHeroInterpretation(text) {
 // (2026-10-15). Display only: the report text, the save and the download are
 // as the model and the program wrote them, so no prompt changes.
 // The parts are the report prompt's sections (agents/rapport.py, and
-// agents/uppfoljning.py for a follow-up) and the two the program appends. A
+// agents/uppfoljning.py for a follow-up) and the three the program adds. A
 // line is a part's heading only when it names one of them whole, in any of
 // the forms the models write ("**X**", "## X", a bare line), so a sub-label
 // inside a part ("QA-status och huvudanmärkningar") never splits it.
 const REPORT_PARTS = [
   ['beskrivning', /^Kort beskrivning av åtgärden$/i],
   ['klimatnytta', /^Beräknad klimatnytta$/i],
+  ['verksamhet', /^Vad åtgärden ändrar i verksamheten$/i],
   ['uppmatt', /^Uppmätt och antaget$/i],
   ['mekanism', /^Hur åtgärden minskar utsläppen$/i],
   ['antaganden', /^Nyckelantaganden och beräkningsgrund$/i],
@@ -4821,6 +4921,11 @@ function partTeaser(part, lifted) {
       return {text: 'Resultatet i tre scenarier: försiktigt, mest sannolikt och full potential.'};
     }
     case 'uppmatt': return {text: 'Vad som är uppmätt och vad som är antaget.'};
+    case 'verksamhet': {
+      const n = (b.match(/^- /gm) || []).length;
+      return {text: 'Samma förändring som tonnen, i km, liter, m² och andra enheter som går att följa' +
+                    (n ? ', för ' + countOf(n, 'utsläppskälla', 'utsläppskällor') : '') + '.'};
+    }
     case 'mekanism': {
       const n = bulletsUnder(b, /^Huvuddrivare\s*:/i);
       return {text: n ? countOf(n, 'huvuddrivare', 'huvuddrivare') + ' och hur de ger effekt.' : 'Vilka drivare som ger effekten, och hur.'};
@@ -5233,7 +5338,11 @@ async function portfolioParts() {
   portfolio.picked = ids;
   if (ids.length < 2) { renderPortfolioPick('Välj minst två analyser.'); return; }
   document.getElementById('pfNext').disabled = true;
-  const r = await postJson('/api/portfolj/atgarder', {ids});
+  // postJson rejects on a dropped connection. Uncaught, the button stayed
+  // disabled and nothing was said.
+  let r;
+  try { r = await postJson('/api/portfolj/atgarder', {ids}); }
+  catch (e) { renderPortfolioPick('Kunde inte nå servern: ' + e.message + '. Försök igen.'); return; }
   if (!r.ok) { renderPortfolioPick(r.data.error || 'Något gick fel.'); return; }
   portfolio.atgarder = r.data.atgarder || [];
   portfolio.potter = r.data.potter || [];
@@ -5324,6 +5433,8 @@ async function runPortfolio() {
     box.appendChild(sanitizedFragment(r.data.markdown));
     out.appendChild(box);
     out.scrollIntoView({behavior: 'smooth', block: 'start'});
+  } catch (e) {
+    msg.textContent = 'Kunde inte nå servern: ' + e.message + '. Försök igen.'; msg.style.display = '';
   } finally { btn.disabled = false; }
 }
 
@@ -5423,7 +5534,7 @@ def login():
             app.logger.warning("Login blocked after repeated wrong passwords, ip %s",
                                _hashed_ip())
             error = 'F\u00f6r m\u00e5nga felaktiga f\u00f6rs\u00f6k. V\u00e4nta tio minuter och f\u00f6rs\u00f6k igen.'
-            return render_template_string(LOGIN_TEMPLATE, error=error,
+            return _render(LOGIN_TEMPLATE, error=error,
                                           **_page_context()), 429
         given = request.form.get('password') or ''
         if hmac.compare_digest(given.encode(), CAIA_PASSWORD.encode()):
@@ -5434,7 +5545,7 @@ def login():
         _login_failed(ip)
         app.logger.warning("Wrong password, ip %s", _hashed_ip())
         error = 'Fel l\u00f6senord'
-    return render_template_string(LOGIN_TEMPLATE, error=error, **_page_context())
+    return _render(LOGIN_TEMPLATE, error=error, **_page_context())
 
 
 @app.route('/logout')
@@ -5448,7 +5559,7 @@ def index():
     # Supabase mode: serve the page; the frontend login overlay gates access and
     # attaches the JWT to /api calls (which are individually @require_auth).
     if SUPABASE_URL:
-        return render_template_string(
+        return _render(
             HTML_TEMPLATE,
             has_supabase=True,
             supabase_url=SUPABASE_URL,
@@ -5458,7 +5569,7 @@ def index():
     # Password mode (or fully open local dev).
     if CAIA_PASSWORD and not _password_session_ok():
         return redirect(url_for('login'))
-    return render_template_string(
+    return _render(
         HTML_TEMPLATE, has_supabase=False, supabase_url='', supabase_anon_key='',
         password_mode=bool(CAIA_PASSWORD), **_page_context(),
     )
@@ -5618,9 +5729,9 @@ def api_evidens_merge():
                 raise RequestError(f'Delresultatet för drivare {number} ska vara text.')
             # Each part goes through the line parsers and on to the merge
             # model, so it gets the same cap as a turn (S3, S6).
-            if len(text) > MAX_TURN_CHARS:
+            if len(text) > MAX_PARTS_CHARS:
                 raise RequestError(f'Delresultatet för drivare {number} är för långt '
-                                   f'(högst {MAX_TURN_CHARS} tecken).')
+                                   f'(högst {MAX_PARTS_CHARS} tecken).')
             # All of them go into one prompt, on top of the history, so the
             # sum has a cap of its own (re-review 2026-10-07, F3): twelve
             # parts at the cap above were 1.2 million characters in a single
@@ -5655,6 +5766,11 @@ def api_evidens_merge():
 # is likely to be cut by the platform after it has been paid for; the user is
 # asked to run the step again instead, which runs the extraction again.
 KALKYL_FALLBACK_MIN_S = 204.0
+# The kalkyl text holds a table row per driver, scenario and year, and goes
+# back to the server as one turn of the history (MAX_TURN_CHARS).
+KALKYL_TOO_LONG = ('Kalkylen blev för lång för att gå vidare till granskningen: {drivers} drivare '
+                   'räknade år för år till {target}. Dela upp åtgärden i flera analyser, eller '
+                   'välj ett närmare målår.')
 KALKYL_NO_TIME = ('Kalkylen gick inte att läsa ut ur analysen, och tiden räckte inte till '
                   'reservberäkningen. Kör steget igen.')
 
@@ -5676,8 +5792,31 @@ def api_kalkyl():
                 model = CalcModel.from_dict(extracted, mode=mode)
                 result = compute(model)
                 # The appendix ends the kalkyl text; /api/rapport copies it
-                # into the report as it stands (caia.appendix).
-                output = render_markdown(model, result) + "\n\n" + render_appendix(model, result)
+                # into the report as it stands (caia.appendix). Before it, what
+                # the action changes in each driver's own unit, which
+                # /api/rapport moves into the report beside the tons. Its own
+                # try: a sentence must never cost the computed result.
+                try:
+                    changes = activity_changes(model)
+                    activity = render_activity(model, changes)
+                except Exception as e:
+                    _log_failure("activity sentences failed", e)
+                    changes, activity = None, ""
+                output = "\n\n".join(part for part in (
+                    render_markdown(model, result), activity, render_appendix(model, result)) if part)
+                # The page sends this text back as a turn of the history, and
+                # _history refuses a turn over MAX_TURN_CHARS and a history
+                # over MAX_HISTORY_CHARS. Said here, where the user can act on
+                # it, and not as "Tur 11 är för lång" at the next step.
+                # Returned, not raised: the fallback below would catch it and
+                # spend a second model call on the same analysis.
+                carried = sum(len(turn['content']) for turn in history)
+                if len(output) > MAX_TURN_CHARS or carried + len(output) > MAX_HISTORY_CHARS:
+                    app.logger.warning("kalkyl: the text is %d characters after %d of history "
+                                       "(%d drivers to %d); over the cap", len(output), carried,
+                                       len(model.drivers), model.target_year)
+                    return jsonify({'error': KALKYL_TOO_LONG.format(
+                        drivers=len(model.drivers), target=model.target_year)}), 422
                 # Scenario span + cumulative feed the right-panel hero (low/mid/high
                 # range bar + 'ackumulerat till målår'), mirroring the åtgärdskort mockup.
                 # Low and high for the same number the headline is: the target
@@ -5705,6 +5844,13 @@ def api_kalkyl():
                     'window': list(result['med']['total']['avg_window']),
                     'mode': mode,
                 }
+                # The same sentences for the page's summary, largest first.
+                if changes and changes['rows']:
+                    span['activity'] = {
+                        'rows': [{'driver': r['driver'], 'text': r['text']}
+                                 for r in sorted(changes['rows'], key=lambda r: -r['weight'])],
+                        'notes': changes['notes'],
+                    }
                 # Every year, so the hero can draw how the benefit builds up.
                 # Its own try: a chart must never cost the computed result.
                 try:
@@ -5932,7 +6078,15 @@ def _client_key_metric(value) -> dict | None:
         raise RequestError('key_metric.year ska vara ett årtal.')
     for k in KEY_METRIC_FIELDS:
         v = value.get(k)
-        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)):
+        if v is None:
+            continue
+        # An integer too large for a float (JSON has no upper bound, Python
+        # reads 1e400 written out) raised OverflowError in isfinite: a 500.
+        try:
+            finite = not isinstance(v, bool) and isinstance(v, (int, float)) and math.isfinite(v)
+        except OverflowError:
+            finite = False
+        if not finite:
             raise RequestError(f'key_metric.{k} ska vara ett tal.')
     return value if any(value.get(k) is not None for k in KEY_METRIC_FIELDS) else None
 

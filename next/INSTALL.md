@@ -220,10 +220,10 @@ Alla inställningar CAIA läser:
 | Variabel | Behövs | Vad den gör |
 |---|---|---|
 | `OPENROUTER_API_KEY` | Alltid | Nyckeln från steg 3. |
-| `CAIA_OPENROUTER_REGION` | Nej | `eu` skickar anropen till OpenRouters EU-ingång (kräver Business-plan). Tom betyder den globala. Ett annat värde stoppar analysen med ett fel. |
+| `CAIA_OPENROUTER_REGION` | Nej | `eu` skickar anropen till OpenRouters EU-ingång (kräver Business-plan), `us` till den amerikanska. Tom betyder den globala. Ett annat värde stoppar analysen med ett fel. |
 | `CAIA_ANTHROPIC_API_KEY` | Nej | Bara för batchkörningar med `tools/run_batch.py`, aldrig i webbappen. Satt skickas alla anrop direkt till Anthropics API i stället för via OpenRouter, till exempel för API-krediter som ingår i ett Claude-abonnemang. Den vägen har ingen EU-ingång, så `CAIA_OPENROUTER_REGION` gäller inte. |
 | `CAIA_KOMMUN_DIR` | Ja, med profil utanför repot | Sökväg till kommunprofilen. Vinner över `CAIA_KOMMUN`. |
-| `CAIA_KOMMUN` | Ja, om inte `CAIA_KOMMUN_DIR` är satt | Namnet på en profil som ligger i repot (i det publika repot finns bara `exempel`). Utan någon av de två startar appen inte: den gissar inte vilken kommun den är. |
+| `CAIA_KOMMUN` | Ja, om inte `CAIA_KOMMUN_DIR` är satt | Namnet på en profil som ligger i repot (i det publika repot finns `exempel` och `karlstad`, den senare utan Konsumtionskompassens filer). Utan någon av de två startar appen inte: den gissar inte vilken kommun den är. |
 | `CAIA_SECRET_KEY` | Ja med lösenord, rekommenderas alltid | Signerar inloggningskakan. Samma värde i alla serverprocesser, annars loggas användare ut slumpvis. Appen startar inte i lösenordsläge utan den. Den är också nyckeln till de hashade adresserna i loggen: utan den får varje process en egen, och samma besökare ser olika ut efter en omstart. |
 | `SUPABASE_URL` | Med Supabase | Projektets adress. När den är satt gäller Supabase-inloggning. |
 | `SUPABASE_ANON_KEY` | Med Supabase | Den publika nyckeln från steg 4. Sidan skickar den till varje besökare, så CAIA startar inte om en hemlig nyckel (`service_role` eller `sb_secret_...`) står här. |

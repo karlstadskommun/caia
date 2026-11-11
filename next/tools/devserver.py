@@ -59,8 +59,10 @@ FIRST = """ÅTGÄRDSPROFIL
 *Målgrupp:* kommunens egna anställda
 *Utsläpp som påverkas:* territoriella utsläpp, kommunens egna utsläpp
 *Rådighet:* direkt
-*Typ av åtgärd:* organisation/styrning
+*Nivå:* kommunal
+*Instrumentkategori:* egen konsumtion och förebild
 *Tidsram:* 2026–2030 (ANTAGANDE: Tidsram 2026–2030 då inget annat angivits)
+*Verkningstid:* kort
 *Kommun:* Karlstads kommun (ANTAGANDE: Gäller Karlstads kommun)
 *Kommentarer:* Ingen uppdelning gjord.
 """
@@ -75,8 +77,10 @@ SECOND = """Jag delade upp åtgärden i två, eftersom laddinfrastrukturen är e
 *Målgrupp:* kommunens egna anställda
 *Utsläpp som påverkas:* territoriella utsläpp, kommunens egna utsläpp
 *Rådighet:* direkt
-*Typ av åtgärd:* organisation/styrning
+*Nivå:* kommunal
+*Instrumentkategori:* egen konsumtion och förebild
 *Tidsram:* 2027–2032
+*Verkningstid:* kort
 *Kommun:* Karlstads kommun
 *Kommentarer:* Uppdaterad efter din rättelse: 60 bilar, start 2027.
 
@@ -87,8 +91,10 @@ SECOND = """Jag delade upp åtgärden i två, eftersom laddinfrastrukturen är e
 *Målgrupp:* kommunens egna verksamheter
 *Utsläpp som påverkas:* territoriella utsläpp
 *Rådighet:* direkt
-*Typ av åtgärd:* infrastruktur
+*Nivå:* kommunal
+*Instrumentkategori:* egen konsumtion och förebild (ANTAGANDE: laddpunkterna är för kommunens egna bilar)
 *Tidsram:* 2027–2029 (ANTAGANDE: följer bilpoolens utbyggnad)
+*Verkningstid:* kort
 *Kommun:* Karlstads kommun (ANTAGANDE: Gäller Karlstads kommun)
 *Kommentarer:* Uppdelningen är gjord av mig.
 """

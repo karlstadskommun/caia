@@ -155,6 +155,15 @@ def test_the_kalkyl_route_reports_the_span_the_right_way_round(monkeypatch):
     # series: case A per year from the ramp start 2025 to 2030, basis =
     # 2 t × |delta_a| × adoption (0; 0,5; 1 from 2027).
     series = body['span'].pop('series')
+    # Case A in its own unit: 1 000 × 20 % = 200 in 2030 (min 10 %, max 30 %),
+    # and (0,5 × 200 + 4 × 200) / 5 = 180 on average 2026-2030.
+    assert body['span'].pop('activity') == {'notes': [], 'rows': [{
+        'driver': 'd', 'text': '200 enheter mindre år 2030 än utan åtgärden (20 %, spann '
+                               '100–300), i snitt 180 enheter mindre per år 2026–2030'}]}
+    # The kalkyl text carries the section between the result and the appendix.
+    out = body['output']
+    assert out.index('Per drivare') < out.index('**Vad åtgärden ändrar i verksamheten**') \
+        < out.index('**Teknisk bilaga')
     # The band is the target year, like the headline: 2030 min 0,2, max 0,6.
     # avg_net is the medel average 2026-2030, round(0,36; 1) = 0,4.
     assert body['span'] == {'net_lo': 0.2, 'net_hi': 0.6, 'avg_net': 0.4, 'headline_year': 2030,

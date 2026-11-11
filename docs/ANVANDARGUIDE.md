@@ -48,7 +48,7 @@ CAIA kan ställa upp till fyra följdfrågor innan profilen är klar, och fråga
 
 Överst på sidan visas var i analysen du är: Åtgärdsförslag, Utsläppskällor, Baslinje, Evidens, Kalkyl, QA, Rapport. CAIA stannar fyra gånger och väntar på dig. Resultatet av varje steg visas i panelen till höger, och under chatten finns en knapp för att godkänna.
 
-Varje steg i panelen börjar med rutan *Det viktigaste*: vilka utsläpp åtgärden påverkar, nivån i dag och vart den är på väg, antagandena resultatet hänger på, resultatet och om kvalitetsgranskningen varnar. Rutan läses ur stegets eget innehåll, så den säger inget som inte står längre ner. Läs den först, och läs resten där den pekar.
+Varje steg i panelen börjar med rutan *Det viktigaste*: vilka utsläpp åtgärden påverkar, nivån i dag och vart den är på väg, antagandena resultatet hänger på, resultatet och vad det motsvarar i verksamheten (till exempel så många km mindre år 2030), och om kvalitetsgranskningen varnar. Rutan läses ur stegets eget innehåll, så den säger inget som inte står längre ner. Läs den först, och läs resten där den pekar.
 
 Vid varje stopp har du två val:
 
@@ -164,7 +164,7 @@ Nivåerna är hämtade ur rapportens del om osäkerhet, QA och beroenden, och mo
 
 Resten av rapporten står under **Rapportens delar**, en rad per avsnitt. Varje rad har avsnittets namn och en rad om vad det innehåller, till exempel scenariernas tal under *Beräknad klimatnytta* eller hur många källor *Källor och underlag* har. Klicka på raden för att fälla ut avsnittet, och en gång till för att fälla ihop det. **Visa alla delar** fäller ut allt på en gång, och **Fäll ihop alla** stänger det igen. Visas ingen stor siffra överst är *Beräknad klimatnytta* utfälld från början.
 
-Delarna är, i rapportens ordning: kort beskrivning av åtgärden, beräknad klimatnytta, hur åtgärden minskar utsläppen, nyckelantaganden och beräkningsgrund, tidsprofil (när effekten kommer), osäkerhet, QA och beroenden, nästa steg, *Följ upp med* (en eller två indikatorer per bärande drivare, i enheter som antal elbilar eller m² renoverad yta, med dagens värde om underlaget har det och var det hämtas; finns inte i en uppföljning, där *Vad som behöver mätas* står under nästa steg), källor och underlag, den tekniska bilagan och *Talens ursprung*. Löptexten är skriven av språkmodellen. Läs delen om osäkerhet, QA och beroenden: där står varför nivåerna i bedömningen blev som de blev och vad kvalitetsgranskningen anmärkt på.
+Delarna är, i rapportens ordning: kort beskrivning av åtgärden, beräknad klimatnytta, *Vad åtgärden ändrar i verksamheten* (samma förändring som tonnen, i km, liter, m² eller den enhet drivaren räknas i, för målåret och som snitt per år; skrivet av kalkylmotorn), hur åtgärden minskar utsläppen, nyckelantaganden och beräkningsgrund, tidsprofil (när effekten kommer), osäkerhet, QA och beroenden, nästa steg, *Följ upp med* (en eller två indikatorer per bärande drivare, i enheter som antal elbilar eller m² renoverad yta, med dagens värde om underlaget har det och var det hämtas; finns inte i en uppföljning, där *Vad som behöver mätas* står under nästa steg), källor och underlag, den tekniska bilagan och *Talens ursprung*. Löptexten är skriven av språkmodellen. Läs delen om osäkerhet, QA och beroenden: där står varför nivåerna i bedömningen blev som de blev och vad kvalitetsgranskningen anmärkt på.
 
 I den nedladdade texten heter *Nästa steg* *Rekommendation och nästa steg* och börjar med den samlade rekommendationen. På sidan står rekommendationen i bedömningen och inte en gång till i delen.
 

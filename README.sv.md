@@ -4,7 +4,7 @@ CAIA (Climate Action Impact Analysis) räknar ut klimatnyttan av en kommunal åt
 
 CAIA har två analystyper, som väljs innan analysen börjar: *prognos* (potentialläget) för en åtgärd som inte är genomförd än, och *uppföljning* (uppföljningsläget) för en insats som redan är gjord, där frågan är vad just de pengarna faktiskt har gett och vad som återstår.
 
-CAIA är utvecklat av Karlstads kommun inom Klimatneutrala Karlstad 2030, som stöds av Viable Cities. Henric Barkman, processledare på Karlstads kommun, tog fram verktyget: han beställde det och fattade metodbesluten. Koden skrevs med AI-assistenten Demi, som bygger på Claude. Det här är version 1.0.1; den första offentliga versionen var 1.0.0. Verktyget hette Zaid till oktober 2026, och det namnet står kvar på några ställen i dokumentationen.
+CAIA är utvecklat av Karlstads kommun inom Klimatneutrala Karlstad 2030, som stöds av Viable Cities. Henric Barkman, processledare på Karlstads kommun, tog fram verktyget: han beställde det och fattade metodbesluten. Koden skrevs med AI-assistenten Demi, som bygger på Claude. Det här är version 1.1.0; den första offentliga versionen var 1.0.0. Verktyget hette Zaid till oktober 2026, och det namnet står kvar på några ställen i dokumentationen.
 
 English: [README.md](README.md).
 
@@ -18,9 +18,9 @@ Licensen gäller koden och dokumentationen i repot. Om kommunernas data, se näs
 
 ## Data
 
-Repot har en kommunprofil, `exempel` (`next/src/caia/kommuner/exempel/`): en mall med nationella schablonvärden och utan lokala datafiler. En kommun fyller i egna värden och datafiler och får då en egen profil (se [Installera för en kommun](#installera-för-en-kommun)).
+Repot har två kommunprofiler i `next/src/caia/kommuner/`. Den ena är `exempel`: en mall med nationella schablonvärden och utan lokala datafiler. En kommun fyller i egna värden och datafiler och får då en egen profil (se [Installera för en kommun](#installera-för-en-kommun)).
 
-Karlstads egen profil (parameterbibliotek och datafiler) ingår inte. En del av datafilerna kommer från andra med egna villkor. Tester som behöver Karlstads profil är märkta `karlstad` och hoppas över med ett besked när den saknas, så testsammanfattningen visar ett antal överhoppade tester.
+Den andra, sedan 1.1, är Karlstads egen profil (`karlstad`): parameterbibliotek, utsläppspotter och datafiler, som ett exempel på en ifylld profil. Fem datafiler från Konsumtionskompassen är utelämnade, eftersom deras licens (CC BY-NC-ND 4.0) inte går att förena med EUPL. Utan dem får profilens konsumtionsrader (`CONS_*`) sina standardvärden, så en analys på den här profilen kan skilja sig från en i Karlstads egen installation. Testerna som läser de filerna hoppas över med ett besked, så testsammanfattningen visar ett antal överhoppade tester. Källor och villkor för varje datafil står i [NOTICE](NOTICE).
 
 `next/tests/fixtures/` har sparade svar från analyser av Karlstads åtgärder. Testerna och utvecklingsservern använder dem. De innehåller inga personuppgifter.
 
@@ -54,7 +54,7 @@ CAIA_KOMMUN=exempel CAIA_DEV_OPEN=1 CAIA_INSECURE_COOKIE=1 .venv/bin/python tool
 
 Öppna http://127.0.0.1:5055. Visar sidan en inloggningsruta har skalet `SUPABASE_URL` satt sedan tidigare; ta bort den variabeln (`unset SUPABASE_URL`) och starta om.
 
-**Kör en riktig analys.** Kräver en API-nyckel från [OpenRouter](https://openrouter.ai). En analys kostar några dollar (2 till 4 USD hösten 2026) och tar 10 till 15 minuter:
+**Kör en riktig analys.** Kräver en API-nyckel från [OpenRouter](https://openrouter.ai). En analys kostar några dollar (2 till 5 USD hösten 2026). Räkna med 7 till 30 minuter, som startsidan säger: det beror mest på hur noga man läser vid de fyra stoppen, och modellstegen själva tog 9 till 12 minuter i referenskörningarna 2026-11-10:
 
 ```
 cp .env.example .env        # fyll i OPENROUTER_API_KEY, låt CAIA_KOMMUN=exempel stå
@@ -82,6 +82,7 @@ Innan en installation öppnas för de anställda: det användarna skriver skicka
 ## Dokumentation
 
 - [docs/METOD.md](docs/METOD.md): vad CAIA räknar och inte räknar, formlerna, källmarkeringen och kända begränsningar. För den som granskar resultaten utan att läsa kod.
+- [docs/METOD.html](docs/METOD.html): samma metod som en översikt att läsa i webbläsaren, med en sammanfattning per avsnitt och hela texten utfällbar. Den genereras ur METOD.md med `next/tools/metod_html.py`. METOD.md är källan; ändra aldrig html:en för hand.
 - [docs/ANVANDARGUIDE.md](docs/ANVANDARGUIDE.md): så kör du en första analys och läser rapporten. För tjänstepersoner.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): moduler, dataflöde, externa tjänster och vad de kostar.
 - [docs/API.md](docs/API.md): alla endpoints med indata, utdata, fel och kostnad. För den som vill integrera.
@@ -98,7 +99,7 @@ Metodens begränsningar, med den uppmätta spridningen mellan körningar, står 
 - **Tecknet kan bli fel för åtgärder som undviker utsläpp.** Positivt tal är minskning. En åtgärd som återbruk kan av språkmodellen räknas som ökad aktivitet och få minus. Kalkylen varnar då för ökade utsläpp, och kvalitetsgranskningen pekar ut felet. Ett sådant resultat ska inte användas förrän antagandet är rättat.
 - **Medelvärdet per år gäller 2026 till 2030**, oavsett målår. En åtgärd som verkar sent i de åren får ett lågt tal, och en som verkar först efteråt får noll. Kalkylen varnar i båda fallen.
 - **Om CAIA:s egen kalkyl inte kan läsa modellens tal** räknar språkmodellen själv. Resultatet märks då `deterministic: false` och rapporten säger det.
-- **En analys tar 10 till 15 minuter**, varje steg upp till knappt fem. Avbryter användaren mitt i ett steg fortsätter anropet på servern och kostar ändå.
+- **Modellstegen i en analys tar omkring tio minuter sammanlagt**, varje steg upp till knappt fem. Avbryter användaren mitt i ett steg fortsätter anropet på servern och kostar ändå.
 - **Anropsgränserna räknas per serverprocess.** På Vercel har varje instans sin egen räknare. Det stoppar en klient som loopar, inte ett bestämt missbruk; den hårda gränsen är kreditgränsen på OpenRouter-nyckeln.
 - **API:t har ingen versionering** utöver versionsnumren i [CHANGELOG.md](CHANGELOG.md).
 - **Öppet efter överlämningsgranskningen (september 2026):** jämförelsen av kalkylens indata med de godkända antagandena fångar inte varje felläsning ([docs/METOD.md](docs/METOD.md#jämförelsen-med-det-som-godkändes)); utläsningen tar första JSON-objektet med drivare i ett modellsvar; sidan hämtar typsnitt och bibliotek från Google och jsDelivr; spridningen mellan körningar visas inte för användaren.

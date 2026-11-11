@@ -1,0 +1,33 @@
+# Utsläppspotter: avgränsade delar av kommunens utsläpp, med ett känt utsläpp
+# per år. Portföljen (caia.calc.portfolj) räknar åtgärder som verkar på samma
+# pott tillsammans, så att de inte kan minska mer än hela potten.
+#
+# Regler för registret:
+# - Potterna får inte överlappa varandra. En pott inuti en annan (husbyggnad
+#   inuti allt byggande) räknar samma ton två gånger, och då är det inte en
+#   portfölj längre.
+# - baslinje är ton CO2e per år det år som står i ar. trend är förändringen
+#   per år utan nya åtgärder, som andel (-0.02 = två procent mindre per år).
+#   Saknas trend räknas samma utsläpp alla år.
+# - kalla ska gå att följa. Är källan svag, säg det i anmarkning.
+#
+# Ett id skrivs in i analysens tekniska bilaga när en drivare märks med
+# potten. Byt inte id på en befintlig pott.
+
+[[pott]]
+id = "husbyggnad"
+namn = "Kommunens husbyggnad"
+baslinje = 17200
+ar = 2022
+perspektiv = "konsumtionsbaserat"
+kalla = "Kommunens interna uppgifter i analysen av energi- och klimatplanens åtgärd Halvera klimatpåverkan från kommunens byggnationer (2025-12-18): nybyggnation av interna lokalfastigheter 14 000 ton och bygginvesteringar i förvaltningsskedet 3 200 ton per år."
+anmarkning = "Källan är inte dokumenterad bortom analysen, vilket dess kvalitetsgranskning också påpekar. Svalna anger kommunkoncernens husbyggande 2022 till 37 749 ton; skillnaden är inte utredd. Gatu- och anläggningsarbeten ingår inte i potten."
+
+[[pott]]
+id = "personbilstrafik"
+namn = "Personbilstrafiken i kommunen"
+baslinje = 79454
+ar = 2023
+perspektiv = "territoriellt"
+kalla = "Nationella emissionsdatabasen, kommunrapporten för Karlstad, raden Transporter, Personbilar (datafilen Kommunrapport_karlstad_vaxthusgaser_totalt.csv)."
+anmarkning = "Ingen trend är satt: utsläppen sjönk 2019–2023, men takten framåt är inte bestämd."

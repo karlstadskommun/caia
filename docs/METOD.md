@@ -1,6 +1,6 @@
 # Metod: så räknar CAIA
 
-För dig som ska granska eller använda resultat från CAIA (Climate Action Impact Analysis) utan att läsa kod. Dokumentet beskriver vad som räknas, vilka formler som används, vad språkmodellen gör och vad programkoden gör, och var metoden är svag. Varje påstående om hur något räknas är kontrollerat mot koden i oktober 2026 (`next/src/caia/calc/`, `kallmarkering.py`, `agents/uppfoljning.py`).
+För dig som ska granska eller använda resultat från CAIA (Climate Action Impact Analysis) utan att läsa kod. Dokumentet beskriver vad som räknas, vilka formler som används, vad språkmodellen gör och vad programkoden gör, och var metoden är svag. Varje påstående om hur något räknas är kontrollerat mot koden i oktober 2026, och avsnittet *Vad åtgärden ändrar i verksamheten* i november 2026 (`next/src/caia/calc/`, `kallmarkering.py`, `agents/uppfoljning.py`).
 
 **Under avstämning.** Hur de tre scenarierna sätts och hur attributionen hanteras är inte avstämt med dem som ska använda talen i uppföljningen. Avsnitten *Tre scenarier* och *Attribution* beskriver hur CAIA gör i dag. De kan komma att ändras, och då ändras det här dokumentet samtidigt.
 
@@ -33,13 +33,13 @@ En analys går genom sju steg. Språkmodellen (Claude, två modeller: Opus 5.5 o
 
 | Steg | Språkmodellen | Programkoden |
 |---|---|---|
-| 1 Åtgärdsprofil | Tolkar beskrivningen, ställer högst fyra följdfrågor och skriver en profil: omfattning i tal, sektor, målgrupp, rådighet, typ av åtgärd, mognad, tidsram. Saknas omfattningen frågar CAIA efter den först, och profilen blir inte färdig förrän användaren svarat. Kan användaren inte svara antar CAIA ett tal och skriver hur det togs fram; det märks som antaget i profilen, i baslinjen, under *Talens ursprung* och i rapporten. Det som modellen själv antagit i övrigt märks också som antagande. | Läser profilen till de fält som sidan visar. |
-| 2 Utsläppskällor | Namnger drivarna, alltså de utsläpp åtgärden påverkar, och för varje drivare mekanismen (undvika, byta eller förbättra) och om det är mängden eller utsläppen per enhet som ändras. Avgör typ av effekt, som bestämmer räknesättet: en direkt åtgärd räknas rakt på drivaren, en indirekt eller möjliggörande som en kedja (hur många nås, hur många ändrar sig, hur mycket, och åtgärdens andel utöver det som hade hänt ändå), och en stödjande åtgärd får inget eget tal. Sätter inga tal. Drivarna delas efter en fast regel: en aktivitet är en drivare även när den räknas både territoriellt och konsumtionsbaserat, kategorier delas bara när profilen ger mängd per kategori, och varje livscykelsteg som åtgärden ändrar är en egen drivare. Steget hette EMAP till oktober 2026, och heter så i koden. | |
+| 1 Åtgärdsprofil | Tolkar beskrivningen, ställer högst fyra följdfrågor och skriver en profil: omfattning i tal, sektor, målgrupp, rådighet, nivå, instrumentkategori, mognad, tidsram och verkningstid (de tre klasserna enligt DIN SPEC 91637). Saknas omfattningen frågar CAIA efter den först, och profilen blir inte färdig förrän användaren svarat. Kan användaren inte svara antar CAIA ett tal och skriver hur det togs fram; det märks som antaget i profilen, i baslinjen, under *Talens ursprung* och i rapporten. Det som modellen själv antagit i övrigt märks också som antagande. | Läser profilen till de fält som sidan visar. |
+| 2 Utsläppskällor | Namnger drivarna, alltså de utsläpp åtgärden påverkar, och för varje drivare mekanismen (undvika, byta eller förbättra) och om det är mängden eller utsläppen per enhet som ändras, och vilken av DIN SPEC 91637:s sex aktivitetsförändringar (bilaga C) drivaren hör till. Avgör typ av effekt, som bestämmer räknesättet: en direkt åtgärd räknas rakt på drivaren, en indirekt eller möjliggörande som en kedja (hur många nås, hur många ändrar sig, hur mycket, och åtgärdens andel utöver det som hade hänt ändå), och en stödjande åtgärd får inget eget tal. Sätter inga tal. Drivarna delas efter en fast regel: en aktivitet är en drivare även när den räknas både territoriellt och konsumtionsbaserat, kategorier delas bara när profilen ger mängd per kategori, och varje livscykelsteg som åtgärden ändrar är en egen drivare. Steget hette EMAP till oktober 2026, och heter så i koden. | |
 | 3 Baslinje | Sätter nuläget per drivare (aktivitet och emissionsfaktor) och trenden utan åtgärd, ur parameterbiblioteket och kommunens data. | Lägger parameterbiblioteket och datafilerna i modellens underlag. |
 | 4 Evidens | Bedömer hur mycket åtgärden ändrar varje drivare, som försiktigt, troligt och optimistiskt värde med källa. Sätter klimatfaktorerna. För en indirekt eller möjliggörande åtgärd skriver steget först attributet (den mätbara egenskap i kommunen som åtgärden ändrar, som avstånd till närmaste laddpunkt), vilken uppfattning det påverkar och vilket led i kedjan som är osäkrast, som i DIN SPEC 91637; texten räknas inte. Arbetar en drivare i taget och fogar sedan ihop dem, med uppgift att hitta dubbelräkning mellan drivarna. | Delar upp arbetet per drivare och kontrollerar att varje del har rätt form. |
-| 5 Kalkyl | Läser ut talen ur steg 1 till 4 och skriver dem i ett formulär. Räknar inte. | Kontrollerar formuläret, räknar alla år och scenarier, skriver tabellerna, varningarna, den tekniska bilagan och avsnittet *Talens ursprung*. |
+| 5 Kalkyl | Läser ut talen ur steg 1 till 4 och skriver dem i ett formulär. Räknar inte. | Kontrollerar formuläret, räknar alla år och scenarier, skriver tabellerna, varningarna, vad åtgärden ändrar i verksamheten, den tekniska bilagan och avsnittet *Talens ursprung*. |
 | 6 Kvalitetsgranskning | Granskar källor, enheter, storleksordning, BAU-hantering och dubbelräkning. Ger status ok eller varning. Ändrar inga tal. | |
-| 7 Rapport | Skriver beslutsunderlaget i löptext, och avslutar potentialrapporten med *Följ upp med*: en eller två indikatorer per bärande drivare i begriplig enhet, som DIN SPEC 91637 avsnitt 5.5 begär. | Lägger kalkylmotorns tekniska bilaga sist, oförändrad, och tar bort en bilaga som modellen ändå skrivit. Sidan lägger sedan till *Talens ursprung* ur steg 5, och batchverktyget (`next/tools/run_batch.py`) gör detsamma. |
+| 7 Rapport | Skriver beslutsunderlaget i löptext, och avslutar potentialrapporten med *Följ upp med*: en eller två indikatorer per bärande drivare i begriplig enhet, som DIN SPEC 91637 beskriver i avsnitt 5.5. | Lägger kalkylmotorns avsnitt *Vad åtgärden ändrar i verksamheten* efter *Beräknad klimatnytta* och motorns tekniska bilaga sist, båda oförändrade, och tar bort en egen version av något av dem som modellen ändå skrivit. Sidan lägger sedan till *Talens ursprung* ur steg 5, och batchverktyget (`next/tools/run_batch.py`) gör detsamma. |
 
 Det betyder att antagandena är språkmodellens bedömning, och att räkningen från antaganden till resultat är vanlig programkod som ger samma svar varje gång för samma indata. Sidan stannar efter steg 1, 2, 3 och 4 så att användaren kan godkänna eller rätta. Steg 5 till 7 körs sedan i en följd.
 
@@ -73,16 +73,27 @@ utsläpp_åtgärd    = aktivitet_BAU × (1 + ändring_aktivitet) × faktor_BAU �
 Infasningen är ett tal mellan 0 och 1 som säger hur stor del av full verkan åtgärden har ett visst år.
 
 - Före startåret är den 0.
-- Mellan startåret och året för full effekt växer den från 0 till 1 enligt en av tre profiler: linjär (jämn ökning), s-formad (långsam start, snabb mitt, långsam avslutning) eller stegvis (0 fram till halva tiden, sedan 1).
+- Mellan startåret och året för full effekt växer den från 0 till 1 enligt en av tre profiler: linjär (jämn ökning), s-formad (långsam start, snabb mitt, långsam avslutning) eller stegvis (0 fram till halva tiden, sedan 1). Profilen kan också stå på engelska: step och stepwise läses som stegvis (sedan 2026-11-10; förut gav step den s-formade kurvan).
 - Från året för full effekt är den 1.
 - Har åtgärden ett slutår är den 0 efter det året.
 
 När full effekt kommer senare än startåret är effekten noll själva startåret, i alla tre profilerna. En åtgärd med linjär infasning som börjar 2026 och når full effekt 2028 räknas med 0, 50 och 100 procent de tre åren.
 
-Två tillägg används främst i uppföljningar:
+Åren däremellan räknas så här:
+
+```
+andel av tiden = (år − startår) / (år för full effekt − startår)
+infasning = andel av tiden  (linjär)
+infasning = 1 / (1 + e ^ (−12 × (andel av tiden − 0,5)))  (s-formad)
+```
+
+Den s-formade kurvan ger 5 procent en fjärdedel in i infasningen, 50 procent halvvägs och 95 procent efter tre fjärdedelar. Den stegvisa profilen är 0 så länge andelen av tiden är mindre än 0,5 och 1 därefter, alltså full effekt från och med det första året som ligger halvvägs eller längre in i infasningen.
+
+Tre tillägg används främst i uppföljningar:
 
 - **Avklingning.** Har drivaren en halveringstid minskar effekten efter året för full effekt: `infasning = 0,5 ^ (år efter full effekt / halveringstid)`. Med halveringstid två år återstår hälften efter två år och en fjärdedel efter fyra.
 - **Andel av startåret.** När åtgärden har full effekt från start men började mitt i året kan startåret räknas med en andel, till exempel 0,5 för ett halvt år.
+- **Andel av slutåret.** När åtgärden upphörde mitt i sitt slutår kan slutåret räknas med en andel på samma sätt. Andelen är större än 0 och högst 1 och kan skilja mellan scenarierna. Den används inte när slutåret är samma år som startåret.
 
 ### Attribution
 
@@ -105,7 +116,7 @@ Det här är en av de två delar som är under avstämning.
 
 ### Tre scenarier
 
-Min är det försiktiga scenariot, medel det troliga och max det optimistiska men rimliga. Fem tal kan skilja mellan scenarierna: ΔA, ΔEF, attributionen, slutåret och halveringstiden. Allt annat är gemensamt: aktivitet och emissionsfaktor basåret, trenderna, klimatfaktorerna, startår och år för full effekt.
+Min är det försiktiga scenariot, medel det troliga och max det optimistiska men rimliga. Sju tal kan skilja mellan scenarierna: ΔA, ΔEF, attributionen, slutåret, andelen av slutåret, halveringstiden och livslängden för tillverkad utrustning. Allt annat är gemensamt: aktivitet och emissionsfaktor basåret, trenderna, klimatfaktorerna, startår och år för full effekt.
 
 Varje scenario räknas för sig med sina egna värden på alla fem. Max är därför fallet där varje osäkert tal samtidigt hamnar i sitt högsta läge, och min där alla hamnar i sitt lägsta. Spannet mellan min och max är inget statistiskt konfidensintervall. När max är större än vad det enskilt viktigaste antagandet kan ge ensamt skriver kalkylen ut det, med rådet att läsa max som ett ytterfall och inte som ett troligt utfall.
 
@@ -143,11 +154,19 @@ förändring = (utsläpp_BAU − utsläpp_åtgärd) / 1 000 × attribution × an
 
 Det gäller bara en engångspost som ökar utsläppen; ett undvikt köp räknas som förut. Livslängden anges av analysen per scenario. Ikapp-året anger analysen, eller så tar kalkylen det senaste slutåret bland de drivare som minskar utsläppen, per scenario. Har någon av dem inget slutår i ett scenario belastas hela posten i det scenariot, utom i en uppföljning (nästa stycke). Saknas livslängd för en engångspost som ökar utsläppen medan nyttan har ett slutår, skriver kalkylen en OBS-rad. Bakgrunden var energivisualiseringen i storköken: 1,25 ton för skärmar och mätare stod fullt mot en nytta som upphör 2027. Med 8 till 12 års livslängd blir det kumulativa medelresultatet i körning 1 −0,5 ton i stället för −1,1. Andelen syns som en egen kolumn i bilagan, och livslängd och ikapp-år prövas bland de bärande antagandena.
 
-**Utrustning skrivs av till målåret i en uppföljning** (2026-10-22). Nyttan räknas bara till och med målåret, så utrustningen belastar insatsen bara för de år av livslängden som ryms dit: ikapp-året sätts till målåret när det saknas eller ligger senare, och andelen blir (målåret + 1 − köpår) / livslängd. Batterilagret hade belastats med hela batteriet mot en nytta räknad till 2030 (−4,9 ton till 2030). Utan livslängd belastas posten fullt som förut, och utläsningen ber därför alltid om livslängd för köpt utrustning. I potentialläget gäller det inte.
+**Utrustning skrivs av till målåret i en uppföljning** (2026-10-22). Nyttan räknas bara till och med målåret, så utrustningen belastar insatsen bara för de år av livslängden som ryms dit: ikapp-året sätts till målåret när det saknas eller ligger senare, och andelen blir (målåret + 1 − köpår) / livslängd. Batterilagret hade belastats med hela batteriet mot en nytta räknad till 2030 (−4,9 ton till 2030). Utan livslängd belastas posten fullt som förut, och utläsningen ber därför alltid om livslängd för köpt utrustning. I potentialläget gäller i stället nästa stycke.
+
+**Tillverkning skrivs av över livslängden i potentialläget** (sedan 1.1, Henric 2026-11-10). Rubriktalet i potentialläget är ett enda år. Bokförs hela tillverkningen av en bil det år den köps, beror målåret på hur många bilar som råkar köpas just det året, och en bil som köptes 2027 och rullar 2030 syns i nyttan men inte i tillverkningen. Därför skrivs tillverkning av utrustning med en livslängd av jämnt över livslängden: varje år bär 1/livslängd av det som köptes vart och ett av livslängdens år bakåt, året självt inräknat, och det sista året den del som återstår när livslängden inte är ett helt antal år.
+
+```
+förändring(t) = summan av förändring_före_avskrivning(t − k) / livslängd, för k = 0, 1, … inom livslängden
+```
+
+Det gäller drivare med en livslängd som ökar utsläppen i medelscenariot, både årliga inköp (bilar som byts löpande) och engångsposter (laddpunkter som byggs ett visst år). En engångspost skrivs av till och med ikapp-året när ett sådant finns, så att summan blir andelen i stycket ovan. Ett slutår samma år som köpet läses inte som ikapp-år i potentialläget, eftersom det där har betytt "bara det året". Utläsningen ber om livslängd för tillverkad utrustning, kortast i min, och om en engångspost för en investering som görs en gång. Livslängden är utrustningens, inte hur länge kommunen behåller den: en tjänstebil som byts efter tre år rullar vidare hos nästa ägare. Inom fönstret till målåret hamnar då bara den del av tillverkningen som hör till åren dit; resten bär åren efter, som också får nyttan. Bakgrunden var tjänstebilarna: när utläsningen började räkna bilarnas och laddarnas tillverkning sjönk nettot 2030 från 116 till 15 ton med en territoriell nytta kring 120 ton, och medel 2026 till 2030 blev negativt. Mätt 2026-11-10, med kalkylen omräknad på samma godkända steg som en referenskörning utan avskrivningen: tjänstebilarnas netto 2030 blev 117 till 148 ton i tre omräkningar (126 utan) med en territoriell nytta kring 158 ton, och medel 2026 till 2030 48 till 101 ton (25 utan). Laddpunkternas netto 2030 sjönk från 51 till mellan 24 och 45 ton, eftersom laddpunkternas tillverkning nu bär en del av livslängden in i 2030 i stället för att stanna på byggåret, och deras medel 2026 till 2030 gick från -15 till mellan 5 och 14 ton. Lövblåsarna gick från 2,6 till 2,2 ton, och återbruket, som inte har någon utrustning, stod still. Två av fem utläsningar av tjänstebilarna med den nya regeln, den lägsta omräkningen och en hel referenskörning, läste fordonsflottans förnyelse på tre år som bilarnas livslängd, och den hela körningen fick då nettot 15 ton igen. Utläsningen säger sedan dess att en förnyelsecykel inte är en livslängd. Med det läste alla fem omräkningar av tjänstebilarna 15 år, och nettot 2030 blev 148 ton på referenskörningens steg och 104 till 117 ton på den hela körningens (där det varit 15), med medel 2026 till 2030 77 respektive 54 till 72 ton. Uppföljningsläget behåller sin egen regel (föregående stycke), eftersom resultatet där är hela fönstret och inte ett år. Bilagan visar ΔE före avskrivning i en egen kolumn bredvid ΔE, och livslängden prövas bland de bärande antagandena.
 
 **En kostnad blir aldrig en nytta** (sedan 2026-10-22, i uppföljningsläget). En engångspost är den köpta mängden. Skrevs den som ΔA > 0 med ΔEF < 0 sänktes faktorn på hela posten, och (1 + ΔA)(1 + ΔEF) − 1 kunde bli negativt, så att tillverkningen räknades som en minskning. Återbrukscontainern fick så 3,4 ton "nytta" av sina egna containrar, och energivisualiseringens skärmar samma sak i mindre skala. Kalkylen räknar nu en sådan post som den tillkomna mängden, ΔA × (1 + ΔEF), med postens egen faktor (ΔEF 0), per scenario, och skriver en OBS-rad. Ett attributionsband som kalkylen vänt för en nytta går då tillbaka som det skrevs.
 
-**Pengarnas egna utsläpp** (sedan 2026-10-22, bara i uppföljningsläget). En drivare vars aktivitet räknas i kronor och som ökar utsläppen i något scenario, alltså bidragsbeloppet gånger utsläpp per krona, ingår inte i resultatet. Pengarna hade använts av kommunen ändå. Den står i stället på en egen rad, "Pengarnas egna utsläpp", med högst 0,012 kg CO2e per krona, en tjänstetung faktor. Gav analysen en högre faktor står den i raden. Postens år räknas fortfarande till insatsens år, så medelfönstret flyttas inte. I driftsmedlens två körningar fanns sådana poster i sju analyser, olika i de två körningarna (krisberedskapen: 204 935 kr × 0,04 = −4,1 ton). Det som köptes och är fysiskt (utrustning, material, transporter) ska vara egna drivare i fysiska enheter. I potentialläget är posten en vanlig drivare som förut. Vändningen av attributionen, omräkningen mellan ton och kg och livslängdsandelen gäller däremot i båda lägena: de slår bara till när talen de behöver finns, och potentiallägets utläsning ber inte om livslängd eller attribution.
+**Pengarnas egna utsläpp** (sedan 2026-10-22, bara i uppföljningsläget). En drivare vars aktivitet räknas i kronor och som ökar utsläppen i något scenario, alltså bidragsbeloppet gånger utsläpp per krona, ingår inte i resultatet. Pengarna hade använts av kommunen ändå. Den står i stället på en egen rad, "Pengarnas egna utsläpp", med högst 0,012 kg CO2e per krona, en tjänstetung faktor. Gav analysen en högre faktor står den i raden. Postens år räknas fortfarande till insatsens år, så medelfönstret flyttas inte. I driftsmedlens två körningar fanns sådana poster i sju analyser, olika i de två körningarna (krisberedskapen: 204 935 kr × 0,04 = −4,1 ton). Det som köptes och är fysiskt (utrustning, material, transporter) ska vara egna drivare i fysiska enheter. I potentialläget är posten en vanlig drivare som förut. Vändningen av attributionen, omräkningen mellan ton och kg och livslängdsandelen gäller däremot i båda lägena: de slår bara till när talen de behöver finns, och potentiallägets utläsning ber inte om attribution, och om livslängd bara för tillverkad utrustning.
 
 ### Rubriktalet och åren det gäller
 
@@ -194,6 +213,42 @@ Talen är påhittade och räknade med CAIA:s kalkylmotor. En åtgärd ska minska
 
 Rubriktalet är målåret 2030: 13,3 ton CO2e, med spannet 6,6 (min) till 26,6 (max) samma år. Summan är 47,7 ton ackumulerat till 2030, och medel per år 2026 till 2030 blir 47,7 / 5 = 9,5 ton. Effekten sjunker något efter 2028 eftersom bilarna ändå blir renare för varje år: det åtgärden tar bort är värt mindre ju lägre emissionsfaktorn är.
 
+### Vad åtgärden ändrar i verksamheten
+
+Tonnen säger hur mycket utsläppen ändras. För att kunna följa upp en åtgärd och ställa den mot kommunens mål behövs samma förändring i den enhet verksamheten räknar i: kilometer, liter, kvadratmeter. Kalkylen skriver därför en mening per drivare i medelscenariot (sedan 2026-11-09). Meningen ger talet för målåret och ett snitt per år över samma år som *Medel per år* (2026 till 2030 i potentialläget).
+
+För en drivare som ändrar mängden aktivitet:
+
+```
+ändrad aktivitet = aktivitet_BAU × ΔA × infasning × attribution × andel
+```
+
+*Andel* gäller bara en engångspost (se *Engångsposter*) och är annars 1. Talet är alltså åtgärdens egen del av förändringen, med samma attribution som tonnen räknas med. Multiplicerar man det med emissionsfaktorn utan åtgärden samma år får man *förändring* i formeln under *Attribution*, alltså talet före uppdelningen på territoriellt och konsumtionsbaserat. Testerna håller kalkylen till det. Rubriktalet i ton (netto) kan skilja sig, eftersom det har gått igenom de faktorerna.
+
+För en drivare som ändrar emissionsfaktorn går det inte att räkna ut hur stor del av aktiviteten som byter. Kalkylen vet hur mycket lägre utsläppen per enhet blir, men inte vad det nya släpper ut. Den anger i stället en jämförelse: det motsvarar att minst så mycket går helt utan utsläpp.
+
+```
+aktivitet med åtgärden = aktivitet_BAU × (1 + ΔA × infasning)
+minst utan utsläpp     = aktivitet med åtgärden × −ΔEF × infasning × attribution × andel
+```
+
+Byter en del av aktiviteten till något annat är det den minsta mängd som måste byta, och ger det som ersätter också utsläpp behöver mer byta. Blir i stället allt lite renare (effektivare fordon, bättre isolering) är talet bara ett jämförelsetal. Kalkylen skriver en rad om det under listan. Med −60 procent på 35 000 liter diesel blir jämförelsen 21 000 liter. Höjer drivaren emissionsfaktorn står bara hur mycket högre den blir.
+
+Utskriften följer några regler:
+
+- Mängderna har två värdesiffror (108 000 blir 110 000), eftersom de bygger på antaganden.
+- Mängden står i den enhet analysen skrev för aktiviteten, utan "/år" och det som står inom parentes. Har kalkylen räknat om aktiviteten mellan ton och kg (se *Enhetskontrollen*) står den ändå i analysens enhet. Står det ett tal i enheten räknas det in i mängden: 50 gånger "100 kr" står som 5 000 kr.
+- När mängden ändras står andelen av aktiviteten utan åtgärden bredvid målårets tal, och spannet mellan min och max när båda pekar åt samma håll som medel. När emissionsfaktorn ändras är procenttalet hur mycket lägre utsläppen per enhet blir, och inget spann skrivs ut.
+- En engångspost står med sitt eget år och utan snitt.
+- En drivare vars aktivitet själv är utsläpp (kg CO2e per år) har ingen annan enhet, och meningen säger det.
+- En drivare som saknar effekt i alla tre scenarierna står inte med.
+
+I räkneexemplet ovan står det: 100 000 km mindre år 2030 än utan åtgärden (10 %, spann 50 000–200 000), i snitt 70 000 km mindre per år 2026–2030.
+
+Avsnittet står i kalkyltexten och i rutan *Det viktigaste* på kalkylsteget (de tre drivare som ger mest). I rapporten står det direkt efter *Beräknad klimatnytta*, och i en uppföljningsrapport alltså före *Uppmätt och antaget*. Saknar rapporten rubrikerna som kommer efter resultatet står avsnittet sist i texten. I en uppföljning är snittet det tal att läsa: en insats som slutat före målåret står som "ingen ändring" det året.
+
+Kalkylmotorn skriver avsnittet, och rapporten får det oförändrat på samma sätt som den tekniska bilagan. Skriver språkmodellen ett eget avsnitt med samma rubrik ersätts det. Saknas avsnittet i kalkylen, i en äldre analys eller när språkmodellen räknade själv, saknas det också i rapporten.
+
 ### Bärande antaganden
 
 Efter räkningen prövar koden varje osäkert tal för sig, i båda analyslägena. Talet flyttas från sitt min till sitt max medan allt annat står på medel, och koden mäter hur mycket det ackumulerade resultatet rör sig. De fem antaganden som flyttar resultatet mest skrivs ut i kalkylen, med ursprung.
@@ -234,6 +289,8 @@ Koden läser därför första ordet i aktivitetens enhet (före "/år" eller "pe
 - den ena är vikt och den andra energi,
 - den ena är vikt eller energi och den andra något annat, till exempel aktiviteten räknad i handlare och utsläppsfaktorn per kg,
 - utsläppsfaktorn är angiven i ton eller gram CO2e i stället för kg.
+
+**Storleksord räknas om** (sedan 2026-11-10). Står ett storleksord eller ett tal framför aktivitetens enhet (tusen, hundra, miljoner, milj., miljarder, mdr eller ett tal, till exempel "tusen km/år" eller "1 000 kg") räknar kalkylen om aktiviteten till enheten utan storleksordet: 500 tusen km blir 500 000 km. Står det framför det utsläppsfaktorn gäller per, till exempel "kg CO2e per 100 km", räknar kalkylen om faktorn till per enhet: 15 kg CO2e per 100 km blir 0,15 kg CO2e per km. Omräkningen görs före jämförelsen mellan ton och kg, så att 2 tusen ton mot en faktor per kg blir 2 000 000 kg. Har båda sidor samma storlek ("100 kr" mot "per 100 kr") räknas ingenting om, och inte heller när faktorn gäller per "enhet" eller saknar nämnare, eftersom den då gäller per det aktiviteten räknas i. Ett tal räknas bara när det står fritt framför ordet (4WD-bilar är ett namn). Kalkylen skriver omräkningen i indata ("räknat som 500 000 km"), i bilagans tabell och i samma varning som för ton mot kg, med hur stort felet blir om talet redan var omräknat men enheten fel angiven. Förut lästes storleksordet som en del av enhetens namn, så att 500 tusen km mot 0,15 kg CO2e per km gav 0,0075 ton där 7,5 var rätt, och 15 kg per 100 km gav 750 ton i stället för 7,5. Felet hittades i granskningen efter 1.0.0 och har inte setts i någon av de sparade riktiga analyserna (omkring 3 600 drivarrader). Ett ord som bara börjar som ett storleksord ("tusentals") räknas inte, och ett storleksord som följs av ett räkneord ("tusen handlare" mot en faktor per kg) räknas om men varnar fortfarande för att enheterna inte går ihop.
 
 Koden känner bara till g, kg, t, ton, Wh, kWh, MWh och GWh, samma tabell som källkontrollen under *Talens ursprung* använder, och samma ord utskrivna (kilogram, tonne, kilowattimme och liknande). Ett tillägg efter bindestreck räknas inte (kWh-el läses som kWh), och ton-km i alla stavningar (ton km, t·km, tkm) läses som ett eget ord, aldrig som ton. Är det första ordet på ena sidan inget av de kända orden, till exempel "el (kWh/år)" eller "Antal ton/år", letar koden efter ett känt ord längre fram på samma sida innan den varnar.
 
@@ -303,7 +360,7 @@ Kontrollen mättes om 2026-10-13, när trenderna började jämföras på medelv�
 
 De 71 körningarna är till största delen de analyser som ändringarna gjordes på. Samma dag prövades kontrollen därför på äldre sparade analyser som inte användes då (mätningen står under *Kända begränsningar*). Där markerade den nio tal i 35 utläsningar, och alla nio satt i utläsningar med rätt resultat. Sex gällde en bas som utläsningen flyttat för en tillkommande utsläppskälla (elen till nya elbilar, tillverkningen av nya maskiner), två en trend som vägts ihop av två godkända trender, och en ett engångsköp. De fem utläsningar som hamnade mer än fem procent från vad antagandena ger fick ingen markering. Felen där var av slag som kontrollen inte ser: ett slutår som föll bort, en känslighetspost som räknades in i summan, en trend på två motverkande poster, och en andel som räknades på en annan nivå än antagandena avsåg. En markering betyder alltså att ett tal inte är det godkända. Om resultatet är rätt eller fel säger den inget om, åt något håll.
 
-Det kontrollen inte fångar: ett bytt tecken, en ändring under en faktor 1,5, en effekt som är härledd utan att något godkänt antagande förankrar den, alla tre scenarier ändrade lika mycket, och en baslinje som den godkända texten sätter till noll eller anger per år på ena sidan och inte den andra. En effekt som är 0 i alla tre scenarier markeras bara när drivarens egna godkända antaganden anger en effekt. Klimatfaktorerna jämförs bara med drivarens eget block i evidenssteget, och i uppföljningsläget markeras inte en konsumtionsfaktor över 1 som lästs ut som 1. Det har hänt: en godkänd konsumtionsfaktor på 1,15 lästes ut som 1,0 i åtta utläsningar av åtta (2026-10-13, innan utläsningen fick en regel om det och innan faktorerna jämfördes), resultatet blev 74 ton i stället för 88, och ingenting markerades. En trend jämförs bara med om talet står någonstans i texten, så en trend på −20 procent passerar om "20" står i drivarens text. Ett tal som inte markerats är alltså inte därmed det godkända.
+Det kontrollen inte fångar: ett bytt tecken, en ändring under en faktor 1,5, en effekt som är härledd utan att något godkänt antagande förankrar den, alla tre scenarier ändrade lika mycket, och en baslinje som den godkända texten sätter till noll eller anger per år på ena sidan och inte den andra. En effekt som är 0 i alla tre scenarier markeras bara när drivarens egna godkända antaganden anger en effekt. Klimatfaktorerna jämförs bara med drivarens eget block i evidenssteget. Sedan 1.1 jämförs de i båda lägena; till och med 1.0.1 släppte uppföljningsläget igenom en konsumtionsfaktor över 1 som lästs ut som 1. Det felet har hänt: en godkänd konsumtionsfaktor på 1,15 lästes ut som 1,0 i åtta utläsningar av åtta (2026-10-13, innan utläsningen fick en regel om det och innan faktorerna jämfördes), resultatet blev 74 ton i stället för 88, och ingenting markerades. En trend jämförs bara med om talet står någonstans i texten, så en trend på −20 procent passerar om "20" står i drivarens text. Ett tal som inte markerats är alltså inte därmed det godkända.
 
 `next/tools/check_godkant.py` kör jämförelsen mot sparade körningar och skriver ut både markerade tal och tabellen ovan.
 
@@ -356,7 +413,9 @@ Rapporten i uppföljningsläget har dessutom raden "Analysläge: uppföljning av
 
 ## När kalkylmotorn inte kan läsa talen
 
-I steg 5 fyller språkmodellen i ett formulär, och koden vägrar formuläret om något tal är omöjligt. Det gäller bland annat när aktivitet eller emissionsfaktor saknas eller inte är större än noll, när en klimatfaktor saknas eller ligger utanför 0 till 2, när en minskning är större än 100 procent, när en trend ligger utanför −100 till +100 procent per år, när attributionen ligger utanför 0 till 1, när året för full effekt ligger före startåret, eller när en halveringstid inte är större än noll.
+I steg 5 fyller språkmodellen i ett formulär, och koden vägrar formuläret om något tal är omöjligt. Det gäller bland annat när aktivitet eller emissionsfaktor saknas eller inte är större än noll, när en klimatfaktor saknas eller ligger utanför 0 till 2, när en minskning är större än 100 procent, när en trend ligger utanför −100 till +100 procent per år, när attributionen ligger utanför 0 till 1, när året för full effekt ligger före startåret, när en halveringstid inte är större än noll, eller när ett årtal ligger utanför 1950 till 2200.
+
+Årsgränsen finns för att kalkylen går år för år från första startåret till målåret. Ett årtal med en siffra för mycket eller för lite (20300, eller 24 för 2024) gav förut ett orimligt rubriktal utan varning, eller en kalkyl som aldrig blev klar. Gränsen gäller målår, basår, startår, året för en engångspost, nyckelår, uppföljningsår och år för bidrag. Ett slutår eller ett år för full effekt får ligga längre fram än 2200: det betyder att effekten aldrig upphör eller aldrig når full verkan, och kalkylen går aldrig dit. Ett slutår före 1950 vägras för en årlig drivare; för en engångspost, där slutåret är ikapp-året, bortses från det.
 
 Då räknar språkmodellen själv. Detsamma händer när formuläret inte går att läsa alls, när utläsningen avbryts eller när något annat fel uppstår på vägen genom motorn. Ett fel hos modelltjänsten hör inte dit (bruten anslutning, överbelastning, en tidsgräns som löper ut). Då svarar steget med felet och användaren kör det igen; efter en bruten anslutning gör sidan ett nytt försök själv. Skälet är att reserven är ett nytt anrop till samma tjänst, med den tid som är kvar av stegets fem minuter (sedan 2026-10-13).
 
@@ -390,7 +449,7 @@ Varje analys räknar sin åtgärd på en egen baslinje. Lägger man ihop analyse
 
 Medel per år räknas över 2026–2030 i potentialläget och över de år alla analyser har i uppföljningsläget.
 
-**Facit.** Husbyggnaden 2030 med P = 17 200 och andelarna 50, 27,6 och 15,4 procent: summan av delarna blir 16 000 ton, gemensam baslinje 11 900 och Halvera som mål 8 600. Sola 2024: 133 ton när möbelflödet är lika stort som BUF:s inköp, mot 164 ton när flödet är mycket större. Skolmåltider på 5 och 20 procent av samma utsläpp: 24 procent, inte 25. Talen kommer från `tests/test_portfolj.py`.
+**Facit.** Husbyggnaden 2030 med P = 17 200 och andelarna 50, 27,6 och 15,4 procent: summan av delarna blir 16 000 ton, gemensam baslinje 11 900 och Halvera som mål 8 600. En uppföljd insats med återbrukade möbler och byggmaterial (Sola, 2024): 133 ton när möbelflödet är lika stort som barn- och ungdomsförvaltningens möbelinköp, mot 164 ton när flödet är mycket större. Skolmåltider på 5 och 20 procent av samma utsläpp: 24 procent, inte 25. Talen kommer från `tests/test_portfolj.py`.
 
 **Varningar.**
 
@@ -403,6 +462,48 @@ Medel per år räknas över 2026–2030 i potentialläget och över de år alla 
 - Det finns delar utan pott.
 
 Varje summa av åtgärdernas egna tal säger att den räknar samma ton flera gånger.
+
+## CAIA och DIN SPEC 91637
+
+DIN SPEC 91637 (september 2025) är en tysk standard för hur kommuner beskriver klimatåtgärder och följer upp dem. Den är ett ramverk för begrepp och arbetsgång, inte en räknemetod. Den beskriver en kedja från åtgärd till minskade utsläpp i fem led: åtgärden, en mätbar egenskap i kommunen som åtgärden ändrar (attribut), människors beteende, en ändrad aktivitet och utfallet. Om baslinje, systemgränser och dubbelräkning säger den nästan ingenting.
+
+**Samma ryggrad.** CAIA bygger på samma ryggrad som standarden. En åtgärd kopplas till en ändrad aktivitet. Utsläppen räknas som aktivitet gånger emissionsfaktor, och åtgärden ändrar den ena eller den andra. Åtgärder delas i direkta, indirekta och stödjande, och en stödjande åtgärd får inget eget tal. Osäkerheten anges som ett spann mellan min och max. CAIA har inte tagit den från standarden: indelningen har funnits i CAIA sedan första versionen.
+
+**Det CAIA har tagit efter.** Fyra saker kom till efter en genomgång av standarden hösten 2026:
+
+- Rapporten avslutas med *Följ upp med*: en eller två indikatorer per bärande drivare att följa upp åtgärden med (standardens avsnitt 5.5), i en enhet som allmänheten förstår (5.2). Finns inte i uppföljningsläget, där *Vad som behöver mätas* gör något liknande.
+- Evidenssteget skriver ut attributet för en indirekt eller möjliggörande åtgärd, vilken uppfattning det påverkar (säkerhet, bekvämlighet, status, hälsa, kostnad) och vilket led i kedjan som är osäkrast (4.5.3 och 4.5.4). Det är text, inget tal.
+- Resultatet står också i aktivitetens egen enhet, se *Vad åtgärden ändrar i verksamheten* (5.2).
+- Åtgärden klassas som standarden gör (4.5.2, sedan 1.1). Intagets profil anger nivå (kommunal, regional, nationell, internationell; tabell 1), instrumentkategori (reglering, ekonomiskt styrmedel, utbud och infrastruktur, information, egen konsumtion och förebild, grundläggande; tabell 2) i stället för CAIA:s tidigare typlista, och verkningstid som kort, medel eller lång (tabell 4) bredvid tidsramen i år. Steg 2 anger för varje drivare vilken av bilaga C:s sex aktivitetsförändringar den hör till (aktivitetsbyte, minskad användning, arbetseffektivitet, resurseffektivitet, resursbyte, kolinlagring), bredvid undvika, byta och förbättra. Klassningen är text och ändrar inga tal. Den gör det lättare att jämföra med och föra över till verktyg som följer standarden. Sparade analyser från före 1.1 har kvar sin typ av åtgärd.
+
+**Det CAIA inte räknar separat.** Attributet finns bara som text. Beteendet finns bara som en andel som ändrar sig, och varför de ändrar sig står i text. För en indirekt åtgärd uppskattar evidenssteget kedjan (hur många som nås, hur många som ändrar sig, hur mycket, åtgärdens andel), men leden multipliceras ihop till en enda effekt per drivare och sparas inte som egna tal. Standarden delar en aktivitet i vad som görs (operation), hur mycket som görs (arbete, till exempel personkilometer) och vad som går åt (resurs: energi, bränsle, material). I CAIA ingår arbete och resurs oftast i emissionsfaktorn, men ibland är de själva aktiviteten, till exempel kilowattimmar el. Andra effekter än växthusgaser (hälsa, buller, luftkvalitet) räknas inte, och det gör inte standarden heller. Kostnad per ton räknas inte. Kolupptag har inget eget spår i kalkylen. Klassningen av åtgärder följer CAIA:s egna listor (typ av åtgärd, sektor, tidsram i år) och inte standardens nivåer, instrumentkategorier och verkningstider.
+
+**Det CAIA gör som standarden inte kräver.** Jämförelsen är en utveckling utan åtgärden per drivare, med trend och källa, inte bara basåret. Varje drivare räknas territoriellt, konsumtionsbaserat och netto. Kalkylen görs av programkod, inte av språkmodellen, utom i reservläget, som märks. Varje indatatal redovisas med ursprung, och hänvisningar till biblioteket och kommunens data kontrolleras. De antaganden som flyttar resultatet mest prövas ett i taget. När två åtgärder verkar på samma utsläppspott i kommunens register hindrar portföljen att de räknar samma ton: andelarna multipliceras i stället för att läggas ihop. Infasning, avklingning och tidigareläggning ger effekten en tidsprofil, och uppföljningsläget räknar en genomförd insats.
+
+**Arbetsgången skiljer sig.** Standarden utgår från målen: vilka aktivitetsförändringar kommunen vill nå, och vilka åtgärder som räcker dit. CAIA bedömer en åtgärd i taget. Portföljen lägger ihop åtgärder men visar ännu inte hur långt de räcker mot ett målvärde, som 10 000 elbilar.
+
+Kort sagt: CAIA bygger på samma ryggrad som DIN SPEC 91637 (åtgärd, ändrad aktivitet, aktivitet gånger emissionsfaktor, direkta, indirekta och stödjande åtgärder), men räknar inte attribut- och beteendeleden som egna tal. CAIA påstår inte att den följer standarden.
+
+| CAIA | DIN SPEC 91637 | Kommentar |
+|---|---|---|
+| åtgärd | intervention | |
+| typ av effekt: direkt, indirekt eller möjliggörande, stödjande | direct, indirect, foundational intervention | |
+| nivå | level | samma fyra nivåer |
+| instrumentkategori (före 1.1: typ av åtgärd) | instrument category | samma sex kategorier sedan 1.1 |
+| rådighet | (ingen) | |
+| verkningstid; tidsram, infasning, slutår | effective duration | verkningstiden i standardens klasser kort, medel och lång sedan 1.1, resten i år |
+| attribut (text i steg 4) | attribute, perception | räknas inte |
+| andel som ändrar sig | behavioural change | |
+| drivare | activity | arbete och resurs ingår oftast i emissionsfaktorn, ibland är de aktiviteten |
+| ändrad mängd (ΔA) eller ändrade utsläpp per enhet (ΔEF); undvika, byta, förbättra; aktivitetsförändring | activity shift | bilaga C:s sex kategorier per drivare sedan 1.1 |
+| förändring i ton | outcome | |
+| utsläppen utan åtgärden, nuläge | base year, reference scenario | standarden ställer inga krav |
+| territoriellt, konsumtion, överlapp | (ingen) | |
+| utsläppspott, portfölj | scenario | CAIA multiplicerar andelar på samma pott, standarden summerar |
+| *Följ upp med* | key indicators | |
+| uppföljningsläget | ex-post evaluation, monitoring | |
+| (räknas inte) | co-benefits | |
+| utsläppskällor (steg 2) | (ingen) | |
 
 ## Kända begränsningar
 
@@ -423,7 +524,7 @@ Var spridningen uppstår är delvis mätt. Utläsningen av talen i steg 5 görs 
 | Tjänstebilar | −49,5, 8,0, 11,4 och 111,2 | 88,5, 88,5, 88,7 och 88,7 |
 | Återbruk | 135 till 138 i fyra, 248 till 252 i fyra | 137,4 i tre av tre |
 | Lövblåsare | 3,3 i fyra av fyra | 3,3 i två av två |
-| En analys från workshopadressen | 61,4 i två av två | 60,1, 61,3 och 61,3 |
+| En analys gjord under en workshop | 61,4 i två av två | 60,1, 61,3 och 61,3 |
 
 Ändringen var att potentiallägets utläsning körs med hög resonemangsnivå i stället för medel och fick tre regler (se DECISIONS.md). Uppföljningslägets utläsning mättes 2026-11-08 och läser sedan dess också med hög nivå, med regeln om faktorer över 1 (DECISIONS.md, samma datum). Med medelnivån svarade utläsningen ibland efter en kort titt: på återbruket tog de felaktiga utläsningarna 15 till 18 sekunder och de riktiga 31 till 39, och på tjänstebilarna tog alla fyra 14 till 17 sekunder. Med hög nivå tar en utläsning 40 till 80 sekunder. Inget av de felaktiga talen i kolumnen "före" markerades av jämförelsen med det som godkändes. De fyra felaktiga återbrukstalen fick kalkylens varning om scenarier i fel ordning, och två av tjänstebilstalen (8,0 och 111,2) fick ingen varning alls.
 
@@ -468,7 +569,7 @@ Utläsningen läser alltså klart oftare rätt än förut, även på analyser re
 
 **Portföljen kontrollerar bara överlapp inom en pott.** Delar utan pott och delar utanför potten läggs ihop som förut. Två åtgärder som verkar på var sin del av samma pott räknas som om de verkade på samma utsläpp, vilket ger ett för lågt tal; då ska potten delas. Pottens tal gäller utsläppen före klimatfaktorerna, och om pottens perspektiv stämmer med delarnas klimatfaktorer prövas inte. Pottvalet görs av användaren, analysen föreslår ingen pott än. Karlstad har två potter, och husbyggnadens baslinje är odokumenterad bortom en tidigare analys.
 
-**Uppföljningsläget är nytt.** Det är prövat på ett fåtal insatser. I provkörningarna gav Testcyklisterna 0,0 och 0,1 ton per år i två körningar, där 2025 års analys i potentialläget hade gett 17. Att talen blev lägre var avsikten med läget, men det finns ännu inget facit att stämma av dem mot.
+**Uppföljningsläget är nytt.** Det är prövat på ett fåtal insatser. I provkörningarna gav en insats för vardagscykling (Testcyklisterna) 0,0 och 0,1 ton per år i två körningar, där 2025 års analys i potentialläget hade gett 17. Att talen blev lägre var avsikten med läget, men det finns ännu inget facit att stämma av dem mot.
 
 **Scenarier och attribution är under avstämning**, se början av dokumentet.
 

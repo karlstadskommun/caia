@@ -9,12 +9,45 @@ import json
 from pathlib import Path
 
 import pytest
+from caia.agents import baslinje_bau, cove_qa, emap, evidens, intake, kalkyl
+from caia.profiles import parse_profiles
 from test_key_points import _run, _texts
 
-from caia.agents import cove_qa, emap, evidens, intake, kalkyl, baslinje_bau
-from caia.profiles import parse_profiles
-
 FIX = Path(__file__).parent / 'fixtures'
+
+
+def test_the_profile_classifies_the_measure_as_din_spec_91637_does():
+    """1.1, DIN SPEC 91637 4.5.2: level (table 1), instrument category
+    (table 2) instead of the old type list, and when the effect comes
+    (table 4)."""
+    p = intake.SYSTEM_PROMPT
+    order = ['*Rådighet:*', '*Nivå:*', '*Instrumentkategori:*', '*Mognad:*', '*Tidsram:*',
+             '*Verkningstid:*', '*Kommun:*']
+    assert [p.index(x) for x in order] == sorted(p.index(x) for x in order)
+    assert '*Typ av åtgärd:*' not in p
+    for word in ('egen konsumtion och förebild', 'utbud och infrastruktur', 'grundläggande',
+                 'kommunal / regional / nationell / internationell', 'kort / medel / lång'):
+        assert word in p, word
+    # Step 2 takes them from the profile and adds annex C per driver.
+    e = emap.SYSTEM_PROMPT
+    assert 'Instrumentkategori:' in e and 'Verkningstid:' in e
+    assert 'aktivitetsförändring: [en eller flera av' in e
+    for shift in ('aktivitetsbyte', 'minskad användning', 'arbetseffektivitet',
+                  'resurseffektivitet', 'resursbyte', 'kolinlagring'):
+        assert f'- {shift}:' in e, shift
+
+
+def test_new_and_old_profiles_keep_their_fields_in_order():
+    new = """ÅTGÄRDSPROFIL
+*Namn:* Laddpunkter
+*Verkningstid:* kort
+*Instrumentkategori:* utbud och infrastruktur
+*Nivå:* kommunal
+*Rådighet:* indirekt
+*Tidsram:* 2027–2030
+"""
+    labels = [f['label'] for f in parse_profiles(new)['profiles'][0]['fields']]
+    assert labels == ['Rådighet', 'Nivå', 'Instrumentkategori', 'Tidsram', 'Verkningstid']
 
 
 def test_the_profile_asks_for_scale_and_maturity():

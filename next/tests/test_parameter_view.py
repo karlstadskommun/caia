@@ -27,35 +27,49 @@ from caia.data import parameters as P  # noqa: E402
 from caia.web import app as A  # noqa: E402
 from test_client_ui import _between, _node  # noqa: E402
 from test_report_row import _inline_script  # noqa: E402
+from conftest import HAS_KK  # noqa: E402
 
 # Read by hand in kommuner/karlstad/data/ on 2026-10-13:
 #   Kommunrapport_karlstad_vaxthusgaser_totalt.csv, row Alla;Alla, column 2023: 224950,7472
 #   energianvandning_bostader_karlstad.csv, row "Per person": 6.67 (MWh)
-#   fotavtryck-per-konsumtionskategori.json, per coicop, the columns Karlstad and per100sek:
-#     07.D 666.44 / 9.2407   07.3.3 651.79 / 19.8985   04.5.5 226.55 / 5.2712
-#     01.1.4 218.45 / 4.6002   04.2.1 208.29 / 0.82797
 #   BASE_pop in the library: 97 233, so 224950.7472 / 97233 = 2.3135
 ONE_CELL = {
     'BASE_co2_total_territorial': '224 951',
     'BASE_co2_percap_territorial': '2,31',
     'HEAT_energy_use_percap_res': '6 670',
-    'CONS_dir_vehicle_CO2e_pc_Karlstad': '666',
-    'CONS_air_travel_CO2e_pc_Karlstad': '652',
-    'CONS_district_heat_CO2e_pc_Karlstad': '227',
-    'CONS_dairy_eggs_CO2e_pc_Karlstad': '218',
-    'CONS_housing_imputed_rent_CO2e_pc_Karlstad': '208',
-    'CONS_dir_vehicle_intensity_CO2e_per100sek': '9,24',
-    'CONS_air_travel_intensity_CO2e_per100sek': '19,9',
-    'CONS_district_heat_intensity_CO2e_per100sek': '5,27',
-    'CONS_dairy_eggs_intensity_CO2e_per100sek': '4,60',
-    'CONS_housing_imputed_rent_intensity_CO2e_per100sek': '0,828',
 }
+# The CONS_ rows point at one cell each in Konsumtionskompassen's export
+# (fotavtryck-per-konsumtionskategori.json): (coicop, column). Its numbers are
+# not written here. The file's licence (CC BY-NC-ND 4.0) keeps it out of the
+# public release, so the expected value is read from the file with json, not
+# through the loader under test; without the file these rows are standard
+# values (conftest.KK_FILES).
+FROM_KK = {
+    'CONS_dir_vehicle_CO2e_pc_Karlstad': ('07.D', 'Karlstad'),
+    'CONS_air_travel_CO2e_pc_Karlstad': ('07.3.3', 'Karlstad'),
+    'CONS_district_heat_CO2e_pc_Karlstad': ('04.5.5', 'Karlstad'),
+    'CONS_dairy_eggs_CO2e_pc_Karlstad': ('01.1.4', 'Karlstad'),
+    'CONS_housing_imputed_rent_CO2e_pc_Karlstad': ('04.2.1', 'Karlstad'),
+    'CONS_dir_vehicle_intensity_CO2e_per100sek': ('07.D', 'per100sek'),
+    'CONS_air_travel_intensity_CO2e_per100sek': ('07.3.3', 'per100sek'),
+    'CONS_district_heat_intensity_CO2e_per100sek': ('04.5.5', 'per100sek'),
+    'CONS_dairy_eggs_intensity_CO2e_per100sek': ('01.1.4', 'per100sek'),
+    'CONS_housing_imputed_rent_intensity_CO2e_per100sek': ('04.2.1', 'per100sek'),
+}
+FOOTPRINT = kommun.BUNDLED_DIR / 'karlstad' / 'data' / 'fotavtryck-per-konsumtionskategori.json'
+
+
+def _export_cell(code: str, column: str) -> float:
+    rows = [r for r in json.loads(FOOTPRINT.read_text(encoding='utf-8')) if r['coicop'] == code]
+    assert len(rows) == 1, code
+    return rows[0][column]
 # A share of floor area out of two MWh totals, and two survey distributions:
 # none of them is one cell in a file. The municipal construction row is one
 # category in the municipal-org file, which has no cell reader (_CELL_READERS).
 NOT_ONE_CELL = ('HEAT_share_district_heating_res', 'GOODS_secondhand_share',
                 'MAT_meat_total_kg_percap_SE', 'BYGG_municipal_husbyggande_CO2e')
 TECHNICAL = re.compile(r'LOOKUP|DATA_[A-Z]')
+KK = pytest.mark.konsumtionskompassen
 
 
 def _view() -> dict[str, dict]:
@@ -77,12 +91,13 @@ def use_kommun():
 # ---------- the number shown is the number in the file ----------
 
 @pytest.mark.karlstad
+@KK
 def test_every_data_file_row_is_accounted_for():
     """The two lists above are the whole set, counted from the library itself."""
     datafil = {r['id'] for s in P.parse_parameter_library() for r in s['rows']
                if r['provenance'] == 'datafil'}
-    assert datafil == set(ONE_CELL) | set(NOT_ONE_CELL)
-    assert not set(ONE_CELL) & set(NOT_ONE_CELL)
+    assert datafil == set(ONE_CELL) | set(FROM_KK) | set(NOT_ONE_CELL)
+    assert not set(ONE_CELL) & set(NOT_ONE_CELL) and not set(FROM_KK) & (set(ONE_CELL) | set(NOT_ONE_CELL))
 
 
 @pytest.mark.karlstad
@@ -90,6 +105,15 @@ def test_every_data_file_row_is_accounted_for():
 def test_a_row_that_points_at_one_cell_shows_that_number(pid, expected):
     row = _view()[pid]
     assert row['value_display'] == expected
+    assert row['value_note'].endswith('.') and 'Datafil: ' in row['value_note']
+
+
+@pytest.mark.karlstad
+@KK
+@pytest.mark.parametrize('pid', sorted(FROM_KK))
+def test_a_consumption_row_shows_the_number_in_the_export(pid):
+    row = _view()[pid]
+    assert row['value_display'] == P._display_number(_export_cell(*FROM_KK[pid]))
     assert row['value_note'].endswith('.') and 'Datafil: ' in row['value_note']
 
 
@@ -109,7 +133,8 @@ def test_no_expression_reaches_the_reader():
               if TECHNICAL.search(r[k])]
     assert not leaked
     # Control: the expressions are there to leak, in the field the view no longer prints.
-    assert sum(1 for r in rows if TECHNICAL.search(r['value_used'])) == len(ONE_CELL) + len(NOT_ONE_CELL)
+    expressions = len(ONE_CELL) + len(NOT_ONE_CELL) + (len(FROM_KK) if HAS_KK else 0)
+    assert sum(1 for r in rows if TECHNICAL.search(r['value_used'])) == expressions
 
 
 @pytest.mark.karlstad
@@ -121,10 +146,15 @@ def test_the_note_says_what_was_read_and_from_where():
         'Totala utsläpp, 2023, delat med Kommunbefolkning. '
         'Datafil: Totala utsläpp per sektor och år (SMHI/RUS).')
     assert view['HEAT_energy_use_percap_res']['value_note'].startswith('MWh, Per person, gånger 1 000. ')
-    assert view['CONS_air_travel_CO2e_pc_Karlstad']['value_note'].startswith(
-        'Flygresor (COICOP 07.3.3), Karlstad. ')
     assert view['GOODS_secondhand_share']['value_note'].startswith('Secondhand_Frequency. ')
     assert view['HEAT_share_district_heating_res']['value_note'].startswith('Småhus vs Flerbostadshus. ')
+
+
+@pytest.mark.karlstad
+@KK
+def test_the_note_names_the_consumption_category():
+    assert _view()['CONS_air_travel_CO2e_pc_Karlstad']['value_note'].startswith(
+        'Flygresor (COICOP 07.3.3), Karlstad. ')
 
 
 @pytest.mark.karlstad
@@ -171,7 +201,6 @@ WORDS = 'Läses ur datafilen vid varje analys'
 @pytest.mark.parametrize('expression,source,shown', [
     # control: the readers do read these
     ('LOOKUP(DATA_EMISSIONS_TOTAL, "Totala utsläpp", 2022)', 'DATA_EMISSIONS_TOTAL', '224 496'),
-    ('LOOKUP(DATA_CONSUMPTION_FOOTPRINT, "Sverige", "coicop=07.D")', 'DATA_CONSUMPTION_FOOTPRINT', '659'),
     ('LOOKUP(DATA_ENERGY_RESIDENTIAL, "MWh", "Totalt")', 'DATA_ENERGY_RESIDENTIAL', '643 851'),
     # a year, a sector, a column or a category that is not there
     ('LOOKUP(DATA_EMISSIONS_TOTAL, "Totala utsläpp", 1989)', 'DATA_EMISSIONS_TOTAL', WORDS),
@@ -205,6 +234,16 @@ WORDS = 'Läses ur datafilen vid varje analys'
 def test_what_an_expression_shows(expression, source, shown):
     text, note = _show(expression, source)
     assert text == shown
+    assert 'Datafil: ' in note and not TECHNICAL.search(note)
+
+
+@pytest.mark.karlstad
+@KK
+def test_the_footprint_reader_reads_another_column():
+    # control for the WORDS rows below it: the reader does read the export
+    text, note = _show('LOOKUP(DATA_CONSUMPTION_FOOTPRINT, "Sverige", "coicop=07.D")',
+                       'DATA_CONSUMPTION_FOOTPRINT')
+    assert text == P._display_number(_export_cell('07.D', 'Sverige'))
     assert 'Datafil: ' in note and not TECHNICAL.search(note)
 
 
@@ -335,8 +374,8 @@ def test_the_footprint_reader_wants_one_category_and_a_real_number(tmp_path):
 
 @pytest.mark.parametrize('x,shown', [
     (224950.7472, '224 951'), (6670.0, '6 670'), (999.6, '1 000'), (999.4, '999'),
-    (666.44, '666'), (99.96, '100'), (19.8985, '19,9'), (9.2407, '9,24'), (4.6002, '4,60'),
-    (2.3135, '2,31'), (0.82797, '0,828'), (0.0015004, '0,00150'), (1.2345e-7, '0,000000123'),
+    (512.44, '512'), (99.96, '100'), (31.8985, '31,9'), (7.2407, '7,24'), (3.6002, '3,60'),
+    (2.3135, '2,31'), (0.61797, '0,618'), (0.0015004, '0,00150'), (1.2345e-7, '0,000000123'),
     (-2.3135, '-2,31'), (-224950.7472, '-224 951'), (0.0, '0'),
 ])
 def test_numbers_are_written_with_three_significant_figures(x, shown):
@@ -360,7 +399,7 @@ def _goteborg(tmp_path, population: str = '600 000', column: str = 'Göteborg'):
     (root / 'parameters_library.md').write_text(lib, encoding='utf-8')
     (root / 'data' / 'fotavtryck-per-konsumtionskategori.json').write_text(json.dumps([
         {'coicop': '07.D', 'label': 'fordon', 'per100sek': 9.2, 'Göteborg': 512.4,
-         'Sverige': 658.6}]), encoding='utf-8')
+         'Sverige': 640.0}]), encoding='utf-8')
     (root / 'data' / 'kommunrapport_vaxthusgaser_totalt.csv').write_text(
         'Rapportnamn:;x\nEmissioner;\nEnhet: ton/år;\nCO2-ekv;\n;\n'
         ';;;;2022;2023\n'
@@ -447,7 +486,10 @@ def test_the_route_carries_the_display_fields(client):
     assert rows['BASE_co2_total_territorial']['value_display'] == '224 951'
     assert rows['BASE_co2_total_territorial']['value_note'].startswith('Totala utsläpp, 2023.')
     assert rows['BASE_co2_total_territorial']['value_used'].startswith('LOOKUP(')  # contract kept
-    assert body['counts'] == {'lokal': 17, 'datafil': 17, 'schablon': 69}
+    # Without Konsumtionskompassen's files (the public release) its ten rows
+    # are standard values.
+    assert body['counts'] == ({'lokal': 17, 'datafil': 17, 'schablon': 69} if HAS_KK
+                              else {'lokal': 17, 'datafil': 7, 'schablon': 79})
 
 
 RENDER = """

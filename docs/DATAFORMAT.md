@@ -29,6 +29,8 @@ Exporten från Nationella emissionsdatabasen (RUS/SMHI), "Emissioner av växthus
 iconv -f latin1 -t utf-8 export.csv > data/kommunrapport_vaxthusgaser_totalt.csv
 ```
 
+Steget gäller en ny export. Karlstads incheckade fil konverterades inte rent: å, ä och ö i etiketterna står som ersättningstecken (U+FFFD). CAIA lagar etiketterna när filen läses, och talen är orörda.
+
 Layout, semikolonseparerad:
 
 1. Fem rader metadata (rapportnamn, enhet och så vidare). De hoppas över.
@@ -53,20 +55,20 @@ Källa: SCB, Kommunal och regional energistatistik, tabellen *Slutanvändning (M
 En JSON-lista, ett objekt per konsumtionskategori, som exporten från Konsumtionskompassen:
 
 ```json
-[{"coicop": "07.D", "label": "direkta utsläpp från fordonsanvändning", "per100sek": 9.24, "Karlstad": 666.4, "Värmlands län": 842.9, "Sverige": 658.6}]
+[{"coicop": "07.D", "label": "direkta utsläpp från fordonsanvändning", "per100sek": 8.5, "Exempelstad": 600.0, "Exempellän": 700.0, "Sverige": 640.0}]
 ```
 
-Kommunens egen kolumn hittas på `ort` i `kommun.toml`: för `ort = "Göteborg"` måste nyckeln heta `"Göteborg"`. Värdet är kg CO2e per person och år.
+Talen ovan är påhittade. Kommunens egen kolumn hittas på `ort` i `kommun.toml`: för `ort = "Göteborg"` måste nyckeln heta `"Göteborg"`. Värdet är kg CO2e per person och år.
 
 ### DATA_HOUSEHOLD_TIME_SERIES
 
 En JSON-lista, ett objekt per region, årtal som nycklar:
 
 ```json
-[{"2019": 5887.6, "2020": 4752.5, "region": "Karlstad", "code": "1780"}]
+[{"2019": 5500.0, "2020": 4900.0, "region": "Exempelstad", "code": "0000"}]
 ```
 
-Agenterna får de tre senaste åren per region, kg CO2e per person och år.
+Talen är påhittade. Agenterna får de tre senaste åren per region, kg CO2e per person och år.
 
 ### DATA_MUNICIPAL_ORG
 
@@ -105,6 +107,6 @@ anmarkning = "Valfri: osäkerheter i källan"
 
 Potterna får inte överlappa varandra: en pott inuti en annan räknar samma ton två gånger. En fil med fel (saknad källa, en baslinje som inte är ett tal större än noll, ett id som finns två gånger) gör att portföljen säger att registret inte går att läsa.
 
-## Karlstads övriga filer
+## Konsumtionskompassens filer i Karlstads profil
 
-Tre filer i Karlstads `data/` står inte i registret och läses inte: `fördelning-av-utsläpp-per-konsumtionskategori.json`, `sammanräknade-utsläpp-i-valda-konsumtionskategorier.json` och `utsläpp-och-befolkning-i-karlstads-deso.json`. De ligger kvar som rådata från Konsumtionskompassen.
+Fem filer i Karlstads `data/` kommer från Konsumtionskompassen (Stockholm Environment Institute), som har licensen CC BY-NC-ND 4.0. Den går inte att förena med EUPL, så filerna följer inte med den offentliga utgåvan. Där får bibliotekets rader `CONS_*` sina standardvärden, som biblioteket säger att agenterna ska göra när en fil saknas. Två av filerna står i registret (`DATA_CONSUMPTION_FOOTPRINT` och `DATA_HOUSEHOLD_TIME_SERIES`). Tre läses inte alls: `fördelning-av-utsläpp-per-konsumtionskategori.json`, `sammanräknade-utsläpp-i-valda-konsumtionskategorier.json` och `utsläpp-och-befolkning-i-karlstads-deso.json`. En kommun som vill ha egna konsumtionsdata exporterar dem från [konsumtionskompassen.se](https://konsumtionskompassen.se/) och anger källan "Stockholm Environment Institute (SEI), Konsumtionskompassen, 2025".

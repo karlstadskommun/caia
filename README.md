@@ -4,7 +4,7 @@ CAIA estimates the climate effect of a municipal climate action. The user descri
 
 CAIA has two analysis modes, chosen before the analysis starts: *forecast* (potentialläge) for an action that has not been carried out yet, and *follow-up* (uppföljningsläge) for an intervention that has already been made, where the question is what that particular money actually achieved and what remains.
 
-CAIA was developed by Karlstads kommun (the Municipality of Karlstad, Sweden) within Klimatneutrala Karlstad 2030, supported by Viable Cities. Henric Barkman, process manager at Karlstads kommun, brought the tool about: he commissioned it and made the method decisions. The code was written with the AI assistant Demi, which runs on Claude. This is version 1.0.1; the first public release was 1.0.0.
+CAIA was developed by Karlstads kommun (the Municipality of Karlstad, Sweden) within Klimatneutrala Karlstad 2030, supported by Viable Cities. Henric Barkman, process manager at Karlstads kommun, brought the tool about: he commissioned it and made the method decisions. The code was written with the AI assistant Demi, which runs on Claude. This is version 1.1.0; the first public release was 1.0.0.
 
 **Language.** The user interface, the prompts and most of the documentation are in Swedish. This README is also available in Swedish: [README.sv.md](README.sv.md).
 
@@ -18,9 +18,12 @@ The licence covers the code and documentation in this repository. See [Data](#da
 
 ## Data
 
-The repository ships with one municipality profile, `exempel` (`next/src/caia/kommuner/exempel/`): a template with national default values and no local data files. A municipality fills in its own values and data files to make a profile of its own (see [Set up for a municipality](#set-up-for-a-municipality)).
+The repository ships with two municipality profiles in `next/src/caia/kommuner/`:
 
-Karlstad's own profile (its parameter library and data files) is not part of this release. Some of its data files come from third parties with their own terms. Tests that need Karlstad's profile are marked `karlstad` and are skipped with a reason when it is absent, so the test summary reports a number of skipped tests.
+- `exempel`, a template with national default values and no local data files. A municipality fills in its own values and data files to make a profile of its own (see [Set up for a municipality](#set-up-for-a-municipality)).
+- `karlstad`, Karlstad's own profile (since 1.1): its parameter library, emission pools and data files, as a worked example of a filled-in profile. Five data files from Konsumtionskompassen are left out, because their licence (CC BY-NC-ND 4.0) cannot be combined with the EUPL. Without them the profile's consumption rows (`CONS_*`) use their standard values, so an analysis run on this profile can differ from one run in Karlstad's own installation. The tests that read those files are skipped with a reason, so the test summary reports a number of skipped tests.
+
+The sources and terms of each data file are in [NOTICE](NOTICE).
 
 `next/tests/fixtures/` holds saved model output from analyses of Karlstad's actions. The tests and the development server use it. It contains no personal data.
 
@@ -54,7 +57,7 @@ CAIA_KOMMUN=exempel CAIA_DEV_OPEN=1 CAIA_INSECURE_COOKIE=1 .venv/bin/python tool
 
 Open http://127.0.0.1:5055. If the page shows a login box, your shell has `SUPABASE_URL` set from before: remove it (`unset SUPABASE_URL`) and start again.
 
-**Run a real analysis.** Requires an API key from [OpenRouter](https://openrouter.ai). An analysis costs a few US dollars (2 to 4 USD in autumn 2026) and takes 10 to 15 minutes:
+**Run a real analysis.** Requires an API key from [OpenRouter](https://openrouter.ai). An analysis costs a few US dollars (2 to 5 USD in autumn 2026). Expect 7 to 30 minutes, as the start page says: it depends mostly on how closely you read at the four stops, and the model steps themselves took 9 to 12 minutes in the reference runs on 2026-11-10:
 
 ```
 cp .env.example .env        # fill in OPENROUTER_API_KEY, leave CAIA_KOMMUN=exempel
@@ -82,6 +85,7 @@ Before an installation is opened to staff: the text users write is sent to a lan
 ## Documentation (Swedish)
 
 - [docs/METOD.md](docs/METOD.md): what CAIA calculates and what it does not, the formulas, source marking and known limitations. For reviewers who do not read code.
+- [docs/METOD.html](docs/METOD.html): the same method as an overview to read in a browser (in Swedish), with a summary per section and the full text folded out on request. It is generated from METOD.md by `next/tools/metod_html.py`. METOD.md is the source; never edit the HTML by hand.
 - [docs/ANVANDARGUIDE.md](docs/ANVANDARGUIDE.md): a first analysis and how to read the report. For municipal staff.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): modules, data flow, external services and what they cost.
 - [docs/API.md](docs/API.md): every endpoint with input, output, errors and cost. For integrators.
@@ -98,7 +102,7 @@ The method's limitations, with the measured spread between runs, are in [docs/ME
 - **The sign can come out wrong for actions that avoid emissions.** A positive number is a reduction. An action such as reuse can be modelled by the language model as increased activity and get a minus. The calculation then warns of increased emissions, and the quality review points out the error. Such a result should not be used until the assumption is corrected.
 - **The average per year covers 2026 to 2030**, whatever the target year. An action that takes effect late in those years gets a low number, and one that takes effect only afterwards gets zero. The calculation warns in both cases.
 - **If CAIA's own calculation cannot read the model's numbers**, the language model calculates instead. The result is then marked `deterministic: false`, and the report says so.
-- **An analysis takes 10 to 15 minutes**, each step up to just under five. If the user cancels in the middle of a step, the call continues on the server and is still paid for.
+- **The model steps of an analysis take about ten minutes in all**, each step up to just under five. If the user cancels in the middle of a step, the call continues on the server and is still paid for.
 - **Rate limits are counted per server process.** On Vercel each instance has its own counter. That stops a looping client, not a determined abuser; the hard limit is the credit limit on the OpenRouter key.
 - **The API has no versioning yet**, beyond the release numbers in [CHANGELOG.md](CHANGELOG.md).
 - **Open items from the handover review (September 2026):** the comparison of the calculation input with the approved assumptions does not catch every misreading ([docs/METOD.md](docs/METOD.md#jämförelsen-med-det-som-godkändes)); the extraction takes the first JSON object with drivers in a model answer; the page loads fonts and libraries from Google and jsDelivr; the spread between runs is not shown to the user.

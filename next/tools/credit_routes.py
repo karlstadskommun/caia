@@ -172,6 +172,23 @@ def routes_for(model: str, now: float | None = None) -> list[tuple[str, str | No
     return out
 
 
+def cached_system(system):
+    """The system prompt as one text block with a cache breakpoint, on the
+    direct routes only.
+
+    Anthropic mailed the Swinga organisation (the first key) on 2026-11-10
+    that its cache hit rate was low, and CAIA sent no cache_control at all.
+    A step's prompt is the same for every call of that step in a run (the
+    evidens parts, the packages of a batch), so from the second call on it is
+    read from cache at a tenth of the price. Under the model's minimum (512
+    tokens on the 5.5 models) the breakpoint silently does nothing. The
+    OpenRouter route, and with it the web app's EU entry, gets the request
+    untouched. Anything that is not a non-empty string is passed on as is."""
+    if not isinstance(system, str) or not system:
+        return system
+    return [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+
+
 def routed_create(original):
     """api_client._create with the direct keys in front of it."""
 
@@ -187,7 +204,8 @@ def routed_create(original):
             try:
                 direct = _direct_client(key).with_options(
                     timeout=anthropic.Timeout(left, connect=min(DIRECT_CONNECT_TIMEOUT, left)))
-                return direct.messages.create(**{**kwargs, "model": wire})
+                return direct.messages.create(**{**kwargs, "model": wire,
+                                                 "system": cached_system(kwargs.get("system"))})
             except Exception as e:
                 kind = failover_kind(e)
                 if kind is None:
@@ -214,8 +232,9 @@ def tag_route(rec: dict) -> None:
     route = getattr(_LOCAL, "route", None)
     rec["route"] = route
     usd = rec.get("usd")
-    log.info("LLM usage route=%s model=%s input=%s output=%s usd=%s",
+    log.info("LLM usage route=%s model=%s input=%s output=%s cache_read=%s cache_write=%s usd=%s",
              route, rec.get("model"), rec.get("input"), rec.get("output"),
+             rec.get("cache_read"), rec.get("cache_write"),
              "n/a" if usd is None else f"{usd:.4f}")
 
 

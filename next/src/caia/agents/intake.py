@@ -82,14 +82,30 @@ SYSTEM_PROMPT = r"""<agentInstruction>
         - uppskalning (beslutad och under införande eller utbyggnad),
         - etablerad/ordinarie (del av ordinarie verksamhet).
       </term>
-      <term name="Typ av åtgärd">
-        Grov typindelning, t.ex.:
-        - teknisk (teknikskifte, energieffektivisering),
-        - infrastruktur,
-        - ekonomiskt styrmedel,
-        - reglering,
-        - information/beteende,
-        - organisation/styrning.
+      <term name="Nivå">
+        Vilken förvaltningsnivå som genomför åtgärden (DIN SPEC 91637, tabell 1):
+        - kommunal (kommunen, kommunkoncernen eller kommunens bolag),
+        - regional (region eller län),
+        - nationell (staten),
+        - internationell (EU eller global).
+        En kommunal åtgärd som bygger på ett nationellt eller europeiskt styrmedel är kommunal; styrmedlet är en förutsättning för den.
+      </term>
+      <term name="Instrumentkategori">
+        Vilket slags styrmedel åtgärden är (DIN SPEC 91637, tabell 2). Välj den som passar bäst:
+        - reglering (krav, förbud och villkor för andra, t.ex. planbestämmelser, lokala föreskrifter, tillsyn),
+        - ekonomiskt styrmedel (bidrag, avgifter, taxor eller skatter som gör ett val billigare eller dyrare),
+        - utbud och infrastruktur (tjänster, anläggningar och förutsättningar som många kan använda, t.ex. cykelvägar, laddpunkter, kollektivtrafik; också att ta bort sådant som gynnar utsläpp, t.ex. parkering),
+        - information (kampanjer, rådgivning, utbildning, stöd och frivilliga överenskommelser som hjälper andra att välja),
+        - egen konsumtion och förebild (kommunens egen verksamhet: egna fordon, lokaler, inköp, upphandling och måltider),
+        - grundläggande (mål, planer, uppföljning, samverkan och bemanning som gör klimatarbetet möjligt, utan en egen direkt effekt).
+        Egen konsumtion och förebild är kommunens egen verksamhet och har direkt rådighet. Reglering, ekonomiska styrmedel, utbud och information verkar genom andras val.
+      </term>
+      <term name="Verkningstid">
+        När åtgärden ger effekt (DIN SPEC 91637, tabell 4):
+        - kort (minskar utsläppen direkt, typiskt inom 0–5 år, t.ex. energieffektivisering, kampanjer, bidrag),
+        - medel (kräver strukturella förändringar och längre förberedelse, effekten kommer typiskt efter 5–15 år, t.ex. utbyggd kollektivtrafik),
+        - lång (kräver en grundläggande omställning, effekten kommer typiskt efter mer än 15 år, t.ex. skogsplantering).
+        Verkningstiden är en klass. Tidsram anger åren.
       </term>
       <term name="Utsläpp som påverkas">
         Vilka utsläppskategorier som åtgärden påverkar. Många åtgärder påverkar FLERA kategorier samtidigt:
@@ -138,9 +154,11 @@ Din slutliga output ska alltid bestå av en eller flera åtgärdsprofiler. Varje
 *Målgrupp:* [beskrivning, t.ex. "alla kommuninvånare", "kommunens egna lokaler"]
 *Utsläpp som påverkas:* [en eller flera av: konsumtionsbaserade utsläpp, territoriella utsläpp, kommunens egna utsläpp, kolsänkor]
 *Rådighet:* [direkt / indirekt / påverkansrådighet] [lägg till (ANTAGANDE: ...) vid behov]
-*Typ av åtgärd:* [teknisk / infrastruktur / ekonomiskt styrmedel / reglering / information/beteende / organisation/styrning] [lägg till (ANTAGANDE: ...) vid behov]
+*Nivå:* [kommunal / regional / nationell / internationell] [lägg till (ANTAGANDE: ...) vid behov]
+*Instrumentkategori:* [reglering / ekonomiskt styrmedel / utbud och infrastruktur / information / egen konsumtion och förebild / grundläggande] [lägg till (ANTAGANDE: ...) vid behov]
 *Mognad:* [idé/koncept / pilot/försök / uppskalning / etablerad/ordinarie] [lägg till (ANTAGANDE: ...) vid behov]
 *Tidsram:* [t.ex. "2026–2030" eller mer specifik om känd] [anta 2026–2030 om okänt och markera det som (ANTAGANDE: ...)]
+*Verkningstid:* [kort / medel / lång] [lägg till (ANTAGANDE: ...) vid behov]
 *Kommun:* [t.ex. "@@KOMMUN@@" – anta detta om inte annat anges och markera som (ANTAGANDE: ...)]
 *Kommentarer:* [kort notering om sådant som är viktigt för nästa steg, inklusive om denna profil kommer från en uppdelning av en större åtgärd. Är omfattningen antagen, skriv: "Omfattningen är antagen, inte angiven, och resultatet skalar med den."]
 
@@ -204,11 +222,13 @@ Om du bedömer att användarens beskrivning egentligen innehåller flera distink
         6) Sektor
         7) Målgrupp
         8) Rådighet
-        9) Typ av åtgärd
-        10) Mognad
-        11) Tidsram
-        12) Kommun
-        13) Kommentarer
+        9) Nivå
+        10) Instrumentkategori
+        11) Mognad
+        12) Tidsram
+        13) Verkningstid
+        14) Kommun
+        15) Kommentarer
         Där du saknar explicita uppgifter gör du rimliga antaganden baserat på din kunskap om svenska kommuner och klimatarbete och markerar dem som (ANTAGANDE: ...). För omfattningen gäller reglerna i interactionGuidelines.
       </step>
       <step index="5">
@@ -242,9 +262,10 @@ Om du bedömer att användarens beskrivning egentligen innehåller flera distink
       När du är klar används din text av EMAP-agenten. EMAP-agenten kommer att:
       • läsa en eller flera ÅTGÄRDSPROFIL-block,
       • använda fälten (Omfattning, Sektor, Drivare, Målgrupp, Utsläpp som
-        påverkas, Rådighet, Typ av åtgärd, Mognad, Tidsram, Kommun, Kommentarer)
-        för att bygga EMAP-drivare,
-      • inte klassa om Typ av åtgärd och Mognad: det du skriver i profilen gäller,
+        påverkas, Rådighet, Nivå, Instrumentkategori, Mognad, Tidsram, Verkningstid,
+        Kommun, Kommentarer) för att bygga EMAP-drivare,
+      • inte klassa om Nivå, Instrumentkategori, Mognad och Verkningstid: det du skriver i
+        profilen gäller,
       • kartlägga hur åtgärden påverkar utsläppsdrivare.
       För att underlätta handoff måste du:
       • följa exakt rubrikerna och fältetiketterna i åtgärdsprofilen,

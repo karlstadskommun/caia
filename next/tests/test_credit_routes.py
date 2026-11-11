@@ -48,7 +48,7 @@ class _Net:
     `calls` lists (route, model) in the order they were asked."""
 
     def __init__(self, answers):
-        self.answers, self.calls = answers, []
+        self.answers, self.calls, self.sent = answers, [], []
 
     def client(self, name):
         net = self
@@ -56,6 +56,7 @@ class _Net:
         class _Messages:
             def create(self, **kw):
                 net.calls.append((name, kw['model']))
+                net.sent.append((name, kw))
                 out = net.answers[name]()
                 if isinstance(out, BaseException):
                     raise out
@@ -107,6 +108,24 @@ def test_the_work_account_answers_and_nothing_switches(setup):
     assert net.calls == [('anthropic:1', 'claude-sonnet-5-5')]
     assert [r['route'] for r in records] == ['anthropic:1']
     assert records[0]['model'] == api_client.SONNET  # priced under the table's id
+
+
+def test_the_direct_route_caches_the_system_prompt_and_openrouter_gets_it_untouched(setup):
+    net, _ = setup({'anthropic:1': _out, 'anthropic:2': _out,
+                    'openrouter': lambda: _answer('via')})
+    assert _call() == 'via'
+    sent = dict(net.sent)
+    marked = [{'type': 'text', 'text': 'system', 'cache_control': {'type': 'ephemeral'}}]
+    assert sent['anthropic:1']['system'] == marked
+    assert sent['anthropic:2']['system'] == marked
+    assert sent['openrouter']['system'] == 'system'
+
+
+def test_cached_system_leaves_anything_but_a_string_alone():
+    blocks = [{'type': 'text', 'text': 'a'}]
+    assert credit_routes.cached_system(blocks) is blocks
+    assert credit_routes.cached_system('') == ''
+    assert credit_routes.cached_system(None) is None
 
 
 def test_work_account_out_second_takes_over_and_the_next_call_starts_there(setup):

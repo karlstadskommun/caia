@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Metod: så räknar CAIA</title>
+<!-- Generated from docs/METOD.md by next/tools/metod_html.py. Do not edit by hand. -->
+<style>
+:root {
+  --kk-charcoal: #444;
+  --kk-charcoal-text: #2f2e2c;
+  --kk-gray-50: #fafaf9;
+  --kk-gray-100: #f4f3f1;
+  --kk-gray-200: #e6e4e0;
+  --kk-gray-300: #cfccc7;
+  --kk-gray-400: #999;
+  --kk-gray-500: #6a6864;
+  --kk-gray-600: #555350;
+  --kk-orange: #E84E0D;
+  --kk-orange-soft: #FDE7DC;
+  --kk-orange-pale: #FEF4EF;
+  --kk-gold: #FFCC01;
+  --kk-red: #B5201F;
+  --kk-red-pale: #FDF7F7;
+  --kk-cream: #FFFAE8;
+  --kk-cream-text: #6F5A00;
+  --kk-bg: #FAF9F6;
+  --topbar: 0px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--kk-bg); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; color: var(--kk-charcoal-text); font: 400 15.5px/1.6 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+a { color: var(--kk-red); text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--kk-red), transparent 60%); }
+a:hover { text-decoration-color: var(--kk-red); }
+:focus-visible { outline: 2px solid var(--kk-orange); outline-offset: 2px; border-radius: 3px; }
+code { font-family: ui-monospace, 'Cascadia Mono', Consolas, Menlo, monospace; font-size: .86em; background: var(--kk-gray-100); padding: .1em .35em; border-radius: 4px; color: var(--kk-charcoal); overflow-wrap: anywhere; }
+strong { font-weight: 500; color: var(--kk-charcoal); }
+h1, h2, h3 { font-weight: 500; color: var(--kk-charcoal); }
+
+/* ---------- top bar, as in the CAIA app ---------- */
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: white; border-bottom: 1px solid var(--kk-gray-200); }
+.topbar-logo { font-size: 20px; font-weight: 500; letter-spacing: -0.3px; color: var(--kk-charcoal); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.topbar-logo::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--kk-orange); }
+.topbar-sep { width: 1px; height: 22px; background: var(--kk-gray-200); flex: none; }
+.topbar-sub { font-size: 13px; color: var(--kk-gray-500); letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.topbar button { margin-left: auto; background: none; border: 1px solid var(--kk-gray-200); border-radius: 100px; padding: 6px 14px; font-size: 12.5px; font-weight: 500; font-family: inherit; color: var(--kk-gray-600); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; flex: none; }
+.topbar button:hover { background: var(--kk-orange-pale); border-color: var(--kk-orange); color: var(--kk-charcoal); }
+.topbar button svg { width: 14px; height: 14px; }
+@media (min-width: 64rem) { .topbar button { display: none; } }
+
+/* ---------- layout ---------- */
+.page { display: grid; grid-template-columns: 1fr; }
+main { padding: 24px 18px 80px; min-width: 0; }
+@media (min-width: 64rem) {
+  .page { grid-template-columns: 17rem minmax(0, 1fr); }
+  main { padding: 40px clamp(24px, 4vw, 56px) 96px; }
+}
+.measure { max-width: 46rem; }
+
+/* ---------- table of contents ---------- */
+nav.toc { font-size: 13.5px; }
+.toc-inner { padding: 22px 16px 32px; }
+.toc-label { font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--kk-gray-400); margin: 0 0 10px; }
+.toc-list, .toc-list ol { list-style: none; margin: 0; padding: 0; }
+.toc-list a { display: flex; align-items: center; gap: 8px; color: var(--kk-gray-600); text-decoration: none; padding: 5px 10px; border-radius: 6px; border-left: 3px solid transparent; line-height: 1.35; }
+.toc-list a:hover { color: var(--kk-charcoal); background: var(--kk-gray-100); }
+.toc-list a.active { color: var(--kk-charcoal); border-left-color: var(--kk-orange); background: var(--kk-orange-pale); }
+.toc-group { margin-top: 12px; }
+.toc-group > a { color: var(--kk-charcoal); font-weight: 500; }
+.toc-group ol a { padding-left: 20px; font-size: 13px; }
+.toc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--kk-gold); flex: none; margin-left: auto; }
+.toc-tools { display: flex; gap: 8px; margin: 18px 0 0; flex-wrap: wrap; }
+.btn-pill { background: white; border: 1px solid var(--kk-gray-200); border-radius: 100px; padding: 6px 14px; font-size: 12px; font-weight: 500; color: var(--kk-gray-600); cursor: pointer; font-family: inherit; }
+.btn-pill:hover { background: var(--kk-orange-pale); border-color: var(--kk-orange); color: var(--kk-charcoal); }
+@media (min-width: 64rem) {
+  nav.toc { position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 1px solid var(--kk-gray-200); background: white; scrollbar-width: thin; }
+  .toc-close { display: none; }
+}
+@media (max-width: 63.99rem) {
+  nav.toc { position: fixed; inset: 0; z-index: 40; background: white; overflow-y: auto; visibility: hidden; opacity: 0; transition: opacity .15s, visibility 0s .15s; }
+  nav.toc.open { visibility: visible; opacity: 1; transition: opacity .15s; }
+  .toc-inner { padding: 12px 18px 48px; max-width: 34rem; }
+  .toc-list a { padding: 9px 12px; font-size: 15px; }
+  .toc-group ol a { font-size: 14px; }
+  .toc-close { position: sticky; top: 0; display: flex; justify-content: flex-end; padding: 6px 0; background: white; }
+  body.nav-open { overflow: hidden; }
+}
+@media (prefers-reduced-motion: reduce) { nav.toc, nav.toc.open { transition: none; } }
+[id] { scroll-margin-top: calc(var(--topbar) + 16px); }
+
+/* ---------- hero ---------- */
+.eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--kk-orange); margin: 4px 0 0; }
+.hero h1 { font-size: clamp(26px, 4.4vw, 34px); line-height: 1.15; letter-spacing: -0.4px; margin: 8px 0 12px; }
+.hero .intro p { color: var(--kk-gray-600); font-size: 16px; margin: 0 0 10px; }
+.hero .source { color: var(--kk-gray-500); font-size: 13px; margin: 14px 0 0; }
+
+h2.section-h { font-size: 21px; letter-spacing: -0.2px; margin: 44px 0 6px; }
+.section-lead { color: var(--kk-gray-600); margin: 0 0 18px; max-width: 46rem; }
+
+/* ---------- flow ---------- */
+.flow-wrap { container-type: inline-size; max-width: 76rem; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 14px; font-size: 13px; color: var(--kk-gray-600); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 4px; height: 14px; border-radius: 2px; display: inline-block; }
+.legend .lm { background: var(--kk-orange); }
+.legend .lc { background: var(--kk-gray-600); }
+.legend .la { background: var(--kk-gold); border-radius: 50%; width: 10px; height: 10px; }
+
+.flow { list-style: none; margin: 0; padding: 0; display: grid; position: relative; }
+.step { display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: 12px; position: relative; padding-bottom: 18px; }
+.step::before { content: ""; position: absolute; left: 18px; top: 36px; bottom: 0; width: 1px; background: var(--kk-gray-300); }
+.step:last-child::before { display: none; }
+.step-head { display: contents; }
+.step-n { grid-column: 1; grid-row: 1 / span 4; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; color: var(--kk-charcoal); background: white; border: 1px solid var(--kk-gray-300); position: relative; z-index: 1; font-variant-numeric: tabular-nums; }
+.step--gate .step-n { border-color: var(--kk-orange); }
+.step-name { grid-column: 2; font-weight: 500; color: var(--kk-charcoal); font-size: 16px; padding-top: 6px; margin-bottom: 6px; }
+.lane { grid-column: 2; border-radius: 6px; padding: 8px 12px 9px; margin-bottom: 6px; font-size: 14px; line-height: 1.45; background: white; border: 1px solid var(--kk-gray-200); border-left-width: 3px; }
+.lane p { margin: 0; overflow-wrap: break-word; }
+.lane-label { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
+.lane--model { border-left-color: var(--kk-orange); }
+.lane--model .lane-label { color: var(--kk-orange); }
+.lane--code { border-left-color: var(--kk-gray-600); }
+.lane--code .lane-label { color: var(--kk-gray-600); }
+.lane .none { color: var(--kk-gray-400); }
+.lane:has(.none) { background: transparent; border-style: dashed; border-left-style: dashed; }
+.step-foot { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; }
+.gate { color: var(--kk-gray-600); display: inline-flex; align-items: center; gap: 6px; }
+.gate::before { content: ""; width: 10px; height: 10px; border: 1.5px solid var(--kk-orange); border-radius: 3px; }
+.hot-mark { color: var(--kk-cream-text); display: inline-flex; align-items: center; gap: 6px; }
+.hot-mark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--kk-gold); }
+.phases { display: none; }
+
+@container (min-width: 36rem) and (max-width: 57.99rem) {
+  .step { grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr); column-gap: 10px; }
+  .step-n { grid-row: 1 / span 3; }
+  .step-name { grid-column: 2 / span 2; }
+  .lane--model { grid-column: 2; grid-row: 2; }
+  .lane--code { grid-column: 3; grid-row: 2; }
+  .step-foot { grid-column: 2 / span 2; grid-row: 3; }
+}
+@container (min-width: 58rem) {
+  .flow { grid-template-columns: 124px repeat(var(--steps), minmax(0, 1fr)); grid-template-rows: auto auto auto auto; column-gap: 8px; }
+  .flow::before { content: "Språkmodellen"; grid-column: 1; grid-row: 2; padding-top: 9px; font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--kk-orange); }
+  .flow::after { content: "Koden"; grid-column: 1; grid-row: 3; padding-top: 9px; font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--kk-gray-600); }
+  .step { grid-row: 1 / span 4; grid-template-rows: subgrid; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
+  .step::before { left: auto; right: -6px; top: 16px; bottom: auto; width: 4px; height: 1px; }
+  .step-head { display: flex; align-items: center; gap: 8px; grid-row: 1; grid-column: 1; margin-bottom: 8px; }
+  .step-n { grid-row: auto; width: 30px; height: 30px; font-size: 13.5px; flex: none; }
+  .step-name { padding: 0; margin: 0; font-size: 14px; line-height: 1.2; hyphens: manual; }
+  .lane { grid-column: 1; margin: 0 0 6px; font-size: 13px; padding: 8px 9px; }
+  .lane--model { grid-row: 2; }
+  .lane--code { grid-row: 3; }
+  .lane-label { display: none; }
+  .step-foot { grid-row: 4; grid-column: 1; font-size: 11.5px; }
+  .gate { display: none; }
+  .phases { display: grid; grid-template-columns: 124px repeat(var(--steps), minmax(0, 1fr)); column-gap: 8px; margin-top: 6px; font-size: 12.5px; color: var(--kk-gray-600); }
+  .phase { border-top: 1.5px solid var(--kk-gray-300); padding-top: 6px; position: relative; }
+  .phase::before, .phase::after { content: ""; position: absolute; top: -5px; width: 1.5px; height: 9px; background: var(--kk-gray-300); }
+  .phase::before { left: 0; } .phase::after { right: 0; }
+  .phase--gate { grid-column: 2 / span var(--gates); border-top-color: var(--kk-orange); }
+  .phase--run { grid-column: calc(2 + var(--gates)) / -1; }
+}
+
+/* chain */
+.chain-intro { color: var(--kk-gray-600); margin: 30px 0 10px; font-size: 14.5px; max-width: 46rem; }
+.chain { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 4px; align-items: stretch; max-width: 76rem; }
+.chain li { display: flex; align-items: center; gap: 4px; }
+.chain li + li::before { content: ""; width: 10px; height: 1px; background: var(--kk-gray-400); }
+.chain-item { display: flex; flex-direction: column; text-decoration: none; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--kk-gray-200); background: white; }
+a.chain-item:hover { border-color: var(--kk-orange); background: var(--kk-orange-pale); }
+.chain-name { color: var(--kk-charcoal); font-weight: 500; font-size: 13.5px; line-height: 1.25; }
+.chain-what { color: var(--kk-gray-500); font-size: 12.5px; line-height: 1.3; }
+.chain-item--hot { border-color: var(--kk-gold); background: var(--kk-cream); }
+.chain-item--hot .chain-name::after { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--kk-gold); margin-left: 6px; vertical-align: .1em; }
+@media (max-width: 34rem) {
+  .chain { flex-direction: column; gap: 0; }
+  .chain li { flex-direction: column; align-items: stretch; gap: 0; }
+  .chain li + li::before { width: 1px; height: 9px; margin-left: 18px; }
+}
+
+/* open issues */
+.open-box { margin-top: 40px; max-width: 46rem; border-radius: 6px; padding: 16px 20px 18px; background: var(--kk-cream); border: 1px solid #f1e3a6; border-left: 3px solid var(--kk-gold); }
+.open-box h2 { margin: 0 0 6px; font-size: 17px; color: var(--kk-cream-text); }
+.open-box p { margin: 0 0 12px; }
+.open-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.open-links a { display: inline-block; padding: 5px 13px; border-radius: 100px; border: 1px solid #e6d27a; background: white; color: var(--kk-cream-text); text-decoration: none; font-size: 13px; font-weight: 500; }
+.open-links a:hover { border-color: var(--kk-gold); }
+
+/* modes */
+.modes { display: grid; gap: 14px; grid-template-columns: 1fr; max-width: 62rem; }
+@media (min-width: 46rem) { .modes { grid-template-columns: 1fr 1fr; } }
+.mode { background: white; border: 1px solid var(--kk-gray-200); border-radius: 6px; padding: 16px 20px 14px; }
+.mode h3 { margin: 0; font-size: 17px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.mode-alt { font-size: 12.5px; color: var(--kk-gray-500); font-weight: 400; }
+.mode-q { margin: 2px 0 12px; color: var(--kk-gray-600); }
+.mode dl { margin: 0; display: grid; grid-template-columns: 8rem 1fr; gap: 7px 12px; font-size: 14px; }
+.mode dt { color: var(--kk-gray-500); }
+.mode dd { margin: 0; }
+.dot-open { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--kk-gold); vertical-align: .1em; margin-left: 4px; }
+@media (max-width: 26rem) { .mode dl { grid-template-columns: 1fr; gap: 0; } .mode dd { margin-bottom: 8px; } }
+.modes-foot { color: var(--kk-gray-600); font-size: 14px; margin: 12px 0 0; max-width: 46rem; }
+
+/* ---------- sections as cards ---------- */
+.cards-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 48px 0 6px; color: var(--kk-gray-500); font-size: 13px; }
+.cards-tools span { margin-right: 4px; }
+.cards { max-width: 50rem; margin-top: 12px; }
+.group { max-width: 50rem; }
+.group > h2 { font-size: 21px; letter-spacing: -0.2px; margin: 40px 0 6px; }
+.group-lead p { color: var(--kk-gray-600); margin: 0 0 6px; }
+.card { background: white; border: 1px solid var(--kk-gray-200); border-radius: 6px; margin-bottom: 10px; }
+.card summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; padding: 14px 18px 15px; border-radius: 6px; }
+.card summary::-webkit-details-marker { display: none; }
+.card summary:hover .card-h { color: var(--kk-red); }
+.card-title { grid-column: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; }
+.card-h { font-weight: 500; font-size: 16.5px; color: var(--kk-charcoal); line-height: 1.3; }
+.card-sum { grid-column: 1; color: var(--kk-gray-600); margin-top: 4px; font-size: 14.5px; }
+.card-sum--none { color: var(--kk-gray-400); font-style: italic; }
+.stale-note { grid-column: 1; display: block; margin-top: 6px; font-size: 12.5px; color: var(--kk-red); }
+.card-toggle { grid-column: 2; grid-row: 1 / span 3; align-self: start; margin-top: 2px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--kk-gray-200); display: grid; place-items: center; transition: transform .2s, border-color .2s; }
+.card-toggle::before { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--kk-charcoal); border-bottom: 1.5px solid var(--kk-charcoal); transform: translateY(-2px) rotate(45deg); }
+.card[open] .card-toggle { transform: rotate(180deg); border-color: var(--kk-orange); }
+.card summary:hover .card-toggle { border-color: var(--kk-orange); }
+@media (prefers-reduced-motion: reduce) { .card-toggle { transition: none; } }
+.badge { font-size: 10.5px; font-weight: 600; letter-spacing: 0.5px; border-radius: 100px; padding: 2px 9px; white-space: nowrap; }
+.badge--open { color: var(--kk-cream-text); background: var(--kk-cream); border: 1px solid #e6d27a; }
+.badge--stale { color: var(--kk-red); background: var(--kk-red-pale); border: 1px solid #ecc5c4; }
+.card--open-issue { border-left: 3px solid var(--kk-gold); }
+.card--stale { border-color: #ecc5c4; }
+.stale-block { font-size: 13px; color: var(--kk-red); margin: -6px 0 14px; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.card-body { container-type: inline-size; border-top: 1px solid var(--kk-gray-100); padding: 4px 18px 16px; }
+.card-body > p, .card-body li { max-width: 70ch; }
+.card-body p { margin: .8em 0; }
+.card-body ul, .card-body ol { padding-left: 22px; margin: .7em 0; }
+.card-body li { margin: .35em 0; }
+.card-body li::marker { color: var(--kk-gray-400); }
+.card[open] summary { background: var(--kk-gray-50); border-radius: 6px 6px 0 0; }
+.xref em { font-style: normal; }
+pre.verbatim { background: var(--kk-gray-50); border: 1px solid var(--kk-gray-200); border-radius: 6px; padding: 12px 14px; overflow-x: auto; }
+pre.verbatim code { background: none; padding: 0; }
+
+/* formulas */
+.formel { container-type: inline-size; background: var(--kk-gray-50); border: 1px solid var(--kk-gray-200); border-left: 3px solid var(--kk-gray-600); border-radius: 6px; padding: 12px 16px; margin: 14px 0; display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); row-gap: 8px; column-gap: 8px; font-size: 15.5px; }
+.f-row { display: contents; }
+.f-lhs { text-align: right; }
+.f-eq { color: var(--kk-gray-500); }
+.f-rhs { line-height: 1.7; }
+.f-note { display: block; color: var(--kk-gray-500); font-size: 12.5px; line-height: 1.35; }
+.formel var, .f-inline var { font-style: normal; color: var(--kk-charcoal); }
+.formel sub, .f-inline sub { font-size: .7em; color: var(--kk-orange); font-weight: 500; vertical-align: -.35em; line-height: 0; }
+.formel sup, .f-inline sup { font-size: .72em; vertical-align: .75em; line-height: 0; white-space: nowrap; }
+.op { color: var(--kk-gray-500); padding: 0 .1em; }
+.op--unary { padding: 0; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 .15em; }
+.frac .num { border-bottom: 1px solid var(--kk-gray-500); padding: 0 .3em .1em; line-height: 1.35; }
+.frac .den { padding: .1em .3em 0; line-height: 1.35; }
+.f-inline { white-space: nowrap; background: var(--kk-gray-100); border-radius: 4px; padding: .1em .45em; }
+@container (max-width: 30rem) {
+  .formel { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+  .f-row { display: block; margin: 4px 0 8px; }
+  .f-lhs { text-align: left; }
+  .f-eq { padding-left: .35em; }
+  .f-rhs { display: block; padding-left: 16px; }
+}
+
+/* tables */
+.table-wrap { margin: 14px 0; }
+.table-wrap.nums { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 13.5px; width: 100%; }
+th { text-align: left; font-weight: 500; color: var(--kk-charcoal); padding: 8px 10px; border-bottom: 1px solid var(--kk-gray-300); vertical-align: bottom; background: var(--kk-gray-50); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--kk-gray-100); vertical-align: top; }
+table.nums { font-variant-numeric: tabular-nums; }
+table.stack td:first-child { color: var(--kk-charcoal); font-weight: 500; }
+@container (max-width: 40rem) {
+  table.stack thead { display: none; }
+  table.stack, table.stack tbody, table.stack tr, table.stack td { display: block; width: 100%; }
+  table.stack tr { border-bottom: 1px solid var(--kk-gray-200); padding: 8px 0 6px; }
+  table.stack td { border: 0; padding: 2px 0 6px; }
+  table.stack td:first-child { font-size: 15px; padding-bottom: 4px; }
+  table.stack td:not(:first-child)::before { content: attr(data-label); display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--kk-gray-400); }
+  table.stack td:empty { display: none; }
+}
+
+footer.foot { margin-top: 56px; color: var(--kk-gray-500); font-size: 13px; max-width: 46rem; border-top: 1px solid var(--kk-gray-200); padding-top: 16px; }
+footer.foot p { margin: 6px 0; }
+
+@media print {
+  .topbar, nav.toc, .cards-tools, .toc-tools { display: none !important; }
+  body, html { background: #fff; }
+  .page { display: block; }
+  .card { break-inside: avoid-page; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar" id="topbar">
+  <span class="topbar-logo">CAIA</span>
+  <span class="topbar-sep" aria-hidden="true"></span>
+  <span class="topbar-sub" id="here">Metod</span>
+  <button type="button" id="toc-open" aria-controls="toc" aria-expanded="false">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
+    Innehåll
+  </button>
+</header>
+
+<div class="page">
+  <nav class="toc" id="toc" aria-label="Innehåll">
+    <div class="toc-inner">
+      <div class="toc-close"><button type="button" class="btn-pill" id="toc-close">Stäng</button></div>
+      <p class="toc-label">Innehåll</p>
+      <ol class="toc-list">
+<li><a href="#flodet">Flödet i en analys</a></li>
+<li><a href="#oppet">Under avstämning</a></li>
+<li><a href="#tva-lagen">Prognos och uppföljning</a></li>
+<li><a href="#vad-caia-raknar">Vad CAIA räknar</a></li>
+<li><a href="#vad-caia-inte-raknar">Vad CAIA inte räknar</a></li>
+<li><a href="#de-sju-stegen">De sju stegen</a></li>
+<li class="toc-group"><a href="#berakningen">Beräkningen</a><ol>
+<li><a href="#utan-atgarden-bau">Utan åtgärden (BAU)</a></li>
+<li><a href="#med-atgarden">Med åtgärden</a></li>
+<li><a href="#infasning">Infasning</a></li>
+<li><a href="#attribution">Attribution<span class="toc-dot" title="Under avstämning"></span></a></li>
+<li><a href="#tre-scenarier">Tre scenarier<span class="toc-dot" title="Under avstämning"></span></a></li>
+<li><a href="#territoriellt-konsumtion-overlapp-och-netto">Territoriellt, konsumtion, överlapp och netto</a></li>
+<li><a href="#engangsposter">Engångsposter</a></li>
+<li><a href="#rubriktalet-och-aren-det-galler">Rubriktalet och åren det gäller</a></li>
+<li><a href="#ett-rakneexempel">Ett räkneexempel</a></li>
+<li><a href="#vad-atgarden-andrar-i-verksamheten">Vad åtgärden ändrar i verksamheten</a></li>
+<li><a href="#barande-antaganden">Bärande antaganden</a></li>
+<li><a href="#varningar-fran-kalkylen">Varningar från kalkylen</a></li>
+<li><a href="#enhetskontrollen">Enhetskontrollen</a></li>
+</ol></li>
+<li class="toc-group"><a href="#talens-ursprung-och-kontrollera-forst-grupp">Talens ursprung och ”Kontrollera först”</a><ol>
+<li><a href="#talens-ursprung-och-kontrollera-forst">Talens ursprung och ”Kontrollera först”</a></li>
+<li><a href="#jamforelsen-med-det-som-godkandes">Jämförelsen med det som godkändes</a></li>
+</ol></li>
+<li><a href="#forvantad-potential-och-uppfoljning">Förväntad potential och uppföljning</a></li>
+<li><a href="#nar-kalkylmotorn-inte-kan-lasa-talen">När kalkylmotorn inte kan läsa talen</a></li>
+<li><a href="#portfoljen-flera-atgarder-tillsammans">Portföljen: flera åtgärder tillsammans</a></li>
+<li><a href="#caia-och-din-spec-91637">CAIA och DIN SPEC 91637</a></li>
+<li><a href="#kanda-begransningar">Kända begränsningar</a></li>
+</ol>
+      <div class="toc-tools">
+        <button type="button" class="btn-pill" data-all="open">Fäll ut alla</button>
+        <button type="button" class="btn-pill" data-all="close">Fäll ihop alla</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero measure" id="overst">
+      <p class="eyebrow">Climate Action Impact Analysis</p>
+      <h1>Metod: så räknar CAIA</h1>
+      <div class="intro"><p>För dig som ska granska eller använda resultat från CAIA (Climate Action Impact Analysis) utan att läsa kod. Dokumentet beskriver vad som räknas, vilka formler som används, vad språkmodellen gör och vad programkoden gör, och var metoden är svag. Varje påstående om hur något räknas är kontrollerat mot koden i oktober 2026, och avsnittet <a class="xref" href="#vad-atgarden-andrar-i-verksamheten"><em>Vad åtgärden ändrar i verksamheten</em></a> i november 2026 (<code>next/src/caia/calc/</code>, <code>kallmarkering.py</code>, <code>agents/uppfoljning.py</code>).</p></div>
+      <p class="source">Översikten är genererad ur <a href="METOD.md">docs/METOD.md</a>, som är källan.</p>
+    </header>
+
+    <section id="flodet" aria-labelledby="flodet-h">
+      <h2 class="section-h" id="flodet-h">Flödet i en analys</h2>
+      <p class="section-lead">Sju steg. Språkmodellen läser, bedömer och skriver; koden räknar, kontrollerar och skriver ut räkningen. Samma indata ger samma räkning varje gång, men antagandena är modellens.</p><div class="flow-wrap" style="--steps:7;--gates:4"><div class="legend" aria-hidden="true"><span><i class="lm"></i>Språkmodellen</span><span><i class="lc"></i>Koden</span><span><i class="la"></i>Rör det som är under avstämning</span></div><ol class="flow" aria-label="Stegen i en analys"><li class="step step--gate">
+  <div class="step-head"><span class="step-n">1</span><span class="step-name">Åtgärds­profil</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Tolkar beskrivningen, ställer högst fyra följdfrågor och skriver profilen: omfattning, sektor, rådighet, tidsram och klassningen enligt DIN SPEC 91637 (nivå, instrumentkategori, verkningstid).</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p>Läser profilen till sidans fält.</p></div>
+  <div class="step-foot"><span class="gate">du godkänner eller rättar</span></div>
+</li><li class="step step--gate">
+  <div class="step-head"><span class="step-n">2</span><span class="step-name">Utsläpps­källor</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Namnger drivarna, mekanismen, aktivitetsförändringen enligt DIN SPEC 91637 och typen av effekt, som bestämmer räknesättet. Sätter inga tal.</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p class="none">Inget</p></div>
+  <div class="step-foot"><span class="gate">du godkänner eller rättar</span></div>
+</li><li class="step step--gate">
+  <div class="step-head"><span class="step-n">3</span><span class="step-name">Baslinje</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Sätter nuläget per drivare (aktivitet, emissionsfaktor) och trenden utan åtgärd.</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p>Lägger parameter­biblioteket och kommunens datafiler i underlaget.</p></div>
+  <div class="step-foot"><span class="gate">du godkänner eller rättar</span></div>
+</li><li class="step step--hot step--gate">
+  <div class="step-head"><span class="step-n">4</span><span class="step-name">Evidens</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Bedömer effekten på varje drivare, försiktigt, troligt och optimistiskt, med källa. Sätter klimatfaktorerna.</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p>Delar upp arbetet per drivare och kontrollerar formen.</p></div>
+  <div class="step-foot"><span class="gate">du godkänner eller rättar</span><span class="hot-mark">scenariovärdena sätts här</span></div>
+</li><li class="step step--hot">
+  <div class="step-head"><span class="step-n">5</span><span class="step-name">Kalkyl</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Läser ut talen ur steg 1 till 4 till ett formulär. Räknar inte.</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p>Räknar alla år och scenarier. Varningar, vad åtgärden ändrar i verksamheten, bilaga, källkontroll och Talens ursprung.</p></div>
+  <div class="step-foot"><span class="hot-mark">attributionen läses ut här</span></div>
+</li><li class="step">
+  <div class="step-head"><span class="step-n">6</span><span class="step-name">Kvalitets­granskning</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Granskar källor, enheter, storleksordning, BAU och dubbelräkning. Ändrar inga tal.</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p class="none">Inget</p></div>
+  <div class="step-foot"></div>
+</li><li class="step">
+  <div class="step-head"><span class="step-n">7</span><span class="step-name">Rapport</span></div>
+  <div class="lane lane--model"><span class="lane-label">Språkmodellen</span><p>Skriver besluts­underlaget, och i potentialrapporten Följ upp med: indikatorer per bärande drivare.</p></div>
+  <div class="lane lane--code"><span class="lane-label">Koden</span><p>Lägger kalkylens avsnitt om vad åtgärden ändrar och den tekniska bilagan på sina platser, oförändrade.</p></div>
+  <div class="step-foot"></div>
+</li></ol><div class="phases" aria-hidden="true"><span class="phase phase--gate">Sidan stannar efter varje steg: du godkänner eller rättar</span><span class="phase phase--run">Körs i en följd</span></div></div>
+      <p class="chain-intro">Det koden räknar i steg 5, för varje drivare och år, och alltihop en gång per scenario: min, medel och max (se <a class="xref" href="#tre-scenarier"><em>Tre scenarier</em></a>). Tryck på en del för att läsa den.</p><ol class="chain" aria-label="Räknekedjan i koden"><li><a class="chain-item" href="#utan-atgarden-bau"><span class="chain-name">Basåret</span><span class="chain-what">aktivitet × emissionsfaktor</span></a></li><li><a class="chain-item" href="#utan-atgarden-bau"><span class="chain-name">BAU</span><span class="chain-what">framskrivet med trend</span></a></li><li><a class="chain-item" href="#med-atgarden"><span class="chain-name">Med åtgärden</span><span class="chain-what">ΔA och ΔEF × infasning</span></a></li><li><a class="chain-item chain-item--hot" href="#attribution"><span class="chain-name">Förändring</span><span class="chain-what">skillnaden × attribution</span></a></li><li><a class="chain-item" href="#territoriellt-konsumtion-overlapp-och-netto"><span class="chain-name">Perspektiven</span><span class="chain-what">territoriellt, konsumtion, netto</span></a></li><li><a class="chain-item" href="#berakningen"><span class="chain-name">Summa</span><span class="chain-what">över drivarna, varje år</span></a></li><li><a class="chain-item" href="#rubriktalet-och-aren-det-galler"><span class="chain-name">Rubriktalet</span><span class="chain-what">plus spann och ackumulerat</span></a></li></ol>
+    </section>
+
+    <section class="open-box" id="oppet" aria-labelledby="oppet-h"><h2 id="oppet-h">Under avstämning</h2><p>Hur de tre scenarierna sätts och hur attributionen hanteras är inte avstämt med dem som ska använda talen i uppföljningen. Avsnitten <a class="xref" href="#tre-scenarier"><em>Tre scenarier</em></a> och <a class="xref" href="#attribution"><em>Attribution</em></a> beskriver hur CAIA gör i dag. De kan komma att ändras, och då ändras det här dokumentet samtidigt.</p><ul class="open-links"><li><a href="#tre-scenarier">Tre scenarier</a></li><li><a href="#attribution">Attribution</a></li></ul></section>
+
+    <section id="tva-lagen" aria-labelledby="tva-lagen-h"><h2 class="section-h" id="tva-lagen-h">Två lägen: prognos och uppföljning</h2><p class="section-lead">I METOD.md heter de förväntad potential (potentialläget) och uppföljning. I CAIA:s webbgränssnitt heter de Prognos och Uppföljning.</p><div class="modes"><section class="mode"><h3>Prognos <span class="mode-alt">förväntad potential</span></h3><p class="mode-q">Vad kan en planerad åtgärd ge?</p><dl><dt>Rubriktal</dt><dd>netto i medelscenariot, målåret (2030 om inget annat anges)</dd><dt>Medel per år</dt><dd>alltid 2026 till 2030, delat på fem</dd><dt>Attribution<span class="dot-open" title="Under avstämning"></span></dt><dd>modellen instrueras att baka in den i ΔA eller ΔEF; eget fält står på 1</dd><dt>Köpt utrustning</dt><dd>tillverkningen skrivs av jämnt över livslängden (sedan 1.1)</dd><dt>Status</dt><dd>standardläget, det CAIA först byggdes för</dd></dl></section><section class="mode"><h3>Uppföljning <span class="mode-alt">genomförd insats</span></h3><p class="mode-q">Vad har insatsen gett, och vad återstår?</p><dl><dt>Rubriktal</dt><dd>netto i medelscenariot, medel per år över insatsens egna år</dd><dt>Medel per år</dt><dd>från första startåret till målåret</dd><dt>Attribution<span class="dot-open" title="Under avstämning"></span></dt><dd>modellen instrueras att ange den som eget tal per scenario, inte också i ΔA eller ΔEF</dd><dt>Tillkommer</dt><dd>egna metodregler, realiserat och återstående, nytta per bidragsår, pengarnas egna utsläpp på egen rad, utrustning skrivs av till målåret</dd><dt>Status</dt><dd>nytt hösten 2026, prövat på ett fåtal insatser, inget facit att stämma av mot än</dd></dl></section></div><p class="modes-foot">Samma sju steg och samma formler i båda. Läget väljs före första meddelandet och går inte att byta. <a class="xref" href="#forvantad-potential-och-uppfoljning">Hela avsnittet om lägena</a></p></section>
+
+    <div class="cards-tools">
+      <span>Avsnitten i METOD.md, med hela texten under varje sammanfattning.</span>
+      <button type="button" class="btn-pill" data-all="open">Fäll ut alla</button>
+      <button type="button" class="btn-pill" data-all="close">Fäll ihop alla</button>
+    </div>
+
+    <div class="cards"><details class="card" id="vad-caia-raknar">
+<summary>
+  <span class="card-title"><span class="card-h">Vad CAIA räknar</span></span>
+  <span class="card-sum">Hur mycket en åtgärd ändrar utsläppen av växthusgaser jämfört med om den inte genomförts (BAU), i ton CO2e per år. Åtgärden delas i drivare, var och en med en aktivitet och en emissionsfaktor. Resultatet redovisas territoriellt, konsumtionsbaserat och netto, i tre scenarier.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>CAIA räknar hur mycket en åtgärd ändrar utsläppen av växthusgaser jämfört med om åtgärden inte hade genomförts. Jämförelsen kallas BAU, business as usual. Svaret anges i ton CO2e per år, och ett positivt tal betyder minskade utsläpp.</p>
+<p>Varje åtgärd delas upp i en eller flera drivare. En drivare är en aktivitet som ger utsläpp, till exempel körda kilometer med tjänstebil eller kilowattimmar el. För varje drivare behövs två tal: hur stor aktiviteten är per år, och hur stora utsläppen är per enhet av aktiviteten (emissionsfaktorn).</p>
+<p>Resultatet redovisas på tre sätt:</p>
+<ul><li><strong>Territoriellt:</strong> den del av förändringen som sker inom kommunens gränser.</li><li><strong>Konsumtionsbaserat:</strong> den del som hör till invånarnas och verksamheternas konsumtion, oavsett var i världen utsläppen sker.</li><li><strong>Netto:</strong> de två tillsammans, med den del som finns i båda räknad en gång.</li></ul>
+<p>Allt räknas i tre scenarier, min, medel och max, så att osäkerheten syns som ett spann runt medelvärdet.</p></div>
+</details>
+<details class="card" id="vad-caia-inte-raknar">
+<summary>
+  <span class="card-title"><span class="card-h">Vad CAIA inte räknar</span></span>
+  <span class="card-sum">Inget är uppmätt av CAIA: allt är beräknat ur antaganden, om inte analysen själv bygger på ett uppmätt tal. En åtgärd i taget utom i portföljen (dubbelräkning inom en analys pekas bara ut i ord), åtgärdens egna utsläpp bara när de finns som drivare, inga kostnader, inga andra effekter än växthusgaser och inget efter målåret i det ackumulerade talet.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><ul><li><strong>Inget är uppmätt av CAIA.</strong> Alla tal är beräkningar ur antaganden. Det gäller också ”realiserat” i en uppföljning, om inte analysen själv bygger på ett uppmätt tal.</li><li><strong>En åtgärd i taget, utom i portföljen.</strong> Varje analys räknar en åtgärd på dess egen baslinje. Att lägga ihop flera åtgärder görs i portföljen (se <a class="xref" href="#portfoljen-flera-atgarder-tillsammans"><em>Portföljen</em></a> nedan), och den räknar bort överlapp bara inom de utsläppspotter som finns i kommunens register. Inom en analys pekar kvalitetsgranskningen (steg 6) ut risken för dubbelräkning i ord, men ingen siffra justeras.</li><li><strong>Åtgärdens egna utsläpp ingår bara om de finns som en drivare.</strong> Tillverkning av det som köps in, eller ökad användning någon annanstans, räknas när analysen har en drivare för det. Annars saknas det.</li><li><strong>Kostnader och kostnadseffektivitet räknas inte.</strong> Rapporten kan nämna kostnader som står i underlaget, men kalkylen innehåller inga kronor utom bidragsbeloppen som fördelar nyttan per år i en uppföljning.</li><li><strong>Andra effekter än växthusgaser</strong>, som luftkvalitet, buller eller biologisk mångfald, ingår inte.</li><li><strong>Inget efter målåret i det ackumulerade talet.</strong> Den ackumulerade effekten räknas till och med målåret (2030 om inget annat anges). En åtgärd som fortsätter verka därefter får alltså ett lägre ackumulerat tal än sin verkliga livslängd skulle ge. Rubriktalet i potentialläget är målåret självt, se <a class="xref" href="#rubriktalet-och-aren-det-galler"><em>Rubriktalet och åren det gäller</em></a>.</li></ul></div>
+</details>
+<details class="card" id="de-sju-stegen">
+<summary>
+  <span class="card-title"><span class="card-h">De sju stegen</span></span>
+  <span class="card-sum">Språkmodellen läser, bedömer och skriver. Koden räknar, kontrollerar och skriver ut räkningen. Sidan stannar efter steg 1 till 4 så att användaren kan godkänna eller rätta, och steg 5 till 7 körs i en följd. Hela tabellen över vem som gör vad står här.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>En analys går genom sju steg. Språkmodellen (Claude, två modeller: Opus 5.5 och Sonnet 5.5) läser, bedömer och skriver. Programkoden räknar, kontrollerar och skriver ut räkningen.</p>
+<div class="table-wrap stack"><table class="stack"><thead><tr><th scope="col">Steg</th><th scope="col">Språkmodellen</th><th scope="col">Programkoden</th></tr></thead><tbody><tr><td data-label="Steg">1 Åtgärdsprofil</td><td data-label="Språkmodellen">Tolkar beskrivningen, ställer högst fyra följdfrågor och skriver en profil: omfattning i tal, sektor, målgrupp, rådighet, nivå, instrumentkategori, mognad, tidsram och verkningstid (de tre klasserna enligt DIN SPEC 91637). Saknas omfattningen frågar CAIA efter den först, och profilen blir inte färdig förrän användaren svarat. Kan användaren inte svara antar CAIA ett tal och skriver hur det togs fram; det märks som antaget i profilen, i baslinjen, under <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a> och i rapporten. Det som modellen själv antagit i övrigt märks också som antagande.</td><td data-label="Programkoden">Läser profilen till de fält som sidan visar.</td></tr><tr><td data-label="Steg">2 Utsläppskällor</td><td data-label="Språkmodellen">Namnger drivarna, alltså de utsläpp åtgärden påverkar, och för varje drivare mekanismen (undvika, byta eller förbättra) och om det är mängden eller utsläppen per enhet som ändras, och vilken av DIN SPEC 91637:s sex aktivitetsförändringar (bilaga C) drivaren hör till. Avgör typ av effekt, som bestämmer räknesättet: en direkt åtgärd räknas rakt på drivaren, en indirekt eller möjliggörande som en kedja (hur många nås, hur många ändrar sig, hur mycket, och åtgärdens andel utöver det som hade hänt ändå), och en stödjande åtgärd får inget eget tal. Sätter inga tal. Drivarna delas efter en fast regel: en aktivitet är en drivare även när den räknas både territoriellt och konsumtionsbaserat, kategorier delas bara när profilen ger mängd per kategori, och varje livscykelsteg som åtgärden ändrar är en egen drivare. Steget hette EMAP till oktober 2026, och heter så i koden.</td><td data-label="Programkoden"></td></tr><tr><td data-label="Steg">3 Baslinje</td><td data-label="Språkmodellen">Sätter nuläget per drivare (aktivitet och emissionsfaktor) och trenden utan åtgärd, ur parameterbiblioteket och kommunens data.</td><td data-label="Programkoden">Lägger parameterbiblioteket och datafilerna i modellens underlag.</td></tr><tr><td data-label="Steg">4 Evidens</td><td data-label="Språkmodellen">Bedömer hur mycket åtgärden ändrar varje drivare, som försiktigt, troligt och optimistiskt värde med källa. Sätter klimatfaktorerna. För en indirekt eller möjliggörande åtgärd skriver steget först attributet (den mätbara egenskap i kommunen som åtgärden ändrar, som avstånd till närmaste laddpunkt), vilken uppfattning det påverkar och vilket led i kedjan som är osäkrast, som i DIN SPEC 91637; texten räknas inte. Arbetar en drivare i taget och fogar sedan ihop dem, med uppgift att hitta dubbelräkning mellan drivarna.</td><td data-label="Programkoden">Delar upp arbetet per drivare och kontrollerar att varje del har rätt form.</td></tr><tr><td data-label="Steg">5 Kalkyl</td><td data-label="Språkmodellen">Läser ut talen ur steg 1 till 4 och skriver dem i ett formulär. Räknar inte.</td><td data-label="Programkoden">Kontrollerar formuläret, räknar alla år och scenarier, skriver tabellerna, varningarna, vad åtgärden ändrar i verksamheten, den tekniska bilagan och avsnittet <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a>.</td></tr><tr><td data-label="Steg">6 Kvalitetsgranskning</td><td data-label="Språkmodellen">Granskar källor, enheter, storleksordning, BAU-hantering och dubbelräkning. Ger status ok eller varning. Ändrar inga tal.</td><td data-label="Programkoden"></td></tr><tr><td data-label="Steg">7 Rapport</td><td data-label="Språkmodellen">Skriver beslutsunderlaget i löptext, och avslutar potentialrapporten med <em>Följ upp med</em>: en eller två indikatorer per bärande drivare i begriplig enhet, som DIN SPEC 91637 beskriver i avsnitt 5.5.</td><td data-label="Programkoden">Lägger kalkylmotorns avsnitt <a class="xref" href="#vad-atgarden-andrar-i-verksamheten"><em>Vad åtgärden ändrar i verksamheten</em></a> efter <em>Beräknad klimatnytta</em> och motorns tekniska bilaga sist, båda oförändrade, och tar bort en egen version av något av dem som modellen ändå skrivit. Sidan lägger sedan till <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a> ur steg 5, och batchverktyget (<code>next/tools/run_batch.py</code>) gör detsamma.</td></tr></tbody></table></div>
+<p>Det betyder att antagandena är språkmodellens bedömning, och att räkningen från antaganden till resultat är vanlig programkod som ger samma svar varje gång för samma indata. Sidan stannar efter steg 1, 2, 3 och 4 så att användaren kan godkänna eller rätta. Steg 5 till 7 körs sedan i en följd.</p></div>
+</details></div>
+<section class="group" id="berakningen" aria-labelledby="berakningen-h"><h2 id="berakningen-h">Beräkningen</h2><div class="group-lead"><p>Formlerna nedan gäller en drivare, ett år och ett scenario. Summan över drivarna är åtgärdens effekt det året.</p></div><div class="cards"><details class="card" id="utan-atgarden-bau">
+<summary>
+  <span class="card-title"><span class="card-h">Utan åtgärden (BAU)</span></span>
+  <span class="card-sum">Basårets aktivitet och emissionsfaktor skrivs fram år för år med varsin konstant trend. BAU räknas med trendens medelvärde och är densamma i alla tre scenarier, så scenarierna skiljer sig bara i vad åtgärden gör.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>år sedan basår</var></span><span class="f-eq">=</span><span class="f-rhs"><var>året</var> <span class="op">−</span> <var>basåret</var></span></div><div class="f-row"><span class="f-lhs"><var>aktivitet</var><sub>BAU</sub></span><span class="f-eq">=</span><span class="f-rhs"><var>aktivitet</var><sub>basår</sub> <span class="op">×</span> (<span class="n">1</span> <span class="op">+</span> <var>trend</var><sub>aktivitet</sub>)<sup><var>år sedan basår</var></sup></span></div><div class="f-row"><span class="f-lhs"><var>faktor</var><sub>BAU</sub></span><span class="f-eq">=</span><span class="f-rhs"><var>faktor</var><sub>basår</sub> <span class="op">×</span> (<span class="n">1</span> <span class="op">+</span> <var>trend</var><sub>faktor</sub>)<sup><var>år sedan basår</var></sup></span></div><div class="f-row"><span class="f-lhs"><var>utsläpp</var><sub>BAU</sub></span><span class="f-eq">=</span><span class="f-rhs"><var>aktivitet</var><sub>BAU</sub> <span class="op">×</span> <var>faktor</var><sub>BAU</sub><span class="f-note">kg, delas med 1 000 till ton</span></span></div></div>
+<p>Trenderna är årliga förändringar, till exempel −0,02 för två procent lägre emissionsfaktor per år. Varje trend är en konstant takt från basåret: väntas utvecklingen gå i faser räknar baslinjen om dem till den takt som ger samma nivå vid målåret, och åren däremellan följer då en jämn kurva. BAU räknas med medelvärdet av trenden och är densamma i alla tre scenarier. Scenarierna skiljer sig alltså bara i vad åtgärden gör, inte i hur världen utvecklas utan den.</p></div>
+</details>
+<details class="card" id="med-atgarden">
+<summary>
+  <span class="card-title"><span class="card-h">Med åtgärden</span></span>
+  <span class="card-sum">Åtgärdens effekt vid full verkan, ΔA på aktiviteten och ΔEF på emissionsfaktorn, skalas med infasningen och läggs på årets BAU-nivå. −0,10 betyder tio procent mindre.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>ändring</var><sub>aktivitet</sub></span><span class="f-eq">=</span><span class="f-rhs"><var>ΔA</var> <span class="op">×</span> <var>infasning</var></span></div><div class="f-row"><span class="f-lhs"><var>ändring</var><sub>faktor</sub></span><span class="f-eq">=</span><span class="f-rhs"><var>ΔEF</var> <span class="op">×</span> <var>infasning</var></span></div><div class="f-row"><span class="f-lhs"><var>utsläpp</var><sub>åtgärd</sub></span><span class="f-eq">=</span><span class="f-rhs"><var>aktivitet</var><sub>BAU</sub> <span class="op">×</span> (<span class="n">1</span> <span class="op">+</span> <var>ändring</var><sub>aktivitet</sub>) <span class="op">×</span> <var>faktor</var><sub>BAU</sub> <span class="op">×</span> (<span class="n">1</span> <span class="op">+</span> <var>ändring</var><sub>faktor</sub>)</span></div></div>
+<p>ΔA och ΔEF är åtgärdens effekt vid full verkan, som andel. −0,10 betyder tio procent mindre. En åtgärd kan ändra aktiviteten (färre kilometer), emissionsfaktorn (renare kilometer) eller båda.</p></div>
+</details>
+<details class="card" id="infasning">
+<summary>
+  <span class="card-title"><span class="card-h">Infasning</span></span>
+  <span class="card-sum">Ett tal mellan 0 och 1 för hur stor del av full verkan åtgärden har ett visst år: noll före start, linjär, s-formad eller stegvis upp till full effekt, noll efter ett slutår. Själva startåret är noll när full effekt kommer senare. Tre tillägg: avklingning, andel av startåret och andel av slutåret.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Infasningen är ett tal mellan 0 och 1 som säger hur stor del av full verkan åtgärden har ett visst år.</p>
+<ul><li>Före startåret är den 0.</li><li>Mellan startåret och året för full effekt växer den från 0 till 1 enligt en av tre profiler: linjär (jämn ökning), s-formad (långsam start, snabb mitt, långsam avslutning) eller stegvis (0 fram till halva tiden, sedan 1). Profilen kan också stå på engelska: step och stepwise läses som stegvis (sedan 2026-11-10; förut gav step den s-formade kurvan).</li><li>Från året för full effekt är den 1.</li><li>Har åtgärden ett slutår är den 0 efter det året.</li></ul>
+<p>När full effekt kommer senare än startåret är effekten noll själva startåret, i alla tre profilerna. En åtgärd med linjär infasning som börjar 2026 och når full effekt 2028 räknas med 0, 50 och 100 procent de tre åren.</p>
+<p>Åren däremellan räknas så här:</p>
+<div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>andel av tiden</var></span><span class="f-eq">=</span><span class="f-rhs"><span class="frac"><span class="num"><var>år</var> <span class="op">−</span> <var>startår</var></span><span class="den"><var>år för full effekt</var> <span class="op">−</span> <var>startår</var></span></span></span></div><div class="f-row"><span class="f-lhs"><var>infasning</var></span><span class="f-eq">=</span><span class="f-rhs"><var>andel av tiden</var><span class="f-note">linjär</span></span></div><div class="f-row"><span class="f-lhs"><var>infasning</var></span><span class="f-eq">=</span><span class="f-rhs"><span class="n">1</span> <span class="op">/</span> (<span class="n">1</span> <span class="op">+</span> <var>e</var><sup><span class="op op--unary">−</span><span class="n">12</span> <span class="op">×</span> (<var>andel av tiden</var> <span class="op">−</span> <span class="n">0,5</span>)</sup>)<span class="f-note">s-formad</span></span></div></div>
+<p>Den s-formade kurvan ger 5 procent en fjärdedel in i infasningen, 50 procent halvvägs och 95 procent efter tre fjärdedelar. Den stegvisa profilen är 0 så länge andelen av tiden är mindre än 0,5 och 1 därefter, alltså full effekt från och med det första året som ligger halvvägs eller längre in i infasningen.</p>
+<p>Tre tillägg används främst i uppföljningar:</p>
+<ul><li><strong>Avklingning.</strong> Har drivaren en halveringstid minskar effekten efter året för full effekt: <span class="f-inline" role="math"><var>infasning</var> <span class="op">=</span> <span class="n">0,5</span><sup><var>år efter full effekt</var> <span class="op">/</span> <var>halveringstid</var></sup></span>. Med halveringstid två år återstår hälften efter två år och en fjärdedel efter fyra.</li><li><strong>Andel av startåret.</strong> När åtgärden har full effekt från start men började mitt i året kan startåret räknas med en andel, till exempel 0,5 för ett halvt år.</li><li><strong>Andel av slutåret.</strong> När åtgärden upphörde mitt i sitt slutår kan slutåret räknas med en andel på samma sätt. Andelen är större än 0 och högst 1 och kan skilja mellan scenarierna. Den används inte när slutåret är samma år som startåret.</li></ul></div>
+</details>
+<details class="card card--open-issue" id="attribution">
+<summary>
+  <span class="card-title"><span class="card-h">Attribution</span><span class="badge badge--open">Under avstämning</span></span>
+  <span class="card-sum">Hur stor del av förändringen som beror på just den här åtgärden. Skalar förändringen, aldrig BAU. Språkmodellen instrueras att baka in den i ΔA eller ΔEF i potentialläget och att ange den som ett eget tal i uppföljningen. Koden kan inte se om det som hade hänt ändå räknats bort två gånger eller inte alls, men vänder bandet när en drivare som minskar utsläppen i alla tre scenarierna har det i fel ordning.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>förändring</var></span><span class="f-eq">=</span><span class="f-rhs"><span class="frac"><span class="num"><var>utsläpp</var><sub>BAU</sub> <span class="op">−</span> <var>utsläpp</var><sub>åtgärd</sub></span><span class="den"><span class="n">1 000</span></span></span> <span class="op">×</span> <var>attribution</var><span class="f-note">ton, positivt = minskning</span></span></div></div>
+<p>Attributionen är ett tal mellan 0 och 1: hur stor del av förändringen som beror på just den här åtgärden och inte hade hänt ändå. Den skalar förändringen, aldrig BAU.</p>
+<p>I dag hanteras den olika i de två analyslägena:</p>
+<ul><li><strong>Förväntad potential:</strong> språkmodellen instrueras att baka in attributionen i ΔA eller ΔEF när talen läses ut. Effekten skrivs som andel som nås × andel som ändrar beteende × minskning per person × attribution. Det egna attributionsfältet ska då stå på 1.</li><li><strong>Uppföljning:</strong> språkmodellen instrueras att ange attributionen som ett eget tal per scenario och att inte också lägga den i ΔA eller ΔEF. Den syns då som en egen kolumn i bilagans tabeller och som en egen rad i <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a>.</li></ul>
+<p>Båda är instruktioner till språkmodellen. Koden räknar med den attribution den får, i båda lägena, och kan inte upptäcka om det som hade hänt ändå har räknats bort två gånger eller inte alls. Det är en sak att titta efter vid granskning: läs ΔA, ΔEF och attributionen tillsammans.</p>
+<p>En sak rättar koden själv (sedan 2026-10-22): attributionen ska följa scenariot. För en drivare som minskar utsläppen har min den lägsta andelen och max den högsta. Står bandet tvärtom, och drivaren minskar utsläppen i alla tre scenarierna, vänder kalkylen det och skriver det i en OBS-rad. Värdena är desamma, bara vilket scenario som får vilket ändras. Klimatkraven i anläggning hade i körning 1 ”15 % (30 till 5)” på drivmedel och transporter. En drivare som ökar utsläppen lämnas som den står: den kan ha en egen andel som är högst i min (det försiktiga scenariot), eller samma andel som nyttan den följer av. Det senare gäller batterilagret, där pengarna betalade konsultstöd och inte batteriet: tillverkningen och förlusterna ska ha samma andel som nyttan. Det är en instruktion, inte en kontroll. En drivare som ökar utsläppen i ett scenario och minskar dem i ett annat lämnas också; det är nästan alltid en kostnad som ΔEF krympt till en minskning, och åt vilket håll bandet ska gå går inte att läsa ut.</p>
+<p>Det här är en av de två delar som är under avstämning.</p></div>
+</details>
+<details class="card card--open-issue" id="tre-scenarier">
+<summary>
+  <span class="card-title"><span class="card-h">Tre scenarier</span><span class="badge badge--open">Under avstämning</span></span>
+  <span class="card-sum">Min, medel och max skiljer sig i sju tal: ΔA, ΔEF, attributionen, slutåret, andelen av slutåret, halveringstiden och livslängden för tillverkad utrustning. Max är fallet där alla osäkra tal samtidigt ligger högt, så spannet är inget konfidensintervall. Ingen effekt kan bli större än −100 procent av basårets aktivitet; i potentialläget sätts aktiviteten då till scenariernas största mängd och emissionsfaktorn till sitt högsta värde, och nivån utan åtgärden blir den mängden, inte baslinjens tal.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Min är det försiktiga scenariot, medel det troliga och max det optimistiska men rimliga. Sju tal kan skilja mellan scenarierna: ΔA, ΔEF, attributionen, slutåret, andelen av slutåret, halveringstiden och livslängden för tillverkad utrustning. Allt annat är gemensamt: aktivitet och emissionsfaktor basåret, trenderna, klimatfaktorerna, startår och år för full effekt.</p>
+<p>Varje scenario räknas för sig med sina egna värden på alla fem. Max är därför fallet där varje osäkert tal samtidigt hamnar i sitt högsta läge, och min där alla hamnar i sitt lägsta. Spannet mellan min och max är inget statistiskt konfidensintervall. När max är större än vad det enskilt viktigaste antagandet kan ge ensamt skriver kalkylen ut det, med rådet att läsa max som ett ytterfall och inte som ett troligt utfall.</p>
+<p>Aktiviteten basåret är gemensam för de tre scenarierna, och ingen effekt kan vara större än −100 procent av den. Ibland säger antagandena mer än så. I ett prövat fall anger baslinjen 21,6 ton nya varor som ersätts, medan scenarierna ersätter 6, 21,6 och 60 ton, med 8, 10 och 14 kg CO2e per kilo. I potentialläget sätts aktiviteten då till scenariernas största mängd, 60 ton, och emissionsfaktorn till sitt högsta värde, 14. Varje scenario blir sin andel av produkten: 48, 216 och 840 ton CO2e är −5,7, −25,7 och −100 procent av 840. Minskningen i ton blir den antagandena anger. Nivån utan åtgärden för den drivaren blir däremot den största mängden och inte baslinjens tal, och utläsningens anteckning säger det. Före 2026-10-13 saknades regeln. Av fyra utläsningar av fallet vägrades två av formuläret (se <a class="xref" href="#nar-kalkylmotorn-inte-kan-lasa-talen"><em>När kalkylmotorn inte kan läsa talen</em></a>), en svarade inte med ett formulär, och en skalade om scenarierna så att det optimistiska blev −100 procent av 21,6 ton, och det troliga resultatet blev då 108 ton i stället för 216. Med regeln gav fyra utläsningar av fyra 216 ton, med spannet 48 till 840.</p>
+<p>Det här är den andra delen som är under avstämning.</p></div>
+</details>
+<details class="card" id="territoriellt-konsumtion-overlapp-och-netto">
+<summary>
+  <span class="card-title"><span class="card-h">Territoriellt, konsumtion, överlapp och netto</span></span>
+  <span class="card-sum">Tre klimatfaktorer per drivare fördelar förändringen på perspektiven. Netto är territoriellt plus konsumtion minus överlappet, och överlappet får aldrig vara större än något av dem. Faktorerna är metodval, utan källmarkering.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Varje drivare har tre klimatfaktorer, satta av språkmodellen i steg 4 och visade för användaren före kalkylen:</p>
+<div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>territoriellt</var></span><span class="f-eq">=</span><span class="f-rhs"><var>förändring</var> <span class="op">×</span> <var>territoriell faktor</var></span></div><div class="f-row"><span class="f-lhs"><var>konsumtion</var></span><span class="f-eq">=</span><span class="f-rhs"><var>förändring</var> <span class="op">×</span> <var>konsumtionsfaktor</var></span></div><div class="f-row"><span class="f-lhs"><var>överlapp</var></span><span class="f-eq">=</span><span class="f-rhs"><var>förändring</var> <span class="op">×</span> <var>överlappsfaktor</var><span class="f-note">men aldrig större än territoriellt eller konsumtion</span></span></div><div class="f-row"><span class="f-lhs"><var>netto</var></span><span class="f-eq">=</span><span class="f-rhs"><var>territoriellt</var> <span class="op">+</span> <var>konsumtion</var> <span class="op">−</span> <var>överlapp</var></span></div></div>
+<p>Faktorerna säger hur stor del av drivarens utsläpp som hör till respektive perspektiv. Biltrafik inom kommunen ligger nära 1 på alla tre: utsläppen sker i kommunen, de hör till invånarnas konsumtion, och det är samma utsläpp. Då blir netto lika med förändringen. Inköpta varor som tillverkas på annat håll ligger nära 0 territoriellt och nära 1 i konsumtion, med litet överlapp.</p>
+<p>Överlappet finns för att samma ton inte ska räknas två gånger när de två perspektiven läggs ihop. Koden begränsar överlappet till det mindre av territoriellt och konsumtion, så att netto aldrig blir mindre än det större av dem.</p>
+<p>Klimatfaktorerna är metodval. De har ingen källmarkering och kontrolleras inte mot parameterbiblioteket.</p></div>
+</details>
+<details class="card" id="engangsposter">
+<summary>
+  <span class="card-title"><span class="card-h">Engångsposter</span></span>
+  <span class="card-sum">En drivare kan vara en post ett enda år, till exempel tillverkningen av något som köptes. Fyra regler från 2026-10-22: tidigarelagda köp belastas bara för de tidigarelagda åren (i båda lägena), och i uppföljningen dessutom att utrustning skrivs av till målåret, att en kostnad aldrig blir en nytta och att pengarnas egna utsläpp står på en egen rad utanför resultatet. Sedan 1.1 skrivs tillverkning med en livslängd av jämnt över livslängden även i potentialläget, så att målåret bär en årlig andel och inte beror på hur mycket som råkade köpas just det året.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>En drivare kan vara en engångspost i stället för en årlig aktivitet, till exempel tillverkningen av cyklar som köptes ett visst år. Den finns då bara sitt eget år, utan trend och utan infasning. Engångsposter används främst i uppföljningar.</p>
+<p><strong>Utrustning vars köp bara tidigarelades</strong> (sedan 2026-10-22). När nyttan har ett ikapp-år, alltså ett år då det som hade hänt ändå har kommit ikapp, köpte pengarna inte utrustningen utan bara att den kom tidigare. Då belastar tillverkningen insatsen bara för de år av livslängden som kom tidigare:</p>
+<div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>andel</var></span><span class="f-eq">=</span><span class="f-rhs"><span class="frac"><span class="num"><var>ikapp-år</var> <span class="op">+</span> <span class="n">1</span> <span class="op">−</span> <var>köpår</var></span><span class="den"><var>livslängd</var></span></span><span class="f-note">högst 1 och lägst 0</span></span></div><div class="f-row"><span class="f-lhs"><var>förändring</var></span><span class="f-eq">=</span><span class="f-rhs"><span class="frac"><span class="num"><var>utsläpp</var><sub>BAU</sub> <span class="op">−</span> <var>utsläpp</var><sub>åtgärd</sub></span><span class="den"><span class="n">1 000</span></span></span> <span class="op">×</span> <var>attribution</var> <span class="op">×</span> <var>andel</var></span></div></div>
+<p>Det gäller bara en engångspost som ökar utsläppen; ett undvikt köp räknas som förut. Livslängden anges av analysen per scenario. Ikapp-året anger analysen, eller så tar kalkylen det senaste slutåret bland de drivare som minskar utsläppen, per scenario. Har någon av dem inget slutår i ett scenario belastas hela posten i det scenariot, utom i en uppföljning (nästa stycke). Saknas livslängd för en engångspost som ökar utsläppen medan nyttan har ett slutår, skriver kalkylen en OBS-rad. Bakgrunden var energivisualiseringen i storköken: 1,25 ton för skärmar och mätare stod fullt mot en nytta som upphör 2027. Med 8 till 12 års livslängd blir det kumulativa medelresultatet i körning 1 −0,5 ton i stället för −1,1. Andelen syns som en egen kolumn i bilagan, och livslängd och ikapp-år prövas bland de bärande antagandena.</p>
+<p><strong>Utrustning skrivs av till målåret i en uppföljning</strong> (2026-10-22). Nyttan räknas bara till och med målåret, så utrustningen belastar insatsen bara för de år av livslängden som ryms dit: ikapp-året sätts till målåret när det saknas eller ligger senare, och andelen blir (målåret + 1 − köpår) / livslängd. Batterilagret hade belastats med hela batteriet mot en nytta räknad till 2030 (−4,9 ton till 2030). Utan livslängd belastas posten fullt som förut, och utläsningen ber därför alltid om livslängd för köpt utrustning. I potentialläget gäller i stället nästa stycke.</p>
+<p><strong>Tillverkning skrivs av över livslängden i potentialläget</strong> (sedan 1.1, Henric 2026-11-10). Rubriktalet i potentialläget är ett enda år. Bokförs hela tillverkningen av en bil det år den köps, beror målåret på hur många bilar som råkar köpas just det året, och en bil som köptes 2027 och rullar 2030 syns i nyttan men inte i tillverkningen. Därför skrivs tillverkning av utrustning med en livslängd av jämnt över livslängden: varje år bär 1/livslängd av det som köptes vart och ett av livslängdens år bakåt, året självt inräknat, och det sista året den del som återstår när livslängden inte är ett helt antal år.</p>
+<div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>förändring</var> (<var>t</var>)</span><span class="f-eq">=</span><span class="f-rhs"><var>summan av förändring före avskrivning</var> <span class="frac"><span class="num"><var>t</var> <span class="op">−</span> <var>k</var></span><span class="den"><var>livslängd</var></span></span><span class="f-note">för k = 0, 1, … inom livslängden</span></span></div></div>
+<p>Det gäller drivare med en livslängd som ökar utsläppen i medelscenariot, både årliga inköp (bilar som byts löpande) och engångsposter (laddpunkter som byggs ett visst år). En engångspost skrivs av till och med ikapp-året när ett sådant finns, så att summan blir andelen i stycket ovan. Ett slutår samma år som köpet läses inte som ikapp-år i potentialläget, eftersom det där har betytt ”bara det året”. Utläsningen ber om livslängd för tillverkad utrustning, kortast i min, och om en engångspost för en investering som görs en gång. Livslängden är utrustningens, inte hur länge kommunen behåller den: en tjänstebil som byts efter tre år rullar vidare hos nästa ägare. Inom fönstret till målåret hamnar då bara den del av tillverkningen som hör till åren dit; resten bär åren efter, som också får nyttan. Bakgrunden var tjänstebilarna: när utläsningen började räkna bilarnas och laddarnas tillverkning sjönk nettot 2030 från 116 till 15 ton med en territoriell nytta kring 120 ton, och medel 2026 till 2030 blev negativt. Mätt 2026-11-10, med kalkylen omräknad på samma godkända steg som en referenskörning utan avskrivningen: tjänstebilarnas netto 2030 blev 117 till 148 ton i tre omräkningar (126 utan) med en territoriell nytta kring 158 ton, och medel 2026 till 2030 48 till 101 ton (25 utan). Laddpunkternas netto 2030 sjönk från 51 till mellan 24 och 45 ton, eftersom laddpunkternas tillverkning nu bär en del av livslängden in i 2030 i stället för att stanna på byggåret, och deras medel 2026 till 2030 gick från -15 till mellan 5 och 14 ton. Lövblåsarna gick från 2,6 till 2,2 ton, och återbruket, som inte har någon utrustning, stod still. Två av fem utläsningar av tjänstebilarna med den nya regeln, den lägsta omräkningen och en hel referenskörning, läste fordonsflottans förnyelse på tre år som bilarnas livslängd, och den hela körningen fick då nettot 15 ton igen. Utläsningen säger sedan dess att en förnyelsecykel inte är en livslängd. Med det läste alla fem omräkningar av tjänstebilarna 15 år, och nettot 2030 blev 148 ton på referenskörningens steg och 104 till 117 ton på den hela körningens (där det varit 15), med medel 2026 till 2030 77 respektive 54 till 72 ton. Uppföljningsläget behåller sin egen regel (föregående stycke), eftersom resultatet där är hela fönstret och inte ett år. Bilagan visar ΔE före avskrivning i en egen kolumn bredvid ΔE, och livslängden prövas bland de bärande antagandena.</p>
+<p><strong>En kostnad blir aldrig en nytta</strong> (sedan 2026-10-22, i uppföljningsläget). En engångspost är den köpta mängden. Skrevs den som ΔA &gt; 0 med ΔEF &lt; 0 sänktes faktorn på hela posten, och (1 + ΔA)(1 + ΔEF) − 1 kunde bli negativt, så att tillverkningen räknades som en minskning. Återbrukscontainern fick så 3,4 ton ”nytta” av sina egna containrar, och energivisualiseringens skärmar samma sak i mindre skala. Kalkylen räknar nu en sådan post som den tillkomna mängden, ΔA × (1 + ΔEF), med postens egen faktor (ΔEF 0), per scenario, och skriver en OBS-rad. Ett attributionsband som kalkylen vänt för en nytta går då tillbaka som det skrevs.</p>
+<p><strong>Pengarnas egna utsläpp</strong> (sedan 2026-10-22, bara i uppföljningsläget). En drivare vars aktivitet räknas i kronor och som ökar utsläppen i något scenario, alltså bidragsbeloppet gånger utsläpp per krona, ingår inte i resultatet. Pengarna hade använts av kommunen ändå. Den står i stället på en egen rad, ”Pengarnas egna utsläpp”, med högst 0,012 kg CO2e per krona, en tjänstetung faktor. Gav analysen en högre faktor står den i raden. Postens år räknas fortfarande till insatsens år, så medelfönstret flyttas inte. I driftsmedlens två körningar fanns sådana poster i sju analyser, olika i de två körningarna (krisberedskapen: 204 935 kr × 0,04 = −4,1 ton). Det som köptes och är fysiskt (utrustning, material, transporter) ska vara egna drivare i fysiska enheter. I potentialläget är posten en vanlig drivare som förut. Vändningen av attributionen, omräkningen mellan ton och kg och livslängdsandelen gäller däremot i båda lägena: de slår bara till när talen de behöver finns, och potentiallägets utläsning ber inte om attribution, och om livslängd bara för tillverkad utrustning.</p></div>
+</details>
+<details class="card" id="rubriktalet-och-aren-det-galler">
+<summary>
+  <span class="card-title"><span class="card-h">Rubriktalet och åren det gäller</span></span>
+  <span class="card-sum">Prognos: netto i medelscenariot under målåret. Uppföljning: netto i medelscenariot som medel per år över insatsens egna år. Medel per år i potentialläget delas alltid på fem (2026 till 2030), så sena åtgärder ser små ut. Kalkylen varnar när effekten finns färre än hälften av åren eller först efter de år som räknas, men talet ändras inte.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>I potentialläget är rubriktalet <strong>netto i medelscenariot under målåret</strong>, 2030 om inget annat anges. I uppföljningsläget är det <strong>netto i medelscenariot, som medelvärde per år</strong> över insatsens egna år. Bredvid står samma tal territoriellt och konsumtionsbaserat. Beslutet att låta målåret vara rubriktal i potentialläget togs 2026-10-13 (se DECISIONS.md); före det var rubriktalet medel per år 2026 till 2030 även där. Sparade analyser bär med sig vilket år talet gäller, och en sparad analys utan år är ett medelvärde.</p>
+<div class="table-wrap nums"><table class="nums"><thead><tr><th scope="col"></th><th scope="col">Förväntad potential</th><th scope="col">Uppföljning</th></tr></thead><tbody><tr><td data-label="">Rubriktalet</td><td data-label="Förväntad potential">målåret</td><td data-label="Uppföljning">medel per år</td></tr><tr><td data-label="">Spannet (låg och hög)</td><td data-label="Förväntad potential">målåret i min och max</td><td data-label="Uppföljning">medel per år i min och max</td></tr><tr><td data-label="">Medel per år gäller åren (mindre rad)</td><td data-label="Förväntad potential">2026 till 2030, alltid</td><td data-label="Uppföljning">från åtgärdens första startår till målåret</td></tr><tr><td data-label="">Ackumulerat</td><td data-label="Förväntad potential">summan från första startåret till målåret, medelscenariot</td><td data-label="Uppföljning">samma</td></tr></tbody></table></div>
+<p>Medel per år står kvar under rubriktalet. I potentialläget delas summan för 2026 till 2030 alltid med fem, oavsett målår. Tre följder är värda att känna till:</p>
+<ul><li>En åtgärd som startar sent i fönstret, till exempel 2029, får ett lågt medelvärde: två år med effekt delas på fem. Har åtgärden effekt färre än hälften av åren, alltså två eller ett av de fem, skriver kalkylen en varning med vilka år det gäller.</li><li>En åtgärd som verkar först efter 2030 får noll i medel per år. Är målåret satt senare än 2030 syns effekten i rubriktalet och i det ackumulerade talet. Är målåret 2030 blir också det ackumulerade talet noll. Då säger varningen vilket år effekten börjar och att nollan beror på åren som räknas.</li><li>Är målåret tidigare än 2030 slutar det ackumulerade talet vid målåret, medan medel per år fortfarande räknar med åren fram till 2030.</li></ul>
+<p>Varningarna ändrar inga tal. Medel per år för en åtgärd som startar 2029 är lika lågt som förut. Skillnaden är att kalkylen säger varför.</p>
+<p>Fönstret är ett metodval som följer planperioden.</p>
+<p>Rubriktalet avrundas till en decimal. Alla summor räknas på oavrundade tal. Olika delar av utskriften avrundar olika: den tekniska bilagan visar en decimal, medan kalkyltexten och sidan visar tal från tio och uppåt som hela ton.</p></div>
+</details>
+<details class="card" id="ett-rakneexempel">
+<summary>
+  <span class="card-title"><span class="card-h">Ett räkneexempel</span></span>
+  <span class="card-sum">Tjänsteresor med bil, med påhittade tal: 1 000 000 km, 0,15 kg CO2e per km som sjunker 2 procent per år, −10 procent i medel, linjär infasning 2026 till 2028. Ger 13,3 ton år 2030 (spann 6,6 till 26,6), 47,7 ton ackumulerat och 9,5 ton i medel per år.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Talen är påhittade och räknade med CAIA:s kalkylmotor. En åtgärd ska minska tjänsteresor med bil.</p>
+<ul><li>Aktivitet basåret 2024: 1 000 000 km per år. Ingen trend.</li><li>Emissionsfaktor: 0,15 kg CO2e per km, som sjunker 2 procent per år utan åtgärd.</li><li>Åtgärdens effekt på körsträckan: −5 procent (min), −10 procent (medel), −20 procent (max).</li><li>Start 2026, full effekt 2028, linjär infasning.</li><li>Klimatfaktorer 1, 1 och 1.</li></ul>
+<p>År 2029 i medelscenariot: emissionsfaktorn har sjunkit till 0,15 × 0,98⁵ = 0,1356 kg per km. Utan åtgärden blir utsläppen 135,6 ton. Med åtgärden körs 900 000 km, vilket ger 122,0 ton. Förändringen är 13,6 ton. Territoriellt 13,6, konsumtion 13,6, överlapp 13,6, netto 13,6.</p>
+<div class="table-wrap nums"><table class="nums"><thead><tr><th scope="col">År</th><th scope="col">Infasning</th><th scope="col">Netto, medel (ton)</th></tr></thead><tbody><tr><td data-label="År">2026</td><td data-label="Infasning">0 %</td><td data-label="Netto, medel (ton)">0</td></tr><tr><td data-label="År">2027</td><td data-label="Infasning">50 %</td><td data-label="Netto, medel (ton)">7,1</td></tr><tr><td data-label="År">2028</td><td data-label="Infasning">100 %</td><td data-label="Netto, medel (ton)">13,8</td></tr><tr><td data-label="År">2029</td><td data-label="Infasning">100 %</td><td data-label="Netto, medel (ton)">13,6</td></tr><tr><td data-label="År">2030</td><td data-label="Infasning">100 %</td><td data-label="Netto, medel (ton)">13,3</td></tr></tbody></table></div>
+<p>Rubriktalet är målåret 2030: 13,3 ton CO2e, med spannet 6,6 (min) till 26,6 (max) samma år. Summan är 47,7 ton ackumulerat till 2030, och medel per år 2026 till 2030 blir 47,7 / 5 = 9,5 ton. Effekten sjunker något efter 2028 eftersom bilarna ändå blir renare för varje år: det åtgärden tar bort är värt mindre ju lägre emissionsfaktorn är.</p></div>
+</details>
+<details class="card" id="vad-atgarden-andrar-i-verksamheten">
+<summary>
+  <span class="card-title"><span class="card-h">Vad åtgärden ändrar i verksamheten</span></span>
+  <span class="card-sum">Bredvid tonnen skriver kalkylen en mening per drivare med förändringen i verksamhetens egen enhet (kilometer, liter, kvadratmeter), för målåret och som snitt per år, med samma attribution som tonnen. När åtgärden ändrar emissionsfaktorn går det inte att räkna ut hur mycket som byter, så kalkylen anger i stället en jämförelse: hur mycket som minst skulle gå helt utan utsläpp.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Tonnen säger hur mycket utsläppen ändras. För att kunna följa upp en åtgärd och ställa den mot kommunens mål behövs samma förändring i den enhet verksamheten räknar i: kilometer, liter, kvadratmeter. Kalkylen skriver därför en mening per drivare i medelscenariot (sedan 2026-11-09). Meningen ger talet för målåret och ett snitt per år över samma år som <em>Medel per år</em> (2026 till 2030 i potentialläget).</p>
+<p>För en drivare som ändrar mängden aktivitet:</p>
+<div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>ändrad aktivitet</var></span><span class="f-eq">=</span><span class="f-rhs"><var>aktivitet</var><sub>BAU</sub> <span class="op">×</span> <var>ΔA</var> <span class="op">×</span> <var>infasning</var> <span class="op">×</span> <var>attribution</var> <span class="op">×</span> <var>andel</var></span></div></div>
+<p><em>Andel</em> gäller bara en engångspost (se <a class="xref" href="#engangsposter"><em>Engångsposter</em></a>) och är annars 1. Talet är alltså åtgärdens egen del av förändringen, med samma attribution som tonnen räknas med. Multiplicerar man det med emissionsfaktorn utan åtgärden samma år får man <em>förändring</em> i formeln under <a class="xref" href="#attribution"><em>Attribution</em></a>, alltså talet före uppdelningen på territoriellt och konsumtionsbaserat. Testerna håller kalkylen till det. Rubriktalet i ton (netto) kan skilja sig, eftersom det har gått igenom de faktorerna.</p>
+<p>För en drivare som ändrar emissionsfaktorn går det inte att räkna ut hur stor del av aktiviteten som byter. Kalkylen vet hur mycket lägre utsläppen per enhet blir, men inte vad det nya släpper ut. Den anger i stället en jämförelse: det motsvarar att minst så mycket går helt utan utsläpp.</p>
+<div class="formel" role="math"><div class="f-row"><span class="f-lhs"><var>aktivitet med åtgärden</var></span><span class="f-eq">=</span><span class="f-rhs"><var>aktivitet</var><sub>BAU</sub> <span class="op">×</span> (<span class="n">1</span> <span class="op">+</span> <var>ΔA</var> <span class="op">×</span> <var>infasning</var>)</span></div><div class="f-row"><span class="f-lhs"><var>minst utan utsläpp</var></span><span class="f-eq">=</span><span class="f-rhs"><var>aktivitet med åtgärden</var> <span class="op">×</span> <span class="op op--unary">−</span><var>ΔEF</var> <span class="op">×</span> <var>infasning</var> <span class="op">×</span> <var>attribution</var> <span class="op">×</span> <var>andel</var></span></div></div>
+<p>Byter en del av aktiviteten till något annat är det den minsta mängd som måste byta, och ger det som ersätter också utsläpp behöver mer byta. Blir i stället allt lite renare (effektivare fordon, bättre isolering) är talet bara ett jämförelsetal. Kalkylen skriver en rad om det under listan. Med −60 procent på 35 000 liter diesel blir jämförelsen 21 000 liter. Höjer drivaren emissionsfaktorn står bara hur mycket högre den blir.</p>
+<p>Utskriften följer några regler:</p>
+<ul><li>Mängderna har två värdesiffror (108 000 blir 110 000), eftersom de bygger på antaganden.</li><li>Mängden står i den enhet analysen skrev för aktiviteten, utan ”/år” och det som står inom parentes. Har kalkylen räknat om aktiviteten mellan ton och kg (se <a class="xref" href="#enhetskontrollen"><em>Enhetskontrollen</em></a>) står den ändå i analysens enhet. Står det ett tal i enheten räknas det in i mängden: 50 gånger ”100 kr” står som 5 000 kr.</li><li>När mängden ändras står andelen av aktiviteten utan åtgärden bredvid målårets tal, och spannet mellan min och max när båda pekar åt samma håll som medel. När emissionsfaktorn ändras är procenttalet hur mycket lägre utsläppen per enhet blir, och inget spann skrivs ut.</li><li>En engångspost står med sitt eget år och utan snitt.</li><li>En drivare vars aktivitet själv är utsläpp (kg CO2e per år) har ingen annan enhet, och meningen säger det.</li><li>En drivare som saknar effekt i alla tre scenarierna står inte med.</li></ul>
+<p>I räkneexemplet ovan står det: 100 000 km mindre år 2030 än utan åtgärden (10 %, spann 50 000–200 000), i snitt 70 000 km mindre per år 2026–2030.</p>
+<p>Avsnittet står i kalkyltexten och i rutan <em>Det viktigaste</em> på kalkylsteget (de tre drivare som ger mest). I rapporten står det direkt efter <em>Beräknad klimatnytta</em>, och i en uppföljningsrapport alltså före <em>Uppmätt och antaget</em>. Saknar rapporten rubrikerna som kommer efter resultatet står avsnittet sist i texten. I en uppföljning är snittet det tal att läsa: en insats som slutat före målåret står som ”ingen ändring” det året.</p>
+<p>Kalkylmotorn skriver avsnittet, och rapporten får det oförändrat på samma sätt som den tekniska bilagan. Skriver språkmodellen ett eget avsnitt med samma rubrik ersätts det. Saknas avsnittet i kalkylen, i en äldre analys eller när språkmodellen räknade själv, saknas det också i rapporten.</p></div>
+</details>
+<details class="card" id="barande-antaganden">
+<summary>
+  <span class="card-title"><span class="card-h">Bärande antaganden</span></span>
+  <span class="card-sum">Koden flyttar varje osäkert tal från sitt min till sitt max med allt annat på medel och mäter hur mycket resultatet rör sig. De fem som flyttar mest skrivs ut. Ett bärande tal utan källa får en OBS-flagga, men flaggan bygger på angivet ursprung, inte på källkontrollen.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Efter räkningen prövar koden varje osäkert tal för sig, i båda analyslägena. Talet flyttas från sitt min till sitt max medan allt annat står på medel, och koden mäter hur mycket det ackumulerade resultatet rör sig. De fem antaganden som flyttar resultatet mest skrivs ut i kalkylen, med ursprung.</p>
+<p>Två saker flaggas med ”OBS: bärande antagande utan källa”:</p>
+<ul><li>ett antagande som ensamt flyttar resultatet med minst en fjärdedel av drivarnas sammanlagda effekt, och som saknar källa eller är märkt som antagande,</li><li>aktiviteten eller emissionsfaktorn hos en drivare som står för minst hälften av effekten, om talet saknar källa eller är märkt som antagande.</li></ul>
+<p>Flaggan utgår från det ursprung språkmodellen angav, inte från utfallet av källkontrollen. Ett bärande tal som påstås komma ur biblioteket men som föll i kontrollen står under <em>Kontrollera först</em> utan att få den här flaggan. Läs därför de två tillsammans.</p>
+<p>Prövningen ändrar inga tal. Den pekar ut vilka antaganden resultatet står och faller med, så att granskningen kan börja där.</p></div>
+</details>
+<details class="card" id="varningar-fran-kalkylen">
+<summary>
+  <span class="card-title"><span class="card-h">Varningar från kalkylen</span></span>
+  <span class="card-sum">Varningar vid enhetsfel, ingen effekt, ökade utsläpp, nollor som beror på åren som räknas, för få år med effekt, scenarier i fel ordning och några formfel. En varning ändrar inga tal; den säger att talet inte ska användas förrän orsaken är förstådd.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Koden skriver en varning bredvid resultatet när:</p>
+<ul><li>enheterna för en drivares aktivitet och utsläppsfaktor inte går ihop (se <a class="xref" href="#enhetskontrollen"><em>Enhetskontrollen</em></a> nedan). Den varningen står först, eftersom ett enhetsfel gör alla andra tal fel också,</li><li>ingen drivare har någon effekt i medelscenariot,</li><li>medelscenariot ger ökade utsläpp (målåret, medel per år eller ackumulerat är negativt),</li><li>medel per år är noll trots att det ackumulerade talet inte är det, eftersom effekten ligger efter 2030 och målåret är senare (bara potentialläget),</li><li>både medel per år och det ackumulerade talet är noll, eftersom åtgärden har effekt först efter målåret (i potentialläget dessutom utanför 2026 till 2030). Varningen anger första året med effekt. Ger startår, år för full effekt och slutår tillsammans ingen effekt något år säger varningen det i stället,</li><li>åtgärden har effekt färre än hälften av åren 2026 till 2030, så att medel per år till största delen är ett medel av nollor (bara potentialläget),</li><li>min och max ger samma ackumulerade tal, eller scenarierna ligger i fel ordning. Vid fel ordning namnger varningen de antaganden som drar åt fel håll: de som ger ett lägre ackumulerat tal vid sitt maxvärde än vid sitt minvärde när de prövas ett i taget med övriga på medel (samma prövning som under <a class="xref" href="#barande-antaganden"><em>Bärande antaganden</em></a>). Vanliga orsaker är att drivarens aktivitet är något som minskar utsläppen, till exempel en återbrukad mängd, och höjs med ΔA, vilket kalkylen läser som mer utsläpp, eller att en drivare som ökar utsläppen har värden i nyttans ordning, till exempel längst effekt i max,</li><li>en engångspost ligger efter målåret, en andel av startåret är angiven men aldrig används, eller ett bidragsår saknas bland bidragsraderna.</li></ul>
+<p>Ett år räknas som ett år med effekt när åtgärden ändrar aktiviteten eller emissionsfaktorn det året i medelscenariot, också under infasningen. Startåret i en infasning är noll och räknas inte.</p>
+<p>En varning ändrar inga tal. Den säger att talet inte ska användas förrän orsaken är förstådd.</p></div>
+</details>
+<details class="card" id="enhetskontrollen">
+<summary>
+  <span class="card-title"><span class="card-h">Enhetskontrollen</span></span>
+  <span class="card-sum">Jämför enheten på aktivitet och emissionsfaktor när de är vikt eller energi. Olika storlek, som ton mot kg, räknas sedan 2026-10-22 om automatiskt och står i varningen, och sedan 2026-11-10 även storleksord som tusen km eller per 100 km. Kontrollen missar enheter den inte känner, som km mot mil eller handlare mot hushåll.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Kalkylen multiplicerar aktiviteten (A0) med utsläppsfaktorn (EF0) och läser produkten som kg CO2e. Det stämmer bara när utsläppsfaktorn är i kg CO2e per samma enhet som aktiviteten räknas i. En körning i oktober 2026 hade aktiviteten i ton och utsläppsfaktorn per kg, och visade 0,1 ton CO2e per år där 86 var rätt. Ingen av de andra kontrollerna jämför de två enheterna med varandra.</p>
+<p>Koden läser därför första ordet i aktivitetens enhet (före ”/år” eller ”per”) och första ordet efter snedstrecket eller ”per” i utsläppsfaktorns enhet, och varnar när:</p>
+<ul><li>båda är vikt eller båda energi men i olika storlek, till exempel ton mot kg eller MWh mot kWh. Sedan 2026-10-22 räknar kalkylen då om aktiviteten till utsläppsfaktorns enhet (210 ton blir 210 000 kg) och skriver i varningen att den gjort det, och hur stort felet blir om enheten var fel angiven men talet redan omräknat. Förut varnade den bara, och resultatet stod kvar: krisberedskapen i driftsmedlens körning 2 räknade 210 ton gånger 2,1 kg CO2e per kg som 0,44 ton i stället för 441, trots varningen. Båda gångerna felet setts var enheterna rätt och omräkningen glömd,</li><li>den ena är vikt och den andra energi,</li><li>den ena är vikt eller energi och den andra något annat, till exempel aktiviteten räknad i handlare och utsläppsfaktorn per kg,</li><li>utsläppsfaktorn är angiven i ton eller gram CO2e i stället för kg.</li></ul>
+<p><strong>Storleksord räknas om</strong> (sedan 2026-11-10). Står ett storleksord eller ett tal framför aktivitetens enhet (tusen, hundra, miljoner, milj., miljarder, mdr eller ett tal, till exempel ”tusen km/år” eller ”1 000 kg”) räknar kalkylen om aktiviteten till enheten utan storleksordet: 500 tusen km blir 500 000 km. Står det framför det utsläppsfaktorn gäller per, till exempel ”kg CO2e per 100 km”, räknar kalkylen om faktorn till per enhet: 15 kg CO2e per 100 km blir 0,15 kg CO2e per km. Omräkningen görs före jämförelsen mellan ton och kg, så att 2 tusen ton mot en faktor per kg blir 2 000 000 kg. Har båda sidor samma storlek (”100 kr” mot ”per 100 kr”) räknas ingenting om, och inte heller när faktorn gäller per ”enhet” eller saknar nämnare, eftersom den då gäller per det aktiviteten räknas i. Ett tal räknas bara när det står fritt framför ordet (4WD-bilar är ett namn). Kalkylen skriver omräkningen i indata (”räknat som 500 000 km”), i bilagans tabell och i samma varning som för ton mot kg, med hur stort felet blir om talet redan var omräknat men enheten fel angiven. Förut lästes storleksordet som en del av enhetens namn, så att 500 tusen km mot 0,15 kg CO2e per km gav 0,0075 ton där 7,5 var rätt, och 15 kg per 100 km gav 750 ton i stället för 7,5. Felet hittades i granskningen efter 1.0.0 och har inte setts i någon av de sparade riktiga analyserna (omkring 3 600 drivarrader). Ett ord som bara börjar som ett storleksord (”tusentals”) räknas inte, och ett storleksord som följs av ett räkneord (”tusen handlare” mot en faktor per kg) räknas om men varnar fortfarande för att enheterna inte går ihop.</p>
+<p>Koden känner bara till g, kg, t, ton, Wh, kWh, MWh och GWh, samma tabell som källkontrollen under <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a> använder, och samma ord utskrivna (kilogram, tonne, kilowattimme och liknande). Ett tillägg efter bindestreck räknas inte (kWh-el läses som kWh), och ton-km i alla stavningar (ton km, t·km, tkm) läses som ett eget ord, aldrig som ton. Är det första ordet på ena sidan inget av de kända orden, till exempel ”el (kWh/år)” eller ”Antal ton/år”, letar koden efter ett känt ord längre fram på samma sida innan den varnar.</p>
+<p>Två andra ord jämförs aldrig med varandra: personer mot invånare, km mot fordonskm och cyklar mot cykel kan betyda samma sak, och en gissning där skulle varna på riktiga analyser. Ordet ”enhet”, som står när analysen inte angett någon enhet, jämförs inte heller. Kontrollen missar alltså till exempel km mot mil (en faktor 10), handlare mot hushåll och GJ mot MJ.</p>
+<p>Prövat 2026-10-13 mot de sparade riktiga analyserna på disk (referenspaketen, uppföljningen av driftsmedlen och provkörningar, 72 drivare i omkring 20 analyser): ingen drivare fick varningen. I 20 av drivarna var minst en av enheterna vikt eller energi, så att kontrollen faktiskt jämförde något; resten räknas i km, liter, kronor, fordon och liknande. Båda de felaktiga utläsningarna från oktober fick varningen.</p>
+<p>Kontrollen säger inte om ett tal som påstås vara en andel egentligen är något annat. I oktoberkörningen lästes 0,72 ton per handlare som en minskning på 72 procent. Där syns felet bara för att aktiviteten räknades i handlare och utsläppsfaktorn per kg. Hade båda varit per handlare hade kontrollen inte märkt något.</p></div>
+</details></div></section>
+<section class="group" id="talens-ursprung-och-kontrollera-forst-grupp" aria-labelledby="talens-ursprung-och-kontrollera-forst-grupp-h"><h2 id="talens-ursprung-och-kontrollera-forst-grupp-h">Talens ursprung och ”Kontrollera först”</h2><div class="cards"><details class="card" id="talens-ursprung-och-kontrollera-forst">
+<summary>
+  <span class="card-title"><span class="card-h">Talens ursprung och ”Kontrollera först”</span></span>
+  <span class="card-sum">Varje rapport slutar med en tabell över var varje indatatal kommer ifrån, och koden kontrollerar påståendet. Kontrollen är smal: bara medelvärdet, utan tecken, och inget värde jämförs mot datafiler eller externa källor. Det som inte håller hamnar under Kontrollera först.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Varje rapport, från webbsidan och från batchverktyget, slutar med avsnittet <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a>: en tabell med en rad per indatatal och var talet kommer ifrån. Sex tal per drivare redovisas: aktivitet och emissionsfaktor basåret, de två trenderna och de två effekterna. Attributionen redovisas också när den skiljer sig från 1 i något scenario.</p>
+<p>Språkmodellen anger ett ursprung för varje tal när den fyller i formuläret i steg 5. Koden kontrollerar sedan påståendet:</p>
+<div class="table-wrap stack"><table class="stack"><thead><tr><th scope="col">Ursprung</th><th scope="col">Vad koden kontrollerar</th><th scope="col">Vad koden inte kontrollerar</th></tr></thead><tbody><tr><td data-label="Ursprung">Parameterbiblioteket</td><td data-label="Vad koden kontrollerar">Att varje angiven parameter finns i biblioteket. Pekar talet på en enda parameter med ett fast värde jämförs talet med bibliotekets, med fem procents marginal och efter ett enhetsbyte om enheterna kräver det (till exempel gram till kilo).</td><td data-label="Vad koden inte kontrollerar">Pekar parametern på en datafil jämförs inget värde. Bygger talet på flera parametrar krävs att en uträkning är utskriven, men uträkningen räknas inte efter.</td></tr><tr><td data-label="Ursprung">Kommunens data</td><td data-label="Vad koden kontrollerar">Att hänvisningen går till en biblioteksrad med ett lokalt värde, eller till en datafil som finns och som CAIA läser. En rad som bara har en nationell schablon godtas inte. Pekar talet på en enda rad med ett lokalt värde jämförs talet med det.</td><td data-label="Vad koden inte kontrollerar">Pekar hänvisningen på en datafil slås talet inte upp i filen.</td></tr><tr><td data-label="Ursprung">Extern källa</td><td data-label="Vad koden kontrollerar">Att en källa är namngiven.</td><td data-label="Vad koden inte kontrollerar">Koden läser inte källan och kan inte avgöra om talet står där.</td></tr><tr><td data-label="Ursprung">Antagande</td><td data-label="Vad koden kontrollerar">Ingenting. Talet redovisas som antagande.</td><td data-label="Vad koden inte kontrollerar"></td></tr></tbody></table></div>
+<p>Tre saker om själva jämförelsen:</p>
+<ul><li>Bara medelvärdet jämförs. Min och max kan ligga var som helst utan att kontrollen märker det.</li><li>Tecknet räknas inte. En effekt på −53 procent passerar mot ett biblioteksvärde på 53.</li><li>Har biblioteksraden ett intervall godtas varje tal inom intervallet, med fem procents marginal i ändarna.</li></ul>
+<p>Ett tal som saknar ursprung, eller vars påstående inte höll i kontrollen, hamnar under rubriken <strong>Kontrollera först</strong> överst i avsnittet, med skälet utskrivet. I tabellen står då ”Kontrollera” eller ”Saknas” i kolumnen för ursprung.</p>
+<p>”Kontrollera först” betyder att CAIA inte har kunnat belägga talet där det sades komma ifrån. Talet kan vara rätt ändå, men en människa behöver slå upp det innan resultatet används.</p>
+<p>Ett tal som passerat kontrollen är inte därmed belagt. Kontrollen fångar hänvisningar till parametrar och filer som inte finns, schabloner som kallas lokala data, och enstaka biblioteksvärden som inte stämmer. Den fångar inte ett felaktigt tal som hänvisar till en datafil, en felräknad härledning eller ett tal som inte står i den externa källan. Tabellen skriver ut när ett värde inte har jämförts (”Värdet slås upp eller räknas fram och jämförs inte här”). I Karlstads bibliotek gäller det 17 av 103 parametrar. Om ett belagt tal är rätt tal för just den här åtgärden prövar kontrollen aldrig.</p>
+<p>En trend eller effekt som är exakt noll, utan att analysen sagt något om den, redovisas som antagande med texten att ingen förändring är angiven.</p>
+<p>Kolumnen Underlag visar för varje parameter talet som används och dess enhet. För en parameter som hämtar sitt värde ur en datafil står samma sak som i sidans parameterlista: talet i filen och en rad om vad som lästes ur vilken fil, till exempel ”224 951 ton CO2e/år. Totala utsläpp, 2023. Datafil: Totala utsläpp per sektor och år (SMHI/RUS)”. Pekar parameterns uttryck inte på en enda ruta i filen (en fördelning ur en enkät, en jämförelse mellan två kategorier) står ”Läses ur datafilen vid varje analys” i stället för ett tal. Koden gissar aldrig ett tal där. En hänvisning direkt till en datafil visar filens beskrivning ur dataregistret. Bibliotekets uttryck (<code>LOOKUP(...)</code>) och registrets namn (<code>DATA_...</code>) skrivs inte ut för en hänvisning som håller. Håller den inte, till exempel en datafil som inte finns, står hänvisningen som analysen skrev den i skälet under Kontrollera först, så att den går att slå upp. Uttrycket tolkas på ett enda ställe i koden, samma som parameterlistan använder, och det som jämförs och det som språkmodellen läser är fortfarande själva uttrycket. Visningen ändrar alltså ingen kontroll. Talet i Underlag är bibliotekets värde, inte talet analysen räknade med; det senare står i kolumnen Värde.</p></div>
+</details>
+<details class="card" id="jamforelsen-med-det-som-godkandes">
+<summary>
+  <span class="card-title"><span class="card-h">Jämförelsen med det som godkändes</span></span>
+  <span class="card-sum">Talen som språkmodellen läser ut i steg 5 jämförs med baslinjen och antagandena som användaren godkände i steg 3 och 4. Bara tal som tydligt motsäger något godkänt markeras. I mätningarna fångades ungefär två av tre inlagda fel i baslinjen och hälften i effekterna, men nästan inga små ändringar (7 av 73 vid gånger 1,5) och inga där alla tre scenarier ändrats lika. Ett omarkerat tal är inte därmed det godkända.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Användaren godkänner baslinjen i steg 3 och antagandena i steg 4 som text. I steg 5 läser språkmodellen ut talen ur texten igen. Koden jämför sedan de utlästa talen med de godkända stegen, och ett tal som avviker tydligt hamnar under <strong>Kontrollera först</strong> med skälet utskrivet, oavsett vilket ursprung det har angetts ha. Avsnittet säger i en mening vad som jämfördes: baslinjen och antagandena, bara antagandena (när samtalet saknar en godkänd baslinje), eller ingenting (när det saknar ett godkänt evidenssteg). Sidan visar dessutom en varning vid den stora siffran när något tal avviker. Jämförelsen ändrar inga tal och stoppar inte kalkylen.</p>
+<p>Godkänt betyder det senaste svaret i steget som användaren gick vidare från med grindens knapp. Ett svar som användaren i stället bad om ändringar i räknas inte. Varje drivare i formuläret paras ihop med en godkänd drivare på namnet. Går namnet inte att para ihop med en enda drivare jämförs talen med alla godkända drivare, vilket kan missa en avvikelse men aldrig hittar på en.</p>
+<div class="table-wrap stack"><table class="stack"><thead><tr><th scope="col">Tal</th><th scope="col">Jämförs med</th><th scope="col">Markeras när</th></tr></thead><tbody><tr><td data-label="Tal">Aktivitet och emissionsfaktor basåret</td><td data-label="Jämförs med">Raden A0 eller EF0 för drivaren i den godkända baslinjen</td><td data-label="Markeras när">Talet varken står i drivarens godkända text eller ligger inom en faktor 1,5 från baslinjens värde (efter ett enhetssteg, till exempel ton och kilo). Undantag för aktiviteten, bara i potentialläget: tar ett scenario bort hela aktiviteten (effekten på aktiviteten är exakt −100 procent) och talet är större än baslinjens, godtas också scenariernas största mängd. Den räknas som den största produkten av två av drivarens mängdantaganden på den försiktiga eller den optimistiska raden. Emissionsfaktorer, årtal och tider räknas inte som mängder (se <a class="xref" href="#tre-scenarier"><em>Tre scenarier</em></a>)</td></tr><tr><td data-label="Tal">Trenderna</td><td data-label="Jämförs med">All godkänd text för drivaren, och profilen</td><td data-label="Markeras när">Medelvärdet inte står någonstans i den texten, som andel eller procent. Trendens värden för min och max jämförs inte, eftersom motorn bara räknar med medelvärdet</td></tr><tr><td data-label="Tal">Effekterna och attributionen</td><td data-label="Jämförs med">Antagandet i steg 4 som effekten lästs ur</td><td data-label="Markeras när">Två av de tre scenarierna stämmer med ett godkänt antagande (eller med en produkt av två eller tre antaganden, eller ett antagande delat med basårets värde), och det tredje ligger mer än en faktor 1,5 från vad samma antagande ger</td></tr></tbody></table></div>
+<p>Jämförelsen är smal med flit. Språkmodellen har rätt att räkna om och kombinera de godkända talen: en andel gånger en minskning, en förändring i kilowattimmar delad med nivån, två grupper i samma drivare. Kräver man att varje tal ska stå i den godkända texten varnar kontrollen på nästan varje riktig analys. Därför markeras bara ett tal som motsäger något godkänt, inte ett tal som bara inte går att hitta.</p>
+<p>Prövad mot 21 sparade riktiga körningar med 78 drivare (oktober 2026). Två tal markerades, och båda var felläsningar som utläsningens egen anteckning avslöjar. Ett tal i taget ändrades sedan i körningarna för att se hur mycket kontrollen fångar:</p>
+<div class="table-wrap nums"><table class="nums"><thead><tr><th scope="col">Ändring</th><th scope="col">Fångad</th></tr></thead><tbody><tr><td data-label="Ändring">Aktiviteten basåret gånger tio</td><td data-label="Fångad">50 av 78</td></tr><tr><td data-label="Ändring">Emissionsfaktorn basåret gånger tio</td><td data-label="Fångad">47 av 78</td></tr><tr><td data-label="Ändring">En effekts medelvärde gånger 2,2 (granskarens fall, −0,38 till −0,84)</td><td data-label="Fångad">35 av 73</td></tr><tr><td data-label="Ändring">En effekts medelvärde halverat</td><td data-label="Fångad">31 av 73</td></tr><tr><td data-label="Ändring">En effekts medelvärde gånger tio</td><td data-label="Fångad">32 av 73</td></tr><tr><td data-label="Ändring">En effekts medelvärde gånger 1,5</td><td data-label="Fångad">7 av 73</td></tr><tr><td data-label="Ändring">En effekts medelvärde satt till max</td><td data-label="Fångad">16 av 60</td></tr><tr><td data-label="Ändring">En effekts alla tre scenarier gånger 2,2</td><td data-label="Fångad">0 av 73</td></tr></tbody></table></div>
+<p>Kontrollen mättes om 2026-10-13, när trenderna började jämföras på medelvärdet och undantaget för den största mängden lades till. Underlaget var 71 körningar med 214 drivare, de flesta upprepade utläsningar av fyra godkända analyser, så talen går inte att jämföra med tabellen ovan. Före och efter ändringen fångade kontrollen lika många av de inlagda felen på varje rad utom en: aktiviteten gånger tio, 130 före och 134 efter av 214. Skillnaden kommer av hur mätningen räknar: ett inlagt fel räknas som fångat bara om talet inte redan var markerat. De fyra är den största mängden i fallet under <a class="xref" href="#tre-scenarier"><em>Tre scenarier</em></a>. Förut var den markerad redan utan fel, nu godtas den, och samma tal gånger tio blir en ny markering. Antalet markerade tal i körningarna, utan inlagda fel, gick från 22 till 5. Ingen av de 22 hörde till en utläsning med fel resultat. Tretton var trender för min och max, som motorn inte räknar med. Fyra var den största mängden i fallet under <a class="xref" href="#tre-scenarier"><em>Tre scenarier</em></a>. Fem var utläsningar som räknat på en annan bas än den godkända, eller vägt ihop en egen trend, och ändå hamnat inom tre procent från de andra utläsningarna av samma analys. De fem markeras fortfarande, med rätta, eftersom talen inte är de godkända. De slutade uppstå när utläsningen fick regeln att hålla sig till baslinjens värden: 0 markerade tal i tolv utläsningar (se DECISIONS.md).</p>
+<p>De 71 körningarna är till största delen de analyser som ändringarna gjordes på. Samma dag prövades kontrollen därför på äldre sparade analyser som inte användes då (mätningen står under <a class="xref" href="#kanda-begransningar"><em>Kända begränsningar</em></a>). Där markerade den nio tal i 35 utläsningar, och alla nio satt i utläsningar med rätt resultat. Sex gällde en bas som utläsningen flyttat för en tillkommande utsläppskälla (elen till nya elbilar, tillverkningen av nya maskiner), två en trend som vägts ihop av två godkända trender, och en ett engångsköp. De fem utläsningar som hamnade mer än fem procent från vad antagandena ger fick ingen markering. Felen där var av slag som kontrollen inte ser: ett slutår som föll bort, en känslighetspost som räknades in i summan, en trend på två motverkande poster, och en andel som räknades på en annan nivå än antagandena avsåg. En markering betyder alltså att ett tal inte är det godkända. Om resultatet är rätt eller fel säger den inget om, åt något håll.</p>
+<p>Det kontrollen inte fångar: ett bytt tecken, en ändring under en faktor 1,5, en effekt som är härledd utan att något godkänt antagande förankrar den, alla tre scenarier ändrade lika mycket, och en baslinje som den godkända texten sätter till noll eller anger per år på ena sidan och inte den andra. En effekt som är 0 i alla tre scenarier markeras bara när drivarens egna godkända antaganden anger en effekt. Klimatfaktorerna jämförs bara med drivarens eget block i evidenssteget. Sedan 1.1 jämförs de i båda lägena; till och med 1.0.1 släppte uppföljningsläget igenom en konsumtionsfaktor över 1 som lästs ut som 1. Det felet har hänt: en godkänd konsumtionsfaktor på 1,15 lästes ut som 1,0 i åtta utläsningar av åtta (2026-10-13, innan utläsningen fick en regel om det och innan faktorerna jämfördes), resultatet blev 74 ton i stället för 88, och ingenting markerades. En trend jämförs bara med om talet står någonstans i texten, så en trend på −20 procent passerar om ”20” står i drivarens text. Ett tal som inte markerats är alltså inte därmed det godkända.</p>
+<p><code>next/tools/check_godkant.py</code> kör jämförelsen mot sparade körningar och skriver ut både markerade tal och tabellen ovan.</p></div>
+</details></div></section>
+<div class="cards"><details class="card" id="forvantad-potential-och-uppfoljning">
+<summary>
+  <span class="card-title"><span class="card-h">Förväntad potential och uppföljning</span></span>
+  <span class="card-sum">Potentialläget (Prognos) bedömer vad en planerad åtgärd kan ge, uppföljningen vad en genomförd insats faktiskt har gett. Samma steg och formler, men uppföljningen får egna metodregler, ett medelfönster som följer insatsen, realiserat och återstående, och nytta per bidragsår.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>CAIA har två analyslägen. Användaren väljer läge innan första meddelandet, och det går inte att byta under analysen. På sidan heter de <em>Prognos</em> och <em>Uppföljning</em> (valet Välj analystyp på stegraden); här kallas de potentialläget och uppföljningsläget.</p>
+<p><strong>Förväntad potential</strong> bedömer vad en planerad åtgärd kan ge. Det är standardläget och det CAIA först byggdes för.</p>
+<p><strong>Uppföljning</strong> bedömer vad en genomförd insats faktiskt har gett och vad som återstår. Läget kom till hösten 2026, efter att granskningen av Karlstads driftsmedel 2025 visat att potentialläget gav för höga tal för genomförda insatser.</p>
+<p>Stegen och formlerna är desamma. Skillnaden är att språkmodellen i varje steg får arton metodregler till, och dessutom egna anvisningar för steget (till exempel att basåret är året före första bidragsåret):</p>
+<ol><li>Jämförelsen är vad som hade hänt utan just de här pengarna, inte utan att kommunen gör något. Det som redan pågår, som mål, beslut, avtal och andra års pengar, hör till jämförelsen.</li><li>Det som hade hänt ändå räknas bort på ett enda ställe: antingen i jämförelsen (BAU) eller i attributionen, aldrig i båda. Fick pengarna bara något att hända tidigare får de nyttan för de år det kom tidigare. Attributionen är pengarnas andel av förändringen och bedöms med skäl åt båda hållen: 1 för det pengarna själva köpte eller utförde och dess egen användning, och för en effekt som går genom andra människors beslut och vanor pengarnas del bland orsakerna, oftast under 1.</li><li>Effekter av kampanjer, utbildning, information och ändrat beteende klingar av år för år, med en halveringstid.</li><li>Uppmätta tal går före antagna.</li><li>Max är ett rimligt högt scenario, inte alla ytterlägen samtidigt.</li><li>Nära noll, och ”går inte att mäta än”, är giltiga svar.</li><li>Ansökans förhandsbedömning och uppföljningens egen redovisade klimatnytta är uppgifter att pröva, inte facit.</li><li>Bara det som pengarna köpte räknas.</li><li>En insats som fått pengar flera år analyseras som en helhet.</li><li>Insatsens egna utsläpp och nyttan behandlas lika: det som räknas bort från nyttan räknas bort från de egna utsläppen på samma sätt, och utrustning vars köp bara tidigarelades belastar insatsen bara för de tidigarelagda åren av livslängden.</li><li>Bidragsbeloppet är ingen utsläppskälla. Pengarna hade använts av kommunen ändå. En egen utsläppspost ska gälla något fysiskt som köptes.</li><li>Gav en pilot upphov till en verksamhet som består och inte hade funnits utan insatsen, räknas en del av dess effekt även efter piloten. Att den ”hade kommit ändå” senare kräver belägg i underlaget. Undanträngning av andra aktörers försäljning är en egen, motiverad andel, inte en del av attributionen.</li><li>Drivarens aktivitet är det som orsakar utsläppen. Undviker insatsen nyproduktion är aktiviteten det nya som undviks, och insatsen sänker den; nettoandelen bestämmer hur mycket. Den återbrukade mängden ställs aldrig upp som ökad aktivitet med lägre utsläpp per enhet, för kalkylen läser mer aktivitet som mer utsläpp. (Sola, driftsmedel körning 1, kom ut 13 / 15 / −30 ton av det skälet.)</li><li>En drivare som ökar utsläppen har sina värden i omvänd ordning mot nyttan, minst och kortast i det höga scenariot, och det gäller mängd, faktor och slutår. Livslängden på köpt utrustning står tvärtom, kortast i det försiktiga, eftersom en kortare livslängd gör att en större del av tillverkningen belastar insatsen. Undantaget är en kostnad som växer med nyttan, som HVO som ersätter diesel: dess mängd och andel följer nyttans i varje scenario, och bara faktorn står i omvänd ordning.</li><li>En kostnad blir aldrig en nytta: tillverkning, inköp och transport av det som köptes ökar utsläppen i alla tre scenarierna och ställs upp som den köpta mängden med sin egen faktor.</li><li>En följdeffekt som underlaget visar har inträffat räknas med en uttryckligen antagen andel, nära noll i det försiktiga scenariot. Noll är rätt bara när underlaget inte visar att den har inträffat.</li><li>El räknas med 59 g CO2e/kWh i alla tre scenarierna, det värde Klimatklivet anger för nordisk elmix (Naturvårdsverket 2026-03-25, efter IVL:s faktor för 2021–2023). Där skillnaden mellan timmar är själva effekten (lagring, el som flyttas till andra timmar) får faktorn för de timmarna avvika, med källa: batterilagrets nytta är just att köpa mindre el när utsläppen är höga, och ett platt medelvärde gör den till noll.</li><li>Köpt utrustning belastas bara med den del av livslängden som ryms till och med målåret.</li></ol>
+<p>Regel 2, 3, 4 och 8 skärptes samma dag som regel 15 till 18 kom: ett avdrag för det som hade hänt ändå görs på ett ställe av BAU, ikapp-år, avklingning och attribution, och en attribution under 1 kräver belägg (”kunde ha gjort det ändå” räcker inte); krav, beslut och köpta saker klingar inte av; en uppmätt varaktighet bestämmer halveringstiden; och betalade pengarna bara en kontroll av ett befintligt krav är nyttan den bättre efterlevnaden. Lydelsen av regel 2 blev först för bred: ”det pengarna själva betalade har attribution 1” lästes som att andelen är 1 tills annat är visat, och de omkörda insatserna fick andelar på 0,85 till 0,9 även för beteendeeffekter. Den skrevs om samma kväll till lydelsen ovan (se DECISIONS). Koden håller i två av de nya: en kostnad som skrivits som mer mängd med lägre faktor räknas om, och utrustning skrivs av till målåret (se <a class="xref" href="#engangsposter"><em>Engångsposter</em></a>).</p>
+<p>Regel 10 till 12 kom 2026-10-22, efter granskningen av driftsmedlens två körningar. Regel 13 och 14 kom samma kväll, med promptsvepet, och är bara instruktioner; kalkylen varnar redan när medelscenariot ger ökade utsläpp eller scenarierna står i fel ordning. Koden håller själv i tre delar av dem: attributionens ordning, pengarnas egna utsläpp och livslängdsandelen (se <a class="xref" href="#attribution"><em>Attribution</em></a> och <a class="xref" href="#engangsposter"><em>Engångsposter</em></a>). Resten är instruktioner.</p>
+<p>Regel 2 betyder att en granskare ska leta efter avdraget på två ställen. Står attributionen på 1 i en uppföljning kan avdraget ligga i jämförelsen eller i ett slutår.</p>
+<p>I kalkylen tillkommer tre saker.</p>
+<p><strong>Medelfönstret följer insatsen.</strong> Medel per år räknas från första startåret till målåret i stället för 2026 till 2030.</p>
+<p><strong>Realiserat och återstående.</strong> Det ackumulerade nettot delas vid uppföljningsåret. Realiserat är summan till och med det året, återstående är resten fram till målåret. Uppföljningsåret är det som analysen anger. Saknas det används i tur och ordning sista bidragsåret, det sista startåret bland de årliga drivarna, det sista startåret bland alla drivare och till sist målåret. Även realiserat är en beräkning ur antaganden, om inte analysen säger att talet är uppmätt.</p>
+<p><strong>Nytta per bidragsår.</strong> Har insatsen fått pengar flera år fördelas den ackumulerade nyttan på åren. En drivare som hör till ett visst bidragsår läggs helt på det året. Övriga drivare fördelas i proportion till årens belopp. Det som inte går att fördela redovisas som ”Ej fördelat”. Raderna summerar till det ackumulerade talet i varje scenario.</p>
+<p>Prövningen av bärande antaganden (se ovan) väger tyngre i en uppföljning, eftersom halveringstid och slutår ofta är rena antaganden och ofta är de tal resultatet hänger på. De prövas på samma sätt som effekterna och attributionen.</p>
+<p>Rapporten i uppföljningsläget har dessutom raden ”Analysläge: uppföljning av genomförd insats” under rubriken, avsnittet <em>Uppmätt och antaget</em>, och en lista sist i rekommendationen över vad som behöver mätas för att de bärande antagandena ska bli mätta värden.</p></div>
+</details>
+<details class="card" id="nar-kalkylmotorn-inte-kan-lasa-talen">
+<summary>
+  <span class="card-title"><span class="card-h">När kalkylmotorn inte kan läsa talen</span></span>
+  <span class="card-sum">Vägrar koden formuläret i steg 5, till exempel för ett omöjligt tal eller ett årtal utanför 1950 till 2200, räknar språkmodellen själv som reserv. Det resultatet har lägre status: okontrollerat, utan Talens ursprung och utan stor siffra, och det bör köras om innan det används.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>I steg 5 fyller språkmodellen i ett formulär, och koden vägrar formuläret om något tal är omöjligt. Det gäller bland annat när aktivitet eller emissionsfaktor saknas eller inte är större än noll, när en klimatfaktor saknas eller ligger utanför 0 till 2, när en minskning är större än 100 procent, när en trend ligger utanför −100 till +100 procent per år, när attributionen ligger utanför 0 till 1, när året för full effekt ligger före startåret, när en halveringstid inte är större än noll, eller när ett årtal ligger utanför 1950 till 2200.</p>
+<p>Årsgränsen finns för att kalkylen går år för år från första startåret till målåret. Ett årtal med en siffra för mycket eller för lite (20300, eller 24 för 2024) gav förut ett orimligt rubriktal utan varning, eller en kalkyl som aldrig blev klar. Gränsen gäller målår, basår, startår, året för en engångspost, nyckelår, uppföljningsår och år för bidrag. Ett slutår eller ett år för full effekt får ligga längre fram än 2200: det betyder att effekten aldrig upphör eller aldrig når full verkan, och kalkylen går aldrig dit. Ett slutår före 1950 vägras för en årlig drivare; för en engångspost, där slutåret är ikapp-året, bortses från det.</p>
+<p>Då räknar språkmodellen själv. Detsamma händer när formuläret inte går att läsa alls, när utläsningen avbryts eller när något annat fel uppstår på vägen genom motorn. Ett fel hos modelltjänsten hör inte dit (bruten anslutning, överbelastning, en tidsgräns som löper ut). Då svarar steget med felet och användaren kör det igen; efter en bruten anslutning gör sidan ett nytt försök själv. Skälet är att reserven är ett nytt anrop till samma tjänst, med den tid som är kvar av stegets fem minuter (sedan 2026-10-13).</p>
+<p>Reserven finns för att användaren ska få ett svar, och det resultatet har lägre status:</p>
+<ul><li>Kalkylen är inte kontrollerad av koden och kan innehålla räknefel.</li><li>Rapporten säger att kalkylen räknades av språkmodellen och bifogar modellens kalkyltext oförändrad i stället för motorns bilaga.</li><li><a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a> ersätts av en text om att källmarkering saknas för körningen.</li><li>Sidan visar ingen stor siffra, skala eller varning från kalkylen. I en installation med konton läses ett tal ur rapportens text när rapporten sparas, och visas märkt ”ur rapportens text, inte programmets kalkyl”.</li><li>I API:t är svaret märkt <code>deterministic: false</code>.</li></ul>
+<p>Ett sådant resultat ska inte jämföras med ett som motorn räknat, och det bör köras om innan det används.</p>
+<p>Två mindre fel fäller inte kalkylen. Går källkontrollen sönder är talen ändå räknade av motorn, och <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a> ersätts av en text om att källmarkeringen inte kunde tas fram. Går prövningen av bärande antaganden sönder utelämnas den ur kalkyltexten utan besked. Raden ”Bärande antaganden” skrivs annars alltid, också när inget antagande har ett spann att pröva. Saknas den har prövningen gått sönder.</p></div>
+</details>
+<details class="card" id="portfoljen-flera-atgarder-tillsammans">
+<summary>
+  <span class="card-title"><span class="card-h">Portföljen: flera åtgärder tillsammans</span></span>
+  <span class="card-sum">Lägger ihop sparade analyser utan att räkna samma ton två gånger inom en utsläppspott. Karlstad har två potter, husbyggnad och personbilstrafik. Varje åtgärd tar sin andel av det som är kvar i potten, så summan blir aldrig större än potten.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>Varje analys räknar sin åtgärd på en egen baslinje. Lägger man ihop analyserna räknas samma ton flera gånger där åtgärderna verkar på samma utsläpp. I Karlstads energi- och klimatplan gör tre åtgärder tillsammans anspråk på 93 procent av kommunens husbyggnad. Portföljen räknar sparade analyser tillsammans så att det inte händer inom en utsläppspott.</p>
+<p><strong>Utsläppspotter.</strong> En pott är en avgränsad del av kommunens utsläpp med ett känt utsläpp per år, en källa och ett perspektiv. Potterna står i kommunprofilens <code>potter.toml</code> och får inte överlappa varandra. Karlstad har två: kommunens husbyggnad, 17 200 ton per år 2022 (kommunens interna uppgifter i analysen av åtgärden Halvera klimatpåverkan från kommunens byggnationer; Svalna anger 37 749 ton för kommunkoncernens husbyggande och skillnaden är inte utredd), och personbilstrafiken, 79 454 ton per år 2023 (Nationella emissionsdatabasen). Potterna har ingen trend än, så samma utsläpp räknas alla år.</p>
+<p><strong>Vad portföljen läser.</strong> Talen per drivare, scenario och år ur den tekniska bilagan i varje sparad rapport. Bara bilagor som kalkylmotorn skrivit läses, alltså rapporter sparade från 30 september 2026. Användaren väljer för varje del av en analys vilken pott den verkar på, eller ingen. En portfölj tar en körning per åtgärd, för två körningar av samma åtgärd kan skilja sig mer än allt överlapp (Logistikstödet räknades fem gånger med 131 till 5 815 ton per år). Potential och uppföljning blandas inte.</p>
+<p><strong>Räkningen, per pott, scenario och år.</strong> P är pottens utsläpp. En åtgärds delar på potten läggs ihop till dess förändring ΔE (före klimatfaktorerna, efter attribution) och dess egna utsläpp E.</p>
+<ul><li>Åtgärdens andel av potten är s = ΔE / största av E och P. Har analysen räknat på mer än potten (allt byggande, märkt på husbyggnad) tar den sin andel av sina egna utsläpp; resten av effekten, ΔE − s × P, ligger utanför potten och räknas som i analysen.</li><li>Kvar i potten blir P × (1 − s₁) × (1 − s₂) × …, och portföljen på potten är P minus det. Eftersom varje s är högst 1 blir den aldrig större än potten.</li><li>Ett mål och de åtgärder som är verktyg för det räknas som målets andel. Målet är taket, och verktygen står med 0 på potten. Ger verktygen tillsammans mindre eller mer än målet säger portföljen det.</li><li>Portföljens tal på potten fördelas tillbaka på åtgärderna i proportion till var och ens andel. Den andra regeln, genomsnittligt tillskott i alla ordningar, visas bredvid. Finns både minskningar och ökningar på samma pott används den andra regeln i båda kolumnerna.</li><li>Åtgärdens netto i portföljen är dess netto skalat med (fördelat på potten + delen utanför) / ΔE, så klimatfaktorerna behåller sina proportioner. Delar utan pott räknas som i analysen.</li></ul>
+<p>Medel per år räknas över 2026–2030 i potentialläget och över de år alla analyser har i uppföljningsläget.</p>
+<p><strong>Facit.</strong> Husbyggnaden 2030 med P = 17 200 och andelarna 50, 27,6 och 15,4 procent: summan av delarna blir 16 000 ton, gemensam baslinje 11 900 och Halvera som mål 8 600. En uppföljd insats med återbrukade möbler och byggmaterial (Sola, 2024): 133 ton när möbelflödet är lika stort som barn- och ungdomsförvaltningens möbelinköp, mot 164 ton när flödet är mycket större. Skolmåltider på 5 och 20 procent av samma utsläpp: 24 procent, inte 25. Talen kommer från <code>tests/test_portfolj.py</code>.</p>
+<p><strong>Varningar.</strong></p>
+<ul><li>Åtgärderna gör tillsammans anspråk på mer än hela potten.</li><li>Åtgärderna överlappar inom potten, med hur många ton summan räknar för mycket.</li><li>En analys har räknat på mer än potten.</li><li>Flera åtgärders delar utanför potten kan vara samma ton.</li><li>Attributionerna på en pott i uppföljningsläget är tillsammans över 100 procent.</li><li>Fönstret är kortare än en analys egna år.</li><li>Det finns delar utan pott.</li></ul>
+<p>Varje summa av åtgärdernas egna tal säger att den räknar samma ton flera gånger.</p></div>
+</details>
+<details class="card" id="caia-och-din-spec-91637">
+<summary>
+  <span class="card-title"><span class="card-h">CAIA och DIN SPEC 91637</span></span>
+  <span class="card-sum">DIN SPEC 91637 är en tysk standard för hur kommuner beskriver och följer upp klimatåtgärder, ett ramverk och ingen räknemetod. CAIA bygger på samma ryggrad (åtgärd, ändrad aktivitet, aktivitet gånger emissionsfaktor, direkta, indirekta och stödjande åtgärder) och har tagit efter fyra saker, sedan 1.1 även standardens klassning av åtgärden (nivå, instrumentkategori, verkningstid och aktivitetsförändring per drivare), men räknar inte attribut och beteende som egna tal. CAIA påstår inte att den följer standarden.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p>DIN SPEC 91637 (september 2025) är en tysk standard för hur kommuner beskriver klimatåtgärder och följer upp dem. Den är ett ramverk för begrepp och arbetsgång, inte en räknemetod. Den beskriver en kedja från åtgärd till minskade utsläpp i fem led: åtgärden, en mätbar egenskap i kommunen som åtgärden ändrar (attribut), människors beteende, en ändrad aktivitet och utfallet. Om baslinje, systemgränser och dubbelräkning säger den nästan ingenting.</p>
+<p><strong>Samma ryggrad.</strong> CAIA bygger på samma ryggrad som standarden. En åtgärd kopplas till en ändrad aktivitet. Utsläppen räknas som aktivitet gånger emissionsfaktor, och åtgärden ändrar den ena eller den andra. Åtgärder delas i direkta, indirekta och stödjande, och en stödjande åtgärd får inget eget tal. Osäkerheten anges som ett spann mellan min och max. CAIA har inte tagit den från standarden: indelningen har funnits i CAIA sedan första versionen.</p>
+<p><strong>Det CAIA har tagit efter.</strong> Fyra saker kom till efter en genomgång av standarden hösten 2026:</p>
+<ul><li>Rapporten avslutas med <em>Följ upp med</em>: en eller två indikatorer per bärande drivare att följa upp åtgärden med (standardens avsnitt 5.5), i en enhet som allmänheten förstår (5.2). Finns inte i uppföljningsläget, där <em>Vad som behöver mätas</em> gör något liknande.</li><li>Evidenssteget skriver ut attributet för en indirekt eller möjliggörande åtgärd, vilken uppfattning det påverkar (säkerhet, bekvämlighet, status, hälsa, kostnad) och vilket led i kedjan som är osäkrast (4.5.3 och 4.5.4). Det är text, inget tal.</li><li>Resultatet står också i aktivitetens egen enhet, se <a class="xref" href="#vad-atgarden-andrar-i-verksamheten"><em>Vad åtgärden ändrar i verksamheten</em></a> (5.2).</li><li>Åtgärden klassas som standarden gör (4.5.2, sedan 1.1). Intagets profil anger nivå (kommunal, regional, nationell, internationell; tabell 1), instrumentkategori (reglering, ekonomiskt styrmedel, utbud och infrastruktur, information, egen konsumtion och förebild, grundläggande; tabell 2) i stället för CAIA:s tidigare typlista, och verkningstid som kort, medel eller lång (tabell 4) bredvid tidsramen i år. Steg 2 anger för varje drivare vilken av bilaga C:s sex aktivitetsförändringar den hör till (aktivitetsbyte, minskad användning, arbetseffektivitet, resurseffektivitet, resursbyte, kolinlagring), bredvid undvika, byta och förbättra. Klassningen är text och ändrar inga tal. Den gör det lättare att jämföra med och föra över till verktyg som följer standarden. Sparade analyser från före 1.1 har kvar sin typ av åtgärd.</li></ul>
+<p><strong>Det CAIA inte räknar separat.</strong> Attributet finns bara som text. Beteendet finns bara som en andel som ändrar sig, och varför de ändrar sig står i text. För en indirekt åtgärd uppskattar evidenssteget kedjan (hur många som nås, hur många som ändrar sig, hur mycket, åtgärdens andel), men leden multipliceras ihop till en enda effekt per drivare och sparas inte som egna tal. Standarden delar en aktivitet i vad som görs (operation), hur mycket som görs (arbete, till exempel personkilometer) och vad som går åt (resurs: energi, bränsle, material). I CAIA ingår arbete och resurs oftast i emissionsfaktorn, men ibland är de själva aktiviteten, till exempel kilowattimmar el. Andra effekter än växthusgaser (hälsa, buller, luftkvalitet) räknas inte, och det gör inte standarden heller. Kostnad per ton räknas inte. Kolupptag har inget eget spår i kalkylen. Klassningen av åtgärder följer CAIA:s egna listor (typ av åtgärd, sektor, tidsram i år) och inte standardens nivåer, instrumentkategorier och verkningstider.</p>
+<p><strong>Det CAIA gör som standarden inte kräver.</strong> Jämförelsen är en utveckling utan åtgärden per drivare, med trend och källa, inte bara basåret. Varje drivare räknas territoriellt, konsumtionsbaserat och netto. Kalkylen görs av programkod, inte av språkmodellen, utom i reservläget, som märks. Varje indatatal redovisas med ursprung, och hänvisningar till biblioteket och kommunens data kontrolleras. De antaganden som flyttar resultatet mest prövas ett i taget. När två åtgärder verkar på samma utsläppspott i kommunens register hindrar portföljen att de räknar samma ton: andelarna multipliceras i stället för att läggas ihop. Infasning, avklingning och tidigareläggning ger effekten en tidsprofil, och uppföljningsläget räknar en genomförd insats.</p>
+<p><strong>Arbetsgången skiljer sig.</strong> Standarden utgår från målen: vilka aktivitetsförändringar kommunen vill nå, och vilka åtgärder som räcker dit. CAIA bedömer en åtgärd i taget. Portföljen lägger ihop åtgärder men visar ännu inte hur långt de räcker mot ett målvärde, som 10 000 elbilar.</p>
+<p>Kort sagt: CAIA bygger på samma ryggrad som DIN SPEC 91637 (åtgärd, ändrad aktivitet, aktivitet gånger emissionsfaktor, direkta, indirekta och stödjande åtgärder), men räknar inte attribut- och beteendeleden som egna tal. CAIA påstår inte att den följer standarden.</p>
+<div class="table-wrap stack"><table class="stack"><thead><tr><th scope="col">CAIA</th><th scope="col">DIN SPEC 91637</th><th scope="col">Kommentar</th></tr></thead><tbody><tr><td data-label="CAIA">åtgärd</td><td data-label="DIN SPEC 91637">intervention</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">typ av effekt: direkt, indirekt eller möjliggörande, stödjande</td><td data-label="DIN SPEC 91637">direct, indirect, foundational intervention</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">nivå</td><td data-label="DIN SPEC 91637">level</td><td data-label="Kommentar">samma fyra nivåer</td></tr><tr><td data-label="CAIA">instrumentkategori (före 1.1: typ av åtgärd)</td><td data-label="DIN SPEC 91637">instrument category</td><td data-label="Kommentar">samma sex kategorier sedan 1.1</td></tr><tr><td data-label="CAIA">rådighet</td><td data-label="DIN SPEC 91637">(ingen)</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">verkningstid; tidsram, infasning, slutår</td><td data-label="DIN SPEC 91637">effective duration</td><td data-label="Kommentar">verkningstiden i standardens klasser kort, medel och lång sedan 1.1, resten i år</td></tr><tr><td data-label="CAIA">attribut (text i steg 4)</td><td data-label="DIN SPEC 91637">attribute, perception</td><td data-label="Kommentar">räknas inte</td></tr><tr><td data-label="CAIA">andel som ändrar sig</td><td data-label="DIN SPEC 91637">behavioural change</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">drivare</td><td data-label="DIN SPEC 91637">activity</td><td data-label="Kommentar">arbete och resurs ingår oftast i emissionsfaktorn, ibland är de aktiviteten</td></tr><tr><td data-label="CAIA">ändrad mängd (ΔA) eller ändrade utsläpp per enhet (ΔEF); undvika, byta, förbättra; aktivitetsförändring</td><td data-label="DIN SPEC 91637">activity shift</td><td data-label="Kommentar">bilaga C:s sex kategorier per drivare sedan 1.1</td></tr><tr><td data-label="CAIA">förändring i ton</td><td data-label="DIN SPEC 91637">outcome</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">utsläppen utan åtgärden, nuläge</td><td data-label="DIN SPEC 91637">base year, reference scenario</td><td data-label="Kommentar">standarden ställer inga krav</td></tr><tr><td data-label="CAIA">territoriellt, konsumtion, överlapp</td><td data-label="DIN SPEC 91637">(ingen)</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">utsläppspott, portfölj</td><td data-label="DIN SPEC 91637">scenario</td><td data-label="Kommentar">CAIA multiplicerar andelar på samma pott, standarden summerar</td></tr><tr><td data-label="CAIA"><em>Följ upp med</em></td><td data-label="DIN SPEC 91637">key indicators</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">uppföljningsläget</td><td data-label="DIN SPEC 91637">ex-post evaluation, monitoring</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">(räknas inte)</td><td data-label="DIN SPEC 91637">co-benefits</td><td data-label="Kommentar"></td></tr><tr><td data-label="CAIA">utsläppskällor (steg 2)</td><td data-label="DIN SPEC 91637">(ingen)</td><td data-label="Kommentar"></td></tr></tbody></table></div></div>
+</details>
+<details class="card" id="kanda-begransningar">
+<summary>
+  <span class="card-title"><span class="card-h">Kända begränsningar</span></span>
+  <span class="card-sum">Den största svagheten: två körningar av samma åtgärd ger olika tal, och tjänstebilarna bytte till och med tecken. Utläsningen i steg 5 är stabilare sedan oktober men inte stabil. Dessutom: antagandena är modellens, källkontrollen är smal, och biblioteket är mest nationella schabloner.</span>
+  <span class="card-toggle" aria-hidden="true"></span>
+</summary>
+<div class="card-body"><p><strong>Två körningar av samma åtgärd ger olika tal.</strong> Det här är metodens största svaghet. Räkningen i steg 5 är densamma varje gång, men antagandena i steg 1 till 4 sätts av språkmodellen och varierar mellan körningar. Uppmätt på tre referensåtgärder i potentialläget, medel netto per år, samma indata varje gång:</p>
+<div class="table-wrap nums"><table class="nums"><thead><tr><th scope="col">Referensåtgärd</th><th scope="col">Körningar (ton CO2e per år)</th></tr></thead><tbody><tr><td data-label="Referensåtgärd">Tjänstebilar</td><td data-label="Körningar (ton CO2e per år)">16,6, sedan 24,9, sedan −17,7</td></tr><tr><td data-label="Referensåtgärd">Återbruk</td><td data-label="Körningar (ton CO2e per år)">84,3, sedan 41,9 (en avbruten körning gav 27,6)</td></tr><tr><td data-label="Referensåtgärd">Lövblåsare</td><td data-label="Körningar (ton CO2e per år)">3,1, sedan 2,2 (tidigare körningar 1,4 och 2,1)</td></tr></tbody></table></div>
+<p>Tjänstebilarna bytte alltså tecken mellan två körningar. Det minustalet låg inom den föregående körningens eget spann, som gick från −13,2 till 51,8, så spannet varnade för det. Mätningarna är få, två eller tre körningar per åtgärd, och säger inget om hur spridningen ser ut för andra åtgärder. Slutsatsen är att ett enskilt medelvärde från en körning inte ska läsas som åtgärdens effekt. Läs spannet, kör åtgärden två gånger och jämför. Skiljer körningarna mycket behöver åtgärden bättre underlag snarare än en tredje körning.</p>
+<p>Var spridningen uppstår är delvis mätt. Utläsningen av talen i steg 5 görs också av språkmodellen och kan variera: innan steg 4 delades upp per drivare gav fyra utläsningar av en och samma evidenstext 1,4, 1,4, 0,7 och 3,8 ton per år. Efter uppdelningen gav åtta utläsningar av samma text samma tal alla åtta gånger. Det gällde lövblåsarna, och slutsatsen att resten av spridningen uppstår i steg 1 till 4 höll inte för de andra åtgärderna. En mätning 2026-10-13 körde bara steg 5 om, på samma godkända steg 1 till 4, och läste av minskningen 2030:</p>
+<div class="table-wrap nums"><table class="nums"><thead><tr><th scope="col">Godkänd analys</th><th scope="col">Utläsningar före (ton CO2e 2030)</th><th scope="col">Efter ändringen</th></tr></thead><tbody><tr><td data-label="Godkänd analys">Tjänstebilar</td><td data-label="Utläsningar före (ton CO2e 2030)">−49,5, 8,0, 11,4 och 111,2</td><td data-label="Efter ändringen">88,5, 88,5, 88,7 och 88,7</td></tr><tr><td data-label="Godkänd analys">Återbruk</td><td data-label="Utläsningar före (ton CO2e 2030)">135 till 138 i fyra, 248 till 252 i fyra</td><td data-label="Efter ändringen">137,4 i tre av tre</td></tr><tr><td data-label="Godkänd analys">Lövblåsare</td><td data-label="Utläsningar före (ton CO2e 2030)">3,3 i fyra av fyra</td><td data-label="Efter ändringen">3,3 i två av två</td></tr><tr><td data-label="Godkänd analys">En analys gjord under en workshop</td><td data-label="Utläsningar före (ton CO2e 2030)">61,4 i två av två</td><td data-label="Efter ändringen">60,1, 61,3 och 61,3</td></tr></tbody></table></div>
+<p>Ändringen var att potentiallägets utläsning körs med hög resonemangsnivå i stället för medel och fick tre regler (se DECISIONS.md). Uppföljningslägets utläsning mättes 2026-11-08 och läser sedan dess också med hög nivå, med regeln om faktorer över 1 (DECISIONS.md, samma datum). Med medelnivån svarade utläsningen ibland efter en kort titt: på återbruket tog de felaktiga utläsningarna 15 till 18 sekunder och de riktiga 31 till 39, och på tjänstebilarna tog alla fyra 14 till 17 sekunder. Med hög nivå tar en utläsning 40 till 80 sekunder. Inget av de felaktiga talen i kolumnen ”före” markerades av jämförelsen med det som godkändes. De fyra felaktiga återbrukstalen fick kalkylens varning om scenarier i fel ordning, och två av tjänstebilstalen (8,0 och 111,2) fick ingen varning alls.</p>
+<p>De fyra analyserna i tabellen är de som reglerna skrevs och justerades på. Tabellen visar alltså att reglerna gör det de skrevs för, och säger lite om en analys de inte har sett. Därför räknades steg 5 samma dag om på äldre sparade analyser av de tre referenspaketen: 17 sparade körningar från 28 september till 8 oktober 2026, 14 av dem med olika godkända steg 1 till 4. Ingen användes när reglerna skrevs. Koden före ändringen läste varje körning en gång, koden efter minst två. Där utläsningarna gav olika tal lästes de godkända stegen för hand för att avgöra vilket som är rätt. Där alla var överens är talet inte kontrollerat.</p>
+<div class="table-wrap nums"><table class="nums"><thead><tr><th scope="col"></th><th scope="col">Före ändringen</th><th scope="col">Efter</th></tr></thead><tbody><tr><td data-label="">Utläsningar som gav ett resultat</td><td data-label="Före ändringen">17 av 17</td><td data-label="Efter">36 av 38</td></tr><tr><td data-label="">Mer än 10 procent från vad de godkända stegen ger år 2030</td><td data-label="Före ändringen">8 av 17</td><td data-label="Efter">2 av 36</td></tr><tr><td data-label="">5 till 10 procent ifrån</td><td data-label="Före ändringen">0 av 17</td><td data-label="Efter">3 av 36</td></tr><tr><td data-label="">En godkänd konsumtionsfaktor på 1,15 läst som 1,15</td><td data-label="Före ändringen">1 av 5</td><td data-label="Efter">10 av 10</td></tr><tr><td data-label="">Utläsningar med ett markerat tal</td><td data-label="Före ändringen">2 av 17</td><td data-label="Efter">9 av 36</td></tr><tr><td data-label="">Tid per utläsning</td><td data-label="Före ändringen">13 till 42 sekunder</td><td data-label="Efter">hälften under 56 sekunder, den längsta 127</td></tr></tbody></table></div>
+<p>De åtta felen före ändringen var av fyra slag. Trenden räknades från fel basår (11 ton i stället för 72). Konsumtionsfaktorn 1,15 lästes som 1,0 (fyra körningar, 14 till 21 procent för lågt). En faktor för kvarvarande utsläpp och en konsumtionsfaktor föll bort (sammantaget 24 procent för högt). Ett engångsköp räknades varje år medan ett påslag på 20 procent föll bort (omkring 1,2 ton i stället för 3,3, två körningar). Inget av de åtta fick en markering eller en varning som pekade på felet.</p>
+<p>Efter ändringen skilde fem utläsningar mer än fem procent från vad de godkända stegen ger:</p>
+<ul><li>I två räknades en mängd som antagandena anger för ett visst år om till en andel av basårets nivå. Motorn lägger andelen på nivån utan åtgärden det året, och har baslinjen en trend är de två nivåerna olika. Resultatet blev 23 procent för lågt i en analys och 6 procent i en annan.</li><li>I två räknades en känslighetspost in som evidenssteget uttryckligen höll utanför summan (6 procent för högt och 7 procent för lågt, den andra räknade dessutom en motverkande post två gånger).</li><li>I en föll slutåret bort på ett engångsköp (11 procent för lågt).</li></ul>
+<p>Därtill kom det ackumulerade talet för en analys ut som 88 ton i en utläsning och 171 i nästa, fast talet för 2030 var detsamma, eftersom tillverkningens utsläpp lades på olika år. Två av 38 utläsningar gav inget resultat: ett svar saknade formulär, och i ett fall bröts anslutningen till modelltjänsten efter 108 sekunder.</p>
+<p>Utläsningen läser alltså klart oftare rätt än förut, även på analyser reglerna inte skrevs på, men den är inte stabil. Två utläsningar av samma godkända steg kan fortfarande skilja mer än tio procent. Ungefär var fjärde får dessutom ett markerat tal fast resultatet är rätt, och ingen av de fem som skilde sig fick någon markering (se <a class="xref" href="#jamforelsen-med-det-som-godkandes"><em>Jämförelsen med det som godkändes</em></a>). Mätningen gäller tre åtgärder i potentialläget. Uppföljningslägets utläsning mättes för sig 2026-11-08 (DECISIONS.md, samma datum), och spridningen i steg 1 till 4 är kvar och är inte mätt om.</p>
+<p><strong>Antagandena är språkmodellens.</strong> Andelar, effekter och tidsramar tas fram av modellen ur beskrivningen, parameterbiblioteket och kommunens data. De visas för användaren före kalkylen och kan rättas där. Hur bra resultatet blir beror på att någon som kan området läser dem.</p>
+<p><strong>Tecknet kan bli fel.</strong> En åtgärd som undviker utsläpp, till exempel återbruk, kan av modellen beskrivas som ökad aktivitet och få minustecken. Kalkylen varnar för ökade utsläpp och kvalitetsgranskningen brukar peka ut felet, men talet rättas inte av sig självt.</p>
+<p><strong>Källkontrollen är smal.</strong> Den jämför bara ett tals värde när talet pekar på en enda biblioteksrad med ett fast värde. Tal ur datafiler, tal som räknats fram ur flera parametrar och tal ur externa källor jämförs inte. Kontrollen bedömer inte heller om källan är bra eller om talet passar åtgärden. Se <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a> ovan.</p>
+<p><strong>Det användaren godkänner och det motorn räknar på är två avläsningar.</strong> Användaren godkänner antagandena som text i steg 4. I steg 5 läser språkmodellen ut talen ur texten till motorns formulär. Sedan oktober 2026 jämför koden de två och markerar ett tal som tydligt avviker (se <a class="xref" href="#jamforelsen-med-det-som-godkandes"><em>Jämförelsen med det som godkändes</em></a> ovan), men jämförelsen är smal: av de ändringar den prövats mot fångar den ungefär två av tre i baslinjen och hälften i effekterna. En granskare behöver fortfarande jämföra själv: vilka tal motorn faktiskt fick står i kalkyltextens och bilagans indatarader och i tabellen i <a class="xref" href="#talens-ursprung-och-kontrollera-forst"><em>Talens ursprung</em></a>, och de ska stämma med antagandena som godkändes i steg 4.</p>
+<p><strong>Parameterbiblioteket är till stor del nationella schabloner.</strong> I Karlstads profil är 17 av 103 parametrar lokalt verifierade, 17 hämtas ur lokala datafiler och 69 är nationella schabloner (oktober 2026). Byggmaterial och byggavfall (sektion 13) kommer ur Boverkets klimatdatabas och en rapport från SKR och Offentliga fastigheter (IVL, 2022). En faktor per kilo byggavfall saknas, eftersom ingen av källorna har en. Knappen Parametrar på sidan visar vilka.</p>
+<p><strong>Klimatfaktorerna är bedömningar.</strong> Hur en drivare fördelas mellan territoriellt och konsumtion sätts av modellen per analys och har ingen källmarkering.</p>
+<p><strong>Spannet är inget konfidensintervall.</strong> Min och max är fallen där alla osäkra tal samtidigt hamnar lågt eller högt. Sannolikheten för det är inte beräknad.</p>
+<p><strong>Medelfönstret 2026 till 2030 är fast i potentialläget.</strong> Åtgärder som verkar sent eller efter 2030 ser små ut i medel per år, som står under rubriktalet. Kalkylen varnar när åtgärden har effekt färre än hälften av åren, eller först efter de år som räknas (se <a class="xref" href="#rubriktalet-och-aren-det-galler"><em>Rubriktalet och åren det gäller</em></a>), men talet är detsamma. En åtgärd med effekt tre av de fem åren får ingen varning, fast medlet är lägre än effekten ett år med full verkan. Läs alltid startåret och det ackumulerade talet tillsammans med rubriktalet.</p>
+<p><strong>Portföljen kontrollerar bara överlapp inom en pott.</strong> Delar utan pott och delar utanför potten läggs ihop som förut. Två åtgärder som verkar på var sin del av samma pott räknas som om de verkade på samma utsläpp, vilket ger ett för lågt tal; då ska potten delas. Pottens tal gäller utsläppen före klimatfaktorerna, och om pottens perspektiv stämmer med delarnas klimatfaktorer prövas inte. Pottvalet görs av användaren, analysen föreslår ingen pott än. Karlstad har två potter, och husbyggnadens baslinje är odokumenterad bortom en tidigare analys.</p>
+<p><strong>Uppföljningsläget är nytt.</strong> Det är prövat på ett fåtal insatser. I provkörningarna gav en insats för vardagscykling (Testcyklisterna) 0,0 och 0,1 ton per år i två körningar, där 2025 års analys i potentialläget hade gett 17. Att talen blev lägre var avsikten med läget, men det finns ännu inget facit att stämma av dem mot.</p>
+<p><strong>Scenarier och attribution är under avstämning</strong>, se början av dokumentet.</p>
+<p>Tekniska begränsningar i driften (anropsgränser, tidsgränser, vad som händer vid avbrott) står i <a href="RUNBOOK.md">RUNBOOK.md</a>. Besluten bakom metoden och varför de togs står i <a href="DECISIONS.md">DECISIONS.md</a>.</p></div>
+</details></div>
+
+    <footer class="foot">
+      <p>Rubrikerna, fulltexten, tabellerna och formlerna kommer ur METOD.md varje gång sidan genereras. Sammanfattningarna, flödet, räknekedjan och jämförelsen av lägena är skrivna för hand i METOD-sammanfattningar.toml och förenklar. Har ett avsnitt ändrats sedan dess sammanfattning lästes står det vid sammanfattningen, och då gäller fulltexten.</p>
+      <p>Genererad med next/tools/metod_html.py ur METOD.md, version e23128df171f.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const toc = document.getElementById('toc');
+  const openBtn = document.getElementById('toc-open');
+  const closeBtn = document.getElementById('toc-close');
+  const here = document.getElementById('here');
+  const topbar = document.getElementById('topbar');
+  const mobile = window.matchMedia('(max-width: 63.99rem)');
+
+  const setTopbar = () => document.documentElement.style.setProperty('--topbar', topbar.offsetHeight + 'px');
+  setTopbar(); window.addEventListener('resize', setTopbar);
+
+  const setNav = (open) => {
+    toc.classList.toggle('open', open);
+    document.body.classList.toggle('nav-open', open);
+    openBtn.setAttribute('aria-expanded', String(open));
+    if (open) { const a = toc.querySelector('a.active') || toc.querySelector('a'); a && a.focus(); }
+    else if (mobile.matches) openBtn.focus();
+  };
+  openBtn.addEventListener('click', () => setNav(true));
+  closeBtn.addEventListener('click', () => setNav(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && toc.classList.contains('open')) setNav(false); });
+
+  const reveal = (id, push) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'DETAILS') el.open = true;
+    let p = el.parentElement;
+    while (p) { if (p.tagName === 'DETAILS') p.open = true; p = p.parentElement; }
+    if (push) history.pushState(null, '', '#' + id);
+    requestAnimationFrame(() => el.scrollIntoView({block: 'start'}));
+    const sum = el.tagName === 'DETAILS' ? el.querySelector('summary') : null;
+    if (sum && push) sum.focus({preventScroll: true});
+  };
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    if (!document.getElementById(id)) return;
+    e.preventDefault();
+    if (toc.classList.contains('open')) { toc.classList.remove('open'); document.body.classList.remove('nav-open'); openBtn.setAttribute('aria-expanded', 'false'); }
+    reveal(id, true);
+  });
+  window.addEventListener('hashchange', () => reveal(decodeURIComponent(location.hash.slice(1)), false));
+  if (location.hash) reveal(decodeURIComponent(location.hash.slice(1)), false);
+
+  document.querySelectorAll('[data-all]').forEach(b => b.addEventListener('click', () => {
+    const open = b.dataset.all === 'open';
+    document.querySelectorAll('details.card').forEach(d => d.open = open);
+  }));
+  window.addEventListener('beforeprint', () => document.querySelectorAll('details.card').forEach(d => d.open = true));
+
+  const links = new Map();
+  toc.querySelectorAll('a[href^="#"]').forEach(a => links.set(a.getAttribute('href').slice(1), a));
+  const targets = [...links.keys()].map(id => document.getElementById(id)).filter(Boolean);
+  let current;
+  const update = () => {
+    const y = topbar.offsetHeight + window.innerHeight * 0.25;
+    let best = null;
+    for (const t of targets) { if (t.getBoundingClientRect().top <= y) best = t; else break; }
+    const id = best ? best.id : null;
+    if (id === current) return;
+    current = id;
+    links.forEach(a => a.classList.remove('active'));
+    const a = id && links.get(id);
+    if (a) {
+      a.classList.add('active');
+      here.textContent = 'Metod · ' + a.textContent.trim();
+      if (!mobile.matches) { const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect(); if (r.top < tr.top + 40 || r.bottom > tr.bottom - 40) a.scrollIntoView({block: 'nearest'}); }
+    } else here.textContent = 'Metod';
+  };
+  let ticking = false;
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; update(); }); } }, {passive: true});
+  document.querySelectorAll('details.card').forEach(d => d.addEventListener('toggle', update));
+  update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+# Det handskrivna i metodöversikten docs/METOD.html. Allt annat på sidan
+# (rubriker, fulltext, tabeller, formler, vad som är under avstämning) läses
+# ur METOD.md när sidan genereras.
+#
+# Varje post har en hash av den text i METOD.md som den skrevs utifrån. Ändras
+# texten säger generatorn att posten kan vara inaktuell, och sidan märker den.
+# Läs då avsnittet, rätta texten här och kör (från next/):
+#
+#   .venv/bin/python tools/metod_html.py --reviewed "<rubrik>"
+#
+# (--reviewed flode, kedja eller lagen för de tre sista posterna.) Ett avsnitt
+# utan post här visas med bara fulltext. Rubriken ska stå exakt som i METOD.md.
+# Texterna får innehålla *kursiv* och **fet**; en kursiv avsnittsrubrik blir en
+# länk till avsnittet.
+
+[[avsnitt]]
+rubrik = "Vad CAIA räknar"
+hash = "66f42f5d9b28"
+sammanfattning = """
+Hur mycket en åtgärd ändrar utsläppen av växthusgaser jämfört med om den inte genomförts (BAU), i ton CO2e per år. Åtgärden delas i drivare, var och en med en aktivitet och en emissionsfaktor. Resultatet redovisas territoriellt, konsumtionsbaserat och netto, i tre scenarier.
+"""
+
+[[avsnitt]]
+rubrik = "Vad CAIA inte räknar"
+hash = "aaadbd44ee83"
+sammanfattning = """
+Inget är uppmätt av CAIA: allt är beräknat ur antaganden, om inte analysen själv bygger på ett uppmätt tal. En åtgärd i taget utom i portföljen (dubbelräkning inom en analys pekas bara ut i ord), åtgärdens egna utsläpp bara när de finns som drivare, inga kostnader, inga andra effekter än växthusgaser och inget efter målåret i det ackumulerade talet.
+"""
+
+[[avsnitt]]
+rubrik = "De sju stegen"
+hash = "ecec7eff7c8c"
+sammanfattning = """
+Språkmodellen läser, bedömer och skriver. Koden räknar, kontrollerar och skriver ut räkningen. Sidan stannar efter steg 1 till 4 så att användaren kan godkänna eller rätta, och steg 5 till 7 körs i en följd. Hela tabellen över vem som gör vad står här.
+"""
+
+[[avsnitt]]
+rubrik = "Utan åtgärden (BAU)"
+hash = "35038298063e"
+sammanfattning = """
+Basårets aktivitet och emissionsfaktor skrivs fram år för år med varsin konstant trend. BAU räknas med trendens medelvärde och är densamma i alla tre scenarier, så scenarierna skiljer sig bara i vad åtgärden gör.
+"""
+
+[[avsnitt]]
+rubrik = "Med åtgärden"
+hash = "1a346afb97a4"
+sammanfattning = """
+Åtgärdens effekt vid full verkan, ΔA på aktiviteten och ΔEF på emissionsfaktorn, skalas med infasningen och läggs på årets BAU-nivå. −0,10 betyder tio procent mindre.
+"""
+
+[[avsnitt]]
+rubrik = "Infasning"
+hash = "e6b2bfc29e8d"
+sammanfattning = """
+Ett tal mellan 0 och 1 för hur stor del av full verkan åtgärden har ett visst år: noll före start, linjär, s-formad eller stegvis upp till full effekt, noll efter ett slutår. Själva startåret är noll när full effekt kommer senare. Tre tillägg: avklingning, andel av startåret och andel av slutåret.
+"""
+
+[[avsnitt]]
+rubrik = "Attribution"
+hash = "8c8f55f5caf8"
+sammanfattning = """
+Hur stor del av förändringen som beror på just den här åtgärden. Skalar förändringen, aldrig BAU. Språkmodellen instrueras att baka in den i ΔA eller ΔEF i potentialläget och att ange den som ett eget tal i uppföljningen. Koden kan inte se om det som hade hänt ändå räknats bort två gånger eller inte alls, men vänder bandet när en drivare som minskar utsläppen i alla tre scenarierna har det i fel ordning.
+"""
+
+[[avsnitt]]
+rubrik = "Tre scenarier"
+hash = "06eddd964fdf"
+sammanfattning = """
+Min, medel och max skiljer sig i sju tal: ΔA, ΔEF, attributionen, slutåret, andelen av slutåret, halveringstiden och livslängden för tillverkad utrustning. Max är fallet där alla osäkra tal samtidigt ligger högt, så spannet är inget konfidensintervall. Ingen effekt kan bli större än −100 procent av basårets aktivitet; i potentialläget sätts aktiviteten då till scenariernas största mängd och emissionsfaktorn till sitt högsta värde, och nivån utan åtgärden blir den mängden, inte baslinjens tal.
+"""
+
+[[avsnitt]]
+rubrik = "Territoriellt, konsumtion, överlapp och netto"
+hash = "7371bae03554"
+sammanfattning = """
+Tre klimatfaktorer per drivare fördelar förändringen på perspektiven. Netto är territoriellt plus konsumtion minus överlappet, och överlappet får aldrig vara större än något av dem. Faktorerna är metodval, utan källmarkering.
+"""
+
+[[avsnitt]]
+rubrik = "Engångsposter"
+hash = "38022861ea09"
+sammanfattning = """
+En drivare kan vara en post ett enda år, till exempel tillverkningen av något som köptes. Fyra regler från 2026-10-22: tidigarelagda köp belastas bara för de tidigarelagda åren (i båda lägena), och i uppföljningen dessutom att utrustning skrivs av till målåret, att en kostnad aldrig blir en nytta och att pengarnas egna utsläpp står på en egen rad utanför resultatet. Sedan 1.1 skrivs tillverkning med en livslängd av jämnt över livslängden även i potentialläget, så att målåret bär en årlig andel och inte beror på hur mycket som råkade köpas just det året.
+"""
+
+[[avsnitt]]
+rubrik = "Rubriktalet och åren det gäller"
+hash = "4b411dc3d00e"
+sammanfattning = """
+Prognos: netto i medelscenariot under målåret. Uppföljning: netto i medelscenariot som medel per år över insatsens egna år. Medel per år i potentialläget delas alltid på fem (2026 till 2030), så sena åtgärder ser små ut. Kalkylen varnar när effekten finns färre än hälften av åren eller först efter de år som räknas, men talet ändras inte.
+"""
+
+[[avsnitt]]
+rubrik = "Ett räkneexempel"
+hash = "97b638ef0b36"
+sammanfattning = """
+Tjänsteresor med bil, med påhittade tal: 1 000 000 km, 0,15 kg CO2e per km som sjunker 2 procent per år, −10 procent i medel, linjär infasning 2026 till 2028. Ger 13,3 ton år 2030 (spann 6,6 till 26,6), 47,7 ton ackumulerat och 9,5 ton i medel per år.
+"""
+
+[[avsnitt]]
+rubrik = "Vad åtgärden ändrar i verksamheten"
+hash = "9bfcff557a43"
+sammanfattning = """
+Bredvid tonnen skriver kalkylen en mening per drivare med förändringen i verksamhetens egen enhet (kilometer, liter, kvadratmeter), för målåret och som snitt per år, med samma attribution som tonnen. När åtgärden ändrar emissionsfaktorn går det inte att räkna ut hur mycket som byter, så kalkylen anger i stället en jämförelse: hur mycket som minst skulle gå helt utan utsläpp.
+"""
+
+[[avsnitt]]
+rubrik = "Bärande antaganden"
+hash = "7a494f56d9e3"
+sammanfattning = """
+Koden flyttar varje osäkert tal från sitt min till sitt max med allt annat på medel och mäter hur mycket resultatet rör sig. De fem som flyttar mest skrivs ut. Ett bärande tal utan källa får en OBS-flagga, men flaggan bygger på angivet ursprung, inte på källkontrollen.
+"""
+
+[[avsnitt]]
+rubrik = "Varningar från kalkylen"
+hash = "d71c4ce3422d"
+sammanfattning = """
+Varningar vid enhetsfel, ingen effekt, ökade utsläpp, nollor som beror på åren som räknas, för få år med effekt, scenarier i fel ordning och några formfel. En varning ändrar inga tal; den säger att talet inte ska användas förrän orsaken är förstådd.
+"""
+
+[[avsnitt]]
+rubrik = "Enhetskontrollen"
+hash = "029ded86d6ca"
+sammanfattning = """
+Jämför enheten på aktivitet och emissionsfaktor när de är vikt eller energi. Olika storlek, som ton mot kg, räknas sedan 2026-10-22 om automatiskt och står i varningen, och sedan 2026-11-10 även storleksord som tusen km eller per 100 km. Kontrollen missar enheter den inte känner, som km mot mil eller handlare mot hushåll.
+"""
+
+[[avsnitt]]
+rubrik = 'Talens ursprung och "Kontrollera först"'
+hash = "4577afa3133e"
+sammanfattning = """
+Varje rapport slutar med en tabell över var varje indatatal kommer ifrån, och koden kontrollerar påståendet. Kontrollen är smal: bara medelvärdet, utan tecken, och inget värde jämförs mot datafiler eller externa källor. Det som inte håller hamnar under Kontrollera först.
+"""
+
+[[avsnitt]]
+rubrik = "Jämförelsen med det som godkändes"
+hash = "c7ede1844a7d"
+sammanfattning = """
+Talen som språkmodellen läser ut i steg 5 jämförs med baslinjen och antagandena som användaren godkände i steg 3 och 4. Bara tal som tydligt motsäger något godkänt markeras. I mätningarna fångades ungefär två av tre inlagda fel i baslinjen och hälften i effekterna, men nästan inga små ändringar (7 av 73 vid gånger 1,5) och inga där alla tre scenarier ändrats lika. Ett omarkerat tal är inte därmed det godkända.
+"""
+
+[[avsnitt]]
+rubrik = "Förväntad potential och uppföljning"
+hash = "2a3cbdbff431"
+sammanfattning = """
+Potentialläget (Prognos) bedömer vad en planerad åtgärd kan ge, uppföljningen vad en genomförd insats faktiskt har gett. Samma steg och formler, men uppföljningen får egna metodregler, ett medelfönster som följer insatsen, realiserat och återstående, och nytta per bidragsår.
+"""
+
+[[avsnitt]]
+rubrik = "När kalkylmotorn inte kan läsa talen"
+hash = "84ce8862ec94"
+sammanfattning = """
+Vägrar koden formuläret i steg 5, till exempel för ett omöjligt tal eller ett årtal utanför 1950 till 2200, räknar språkmodellen själv som reserv. Det resultatet har lägre status: okontrollerat, utan Talens ursprung och utan stor siffra, och det bör köras om innan det används.
+"""
+
+[[avsnitt]]
+rubrik = "Portföljen: flera åtgärder tillsammans"
+hash = "55d0776b723a"
+sammanfattning = """
+Lägger ihop sparade analyser utan att räkna samma ton två gånger inom en utsläppspott. Karlstad har två potter, husbyggnad och personbilstrafik. Varje åtgärd tar sin andel av det som är kvar i potten, så summan blir aldrig större än potten.
+"""
+
+[[avsnitt]]
+rubrik = "CAIA och DIN SPEC 91637"
+hash = "cb3d2177940d"
+sammanfattning = """
+DIN SPEC 91637 är en tysk standard för hur kommuner beskriver och följer upp klimatåtgärder, ett ramverk och ingen räknemetod. CAIA bygger på samma ryggrad (åtgärd, ändrad aktivitet, aktivitet gånger emissionsfaktor, direkta, indirekta och stödjande åtgärder) och har tagit efter fyra saker, sedan 1.1 även standardens klassning av åtgärden (nivå, instrumentkategori, verkningstid och aktivitetsförändring per drivare), men räknar inte attribut och beteende som egna tal. CAIA påstår inte att den följer standarden.
+"""
+
+[[avsnitt]]
+rubrik = "Kända begränsningar"
+hash = "839bd68e2aca"
+sammanfattning = """
+Den största svagheten: två körningar av samma åtgärd ger olika tal, och tjänstebilarna bytte till och med tecken. Utläsningen i steg 5 är stabilare sedan oktober men inte stabil. Dessutom: antagandena är modellens, källkontrollen är smal, och biblioteket är mest nationella schabloner.
+"""
+
+# Flödet överst på sidan: ett kort per steg, med vad språkmodellen och koden gör.
+# grind = sidan stannar efter steget. ror = steget rör ett avsnitt; står det
+# avsnittet under avstämning i METOD.md visas markeringen.
+[flode]
+kallor = ["De sju stegen"]
+hash = "ecec7eff7c8c"
+ingress = """
+Sju steg. Språkmodellen läser, bedömer och skriver; koden räknar, kontrollerar och skriver ut räkningen. Samma indata ger samma räkning varje gång, men antagandena är modellens.
+"""
+fas_grind = "Sidan stannar efter varje steg: du godkänner eller rättar"
+fas_kor = "Körs i en följd"
+
+[[flode.steg]]
+namn = "Åtgärds­profil"
+modell = "Tolkar beskrivningen, ställer högst fyra följdfrågor och skriver profilen: omfattning, sektor, rådighet, tidsram och klassningen enligt DIN SPEC 91637 (nivå, instrumentkategori, verkningstid)."
+kod = "Läser profilen till sidans fält."
+grind = true
+
+[[flode.steg]]
+namn = "Utsläpps­källor"
+modell = "Namnger drivarna, mekanismen, aktivitetsförändringen enligt DIN SPEC 91637 och typen av effekt, som bestämmer räknesättet. Sätter inga tal."
+grind = true
+
+[[flode.steg]]
+namn = "Baslinje"
+modell = "Sätter nuläget per drivare (aktivitet, emissionsfaktor) och trenden utan åtgärd."
+kod = "Lägger parameter­biblioteket och kommunens datafiler i underlaget."
+grind = true
+
+[[flode.steg]]
+namn = "Evidens"
+modell = "Bedömer effekten på varje drivare, försiktigt, troligt och optimistiskt, med källa. Sätter klimatfaktorerna."
+kod = "Delar upp arbetet per drivare och kontrollerar formen."
+grind = true
+ror = "Tre scenarier"
+markering = "scenariovärdena sätts här"
+
+[[flode.steg]]
+namn = "Kalkyl"
+modell = "Läser ut talen ur steg 1 till 4 till ett formulär. Räknar inte."
+kod = "Räknar alla år och scenarier. Varningar, vad åtgärden ändrar i verksamheten, bilaga, källkontroll och Talens ursprung."
+ror = "Attribution"
+markering = "attributionen läses ut här"
+
+[[flode.steg]]
+namn = "Kvalitets­granskning"
+modell = "Granskar källor, enheter, storleksordning, BAU och dubbelräkning. Ändrar inga tal."
+
+[[flode.steg]]
+namn = "Rapport"
+modell = "Skriver besluts­underlaget, och i potentialrapporten Följ upp med: indikatorer per bärande drivare."
+kod = "Lägger kalkylens avsnitt om vad åtgärden ändrar och den tekniska bilagan på sina platser, oförändrade."
+
+# Räknekedjan under flödet. avsnitt = rubriken som ledet länkar till.
+[kedja]
+kallor = ["Beräkningen", "Utan åtgärden (BAU)", "Med åtgärden", "Attribution", "Territoriellt, konsumtion, överlapp och netto", "Rubriktalet och åren det gäller"]
+hash = "4e856defddf1"
+ingress = """
+Det koden räknar i steg 5, för varje drivare och år, och alltihop en gång per scenario: min, medel och max (se *Tre scenarier*). Tryck på en del för att läsa den.
+"""
+
+[[kedja.led]]
+namn = "Basåret"
+vad = "aktivitet × emissionsfaktor"
+avsnitt = "Utan åtgärden (BAU)"
+
+[[kedja.led]]
+namn = "BAU"
+vad = "framskrivet med trend"
+avsnitt = "Utan åtgärden (BAU)"
+
+[[kedja.led]]
+namn = "Med åtgärden"
+vad = "ΔA och ΔEF × infasning"
+avsnitt = "Med åtgärden"
+
+[[kedja.led]]
+namn = "Förändring"
+vad = "skillnaden × attribution"
+avsnitt = "Attribution"
+
+[[kedja.led]]
+namn = "Perspektiven"
+vad = "territoriellt, konsumtion, netto"
+avsnitt = "Territoriellt, konsumtion, överlapp och netto"
+
+[[kedja.led]]
+namn = "Summa"
+vad = "över drivarna, varje år"
+avsnitt = "Beräkningen"
+
+[[kedja.led]]
+namn = "Rubriktalet"
+vad = "plus spann och ackumulerat"
+avsnitt = "Rubriktalet och åren det gäller"
+
+# Jämförelsen av de två lägena. En rad vars etikett är en avsnittsrubrik som
+# står under avstämning får en markering.
+[lagen]
+kallor = ["Förväntad potential och uppföljning", "Rubriktalet och åren det gäller", "Attribution", "Engångsposter"]
+hash = "a1213aa38e47"
+avsnitt = "Förväntad potential och uppföljning"
+rubrik = "Två lägen: prognos och uppföljning"
+ingress = """
+I METOD.md heter de förväntad potential (potentialläget) och uppföljning. I CAIA:s webbgränssnitt heter de Prognos och Uppföljning.
+"""
+fot = """
+Samma sju steg och samma formler i båda. Läget väljs före första meddelandet och går inte att byta.
+"""
+
+[[lagen.lage]]
+namn = "Prognos"
+alt = "förväntad potential"
+fraga = "Vad kan en planerad åtgärd ge?"
+rader = [
+  ["Rubriktal", "netto i medelscenariot, målåret (2030 om inget annat anges)"],
+  ["Medel per år", "alltid 2026 till 2030, delat på fem"],
+  ["Attribution", "modellen instrueras att baka in den i ΔA eller ΔEF; eget fält står på 1"],
+  ["Köpt utrustning", "tillverkningen skrivs av jämnt över livslängden (sedan 1.1)"],
+  ["Status", "standardläget, det CAIA först byggdes för"],
+]
+
+[[lagen.lage]]
+namn = "Uppföljning"
+alt = "genomförd insats"
+fraga = "Vad har insatsen gett, och vad återstår?"
+rader = [
+  ["Rubriktal", "netto i medelscenariot, medel per år över insatsens egna år"],
+  ["Medel per år", "från första startåret till målåret"],
+  ["Attribution", "modellen instrueras att ange den som eget tal per scenario, inte också i ΔA eller ΔEF"],
+  ["Tillkommer", "egna metodregler, realiserat och återstående, nytta per bidragsår, pengarnas egna utsläpp på egen rad, utrustning skrivs av till målåret"],
+  ["Status", "nytt hösten 2026, prövat på ett fåtal insatser, inget facit att stämma av mot än"],
+]

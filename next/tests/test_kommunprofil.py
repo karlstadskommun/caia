@@ -306,7 +306,7 @@ def test_data_files_are_found_through_the_register(tmp_path, use_kommun):
     (root / 'kommun.toml').write_text(toml, encoding='utf-8')
     (root / 'data' / 'fotavtryck-per-konsumtionskategori.json').write_text(json.dumps([
         {'coicop': '07.D', 'label': 'fordon', 'per100sek': 9.2, 'Göteborg': 512.5,
-         'Sverige': 658.6}]), encoding='utf-8')
+         'Sverige': 640.0}]), encoding='utf-8')
     (root / 'data' / 'energianvandning_bostader.csv').write_text(
         'Kategori,MWh\nSmåhus,1000\n', encoding='utf-8')
     (root / 'data' / 'kommunrapport_vaxthusgaser_totalt.csv').write_text(

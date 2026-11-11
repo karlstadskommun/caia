@@ -72,7 +72,7 @@ Det som är värt att leta efter:
 | Tid per modellanrop | 280 s, ett omförsök bara vid snabba fel | `REQUEST_TIMEOUT_S` i `api_client.py` |
 | Tid per funktion på Vercel | 300 s (modellanropet själv 280 s, `REQUEST_TIMEOUT_S`) | `vercel.json` |
 | Storlek per anrop | 2 MB, 120 turer, 12 drivare | `app.py` |
-| Text per analys | 400 000 tecken totalt, 100 000 per tur, och 100 000 för delresultaten i steg 4 tillsammans (drygt dubbla den största riktiga analysen) | `MAX_HISTORY_CHARS`, `MAX_TURN_CHARS`, `MAX_PARTS_CHARS` i `app.py` |
+| Text per analys | 400 000 tecken totalt, 200 000 per tur (kalkylens text med bilaga är den längsta turen: 112 000 tecken för tolv drivare till 2045), och 100 000 för delresultaten i steg 4 tillsammans. En kalkyl över taket per tur, eller som gör hela historiken för lång, vägras i steg 5 med besked om att dela upp åtgärden eller välja ett närmare målår | `MAX_HISTORY_CHARS`, `MAX_TURN_CHARS`, `MAX_PARTS_CHARS` i `app.py` |
 | Anrop som inte når en modell (sparade rapporter, planen för steg 4, parameterlistan) | 30 per minut, 600 per dygn och användare, räknat för sig | `REPORT_RATE_PER_MIN`, `REPORT_RATE_PER_DAY` i `app.py` |
 | En sparad rapport | 300 000 tecken och 600 000 byte, i appen och i tabellen | `REPORT_MAX_CHARS` i `app.py`, `deploy/reports.sql` |
 | Inloggningsförsök (lösenordsläge) | 5 per IP på tio minuter | `app.py` |
@@ -240,7 +240,7 @@ Sidan hämtar tre bibliotek från jsDelivr i användarens webbläsare: marked (g
 2. Räkna ut filens kontrollsumma och skriv in den: `curl -s <adressen> | openssl dgst -sha384 -binary | openssl base64 -A`, med `sha384-` framför.
 3. Kör testerna. Öppna sedan sidan i en webbläsare, kör en analys till en rapport och se att tabeller, listor och länkar ser ut som förut. Ett bibliotek som tolkar text annorlunda märks där, inte i testerna.
 
-DOMPurify är det som håller modellens text från att köra kod i sidan, så ta dess uppdateringar först. Läget 2026-10-07: DOMPurify 3.4.16 (uppdaterad den dagen), marked 14.1.3 och supabase-js 2.45.4 (båda från 2024).
+DOMPurify är det som håller modellens text från att köra kod i sidan, så ta dess uppdateringar först. Läget 2026-11-10: DOMPurify 3.4.17 (uppdaterad den dagen, från 3.4.16), marked 14.1.3 och supabase-js 2.45.4 (båda från 2024).
 
 ## Felsökning
 

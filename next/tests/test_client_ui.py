@@ -1002,6 +1002,16 @@ _EMAP_HEAD = ('EMAP-analys av åtgärd: Galleri\n\n1. Sammanfattning\nEtt galler
               '- Kort motivering: Byte.\n\n')
 
 
+def test_the_activity_shift_of_din_spec_annex_c_is_drawn_per_driver():
+    md = _EMAP_HEAD + ('4. EMAP-drivare\nDrivare 1: Köp\n  aktivitet_matt: kg/år\n'
+                       '  aktivitetsförändring: minskad användning\n')
+    out = _emap(md)
+    d, = out['view']['profiles'][0]['drivers']
+    assert d['fields']['aktivitetsförändring'] == 'minskad användning' and not d['rest']
+    assert 'Aktivitetsförändring enligt DIN SPEC 91637: minskad användning' in out['html']
+    assert 'aktivitetsförändring:' not in out['html']
+
+
 def test_numbered_items_in_the_uncertainties_stay_items():
     md = _EMAP_HEAD + ('3. Osäkerheter\n- Viktigaste osäkerheter i denna EMAP-bedömning:\n'
                        '    1. Osäkerheter kring tidsprofil är stora.\n    2. Underlaget för drivare saknas.\n'

@@ -235,7 +235,8 @@ def test_every_data_file_row_shows_what_the_parameter_view_shows():
     Underlag column. It now prints the parameter view's number and line, read
     through parameter_view(), so the expression is interpreted in one place."""
     rows = _datafil_rows()
-    assert len(rows) >= 10
+    # 17 with Konsumtionskompassen's files, 7 in the public release without them.
+    assert len(rows) >= 7
     for pid, row in rows.items():
         b = _one('a0', kallor={'a0': {'ursprung': 'parameterbibliotek', 'parametrar': [pid]}})
         assert b.ok, (pid, b.problem)
@@ -338,7 +339,7 @@ def test_kommundata_is_compared_with_the_local_value_not_the_national_range():
 
 def test_rvu_car_share_is_kommundata_at_the_municipal_level():
     # RVU 2023: 53 % for the municipality (figur 18), 47 % for the tätort
-    # (tabell 14, what PAC uses for a plan). CAIA's library holds the first.
+    # (tabell 14, what Karlstad's plan-analysis tool uses for a plan). CAIA's library holds the first.
     claim = {'a0': {'ursprung': 'kommundata', 'parametrar': ['TR_mode_share_car']}}
     assert _one('a0', a0=0.53, kallor=claim).ok
     b = _one('a0', a0=0.47, kallor=claim)
