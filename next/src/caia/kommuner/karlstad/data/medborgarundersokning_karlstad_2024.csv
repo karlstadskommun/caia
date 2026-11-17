@@ -1,0 +1,20 @@
+Question,Response_Option,Percentage
+Meat_Frequency,Flera gånger i veckan,52.0
+Meat_Frequency,Någon gång i veckan,34.3
+Meat_Frequency,Någon gång i månaden,6.6
+Meat_Frequency,Någon gång i halvåret,1.6
+Meat_Frequency,Mer sällan eller aldrig,5.6
+Secondhand_Frequency,Flera gånger i veckan,0.0
+Secondhand_Frequency,Någon gång i veckan,3.5
+Secondhand_Frequency,Någon gång i månaden,17.5
+Secondhand_Frequency,Någon gång i halvåret,28.1
+Secondhand_Frequency,Mer sällan eller aldrig,50.0
+Short_Car_Trips,Flera gånger i veckan,39.0
+Short_Car_Trips,Någon gång i veckan,26.5
+Short_Car_Trips,Någon gång i månaden,9.6
+Short_Car_Trips,Någon gång i halvåret,3.1
+Short_Car_Trips,Mer sällan eller aldrig,21.8
+Air_Travel_Frequency,Ingen gång,59.0
+Air_Travel_Frequency,1 gång,24.0
+Air_Travel_Frequency,2 gånger,10.0
+Air_Travel_Frequency,3 eller fler gånger,6.9

@@ -77,7 +77,7 @@ def _with_scope(scope: str) -> str:
 
 
 def test_draft_without_a_number_for_the_scope_is_still_clarifying(monkeypatch):
-    # Henric 2026-10-15: a missing scope is asked for before the profile is
+    # 2026-10-15: a missing scope is asked for before the profile is
     # finished. A request without a question mark must not get the button.
     text = _with_scope('okänt') + '\n\nAnge hur många tjänstebilar som berörs.'
     out = _run(text, monkeypatch)

@@ -8,7 +8,7 @@ För dig som är tjänsteperson och ska köra en analys själv i CAIA (Climate A
 
 **Håll fliken öppen.** En pågående analys finns bara i den öppna fliken. Stänger du den eller laddar om sidan innan rapporten är klar är analysen borta, och du får börja om.
 
-**Skriv inga personuppgifter.** Allt du skriver, och allt analysen tar fram, skickas till en språkmodell hos en extern leverantör. I Karlstads installation stannar texten i EU: den går via OpenRouters EU-ingång till Google Vertex AI i Europa, där modellen körs (detaljerna i [säkerhetsgranskningen](security-review-2026-10.md)). Startsidan påminner om detta, men skriv ändå inte:
+**Skriv inga personuppgifter.** Allt du skriver, och allt analysen tar fram, skickas till en språkmodell hos en extern leverantör. I Karlstads installation stannar texten i EU: den går via OpenRouters EU-ingång till Google Vertex AI i EU, där modellen körs (detaljerna i [DEPLOY.md](../next/DEPLOY.md)). Startsidan påminner om detta, men skriv ändå inte:
 
 - namn på enskilda personer, till exempel anställda, sökande eller boende,
 - personnummer, adresser, telefonnummer eller e-postadresser,
@@ -48,7 +48,7 @@ CAIA kan ställa upp till fyra följdfrågor innan profilen är klar, och fråga
 
 Överst på sidan visas var i analysen du är: Åtgärdsförslag, Utsläppskällor, Baslinje, Evidens, Kalkyl, QA, Rapport. CAIA stannar fyra gånger och väntar på dig. Resultatet av varje steg visas i panelen till höger, och under chatten finns en knapp för att godkänna.
 
-Varje steg i panelen börjar med rutan *Det viktigaste*: vilka utsläpp åtgärden påverkar, nivån i dag och vart den är på väg, antagandena resultatet hänger på, resultatet och om kvalitetsgranskningen varnar. Rutan läses ur stegets eget innehåll, så den säger inget som inte står längre ner. Läs den först, och läs resten där den pekar.
+Varje steg i panelen börjar med rutan *Det viktigaste*: vilka utsläpp åtgärden påverkar, nivån i dag och vart den är på väg, antagandena resultatet hänger på, resultatet och vad det motsvarar i verksamheten (till exempel så många km mindre år 2030), och om kvalitetsgranskningen varnar. Rutan läses ur stegets eget innehåll, så den säger inget som inte står längre ner. Läs den först, och läs resten där den pekar.
 
 Vid varje stopp har du två val:
 
@@ -65,7 +65,7 @@ Det du godkänner bygger nästa steg vidare på. Ett fel du släpper igenom tidi
 
 ### 1. Åtgärdsprofilen
 
-Knappen heter **Godkänn profilen och fortsätt**. Panelen visar ett kort med sektor, drivare, målgrupp, utsläpp som påverkas, rådighet, typ av åtgärd, tidsram och kommun.
+Knappen heter **Godkänn profilen och fortsätt**. Panelen visar ett kort med omfattning, sektor, drivare, målgrupp, utsläpp som påverkas, rådighet, nivå, instrumentkategori, mognad, tidsram, verkningstid, kommun och kommentarer. Nivå, instrumentkategori och verkningstid är klasserna i DIN SPEC 91637 (sedan 1.1; en analys från före 1.1 visar i stället typ av åtgärd).
 
 Titta efter märkningen **ANTAGANDE**. Den står vid allt CAIA har antagit utan att du sagt det, och kortet visar hur många antaganden det är. Läs dem. Är omfattningen antagen står det i kommentarerna att resultatet skalar med den, och då är det det antagandet som är viktigast att rätta om du kan. Stämmer de inte, rätta nu. När du rättat visas de ändrade fälten med märkningen ÄNDRAD och det gamla värdet under.
 
@@ -73,7 +73,7 @@ Titta efter märkningen **ANTAGANDE**. Den står vid allt CAIA har antagit utan 
 
 Knappen heter **Godkänn utsläppskällorna och fortsätt**. Här har CAIA namngett drivarna, alltså de aktiviteter vars utsläpp åtgärden påverkar, och sagt hur effekten ska räknas. Inga tal är satta än.
 
-Panelen visar först en sammanfattning och sedan utsläppen som åtgärden påverkar. Varje drivare står som en uträkning: aktiviteten som mäts, gånger utsläppen per enhet, ger utsläpp av ett visst slag och på en viss plats. Under det står hur åtgärden påverkar drivaren (undvika, byta eller förbättra) och hur stor risken är att samma minskning räknas två gånger. Därefter kommer **Så räknas effekten**: rakt på drivaren, som en kedja av antaganden om hur många som ändrar sig, eller inget eget tal för en åtgärd som bara stödjer andra; klicka på **Varför?** för att läsa motiveringen. (Analyser från före 2026-10-14 visar i stället sex rutor under **Så klassas åtgärden**.) Sist står det som är osäkert. Underlag som skulle göra bedömningen säkrare frågar CAIA efter i chatten.
+Panelen visar först en sammanfattning och sedan utsläppen som åtgärden påverkar. Varje drivare står som en uträkning: aktiviteten som mäts, gånger utsläppen per enhet, ger utsläpp av ett visst slag och på en viss plats. Under det står hur åtgärden påverkar drivaren (undvika, byta eller förbättra), vilken av DIN SPEC 91637:s sex aktivitetsförändringar drivaren hör till (sedan 1.1), och hur stor risken är att samma minskning räknas två gånger. Därefter kommer **Så räknas effekten**: rakt på drivaren, som en kedja av antaganden om hur många som ändrar sig, eller inget eget tal för en åtgärd som bara stödjer andra; klicka på **Varför?** för att läsa motiveringen. (Analyser från före 2026-10-14 visar i stället sex rutor under **Så klassas åtgärden**.) Sist står det som är osäkert. Underlag som skulle göra bedömningen säkrare frågar CAIA efter i chatten.
 
 Kontrollera att drivarna är de rätta och att ingen saknas. Det är drivarna som räknas i resten av analysen. Uppdelningen följer en fast regel, så att två körningar av samma åtgärd får samma drivare: en aktivitet är en drivare även när den ger både territoriella och konsumtionsbaserade utsläpp, och en aktivitet delas bara upp om det finns ett eget tal för varje del eller om åtgärden ändrar delarna olika. Saknas till exempel tillverkningen av det som ska köpas in kommer den inte med i resultatet.
 
@@ -164,7 +164,7 @@ Nivåerna är hämtade ur rapportens del om osäkerhet, QA och beroenden, och mo
 
 Resten av rapporten står under **Rapportens delar**, en rad per avsnitt. Varje rad har avsnittets namn och en rad om vad det innehåller, till exempel scenariernas tal under *Beräknad klimatnytta* eller hur många källor *Källor och underlag* har. Klicka på raden för att fälla ut avsnittet, och en gång till för att fälla ihop det. **Visa alla delar** fäller ut allt på en gång, och **Fäll ihop alla** stänger det igen. Visas ingen stor siffra överst är *Beräknad klimatnytta* utfälld från början.
 
-Delarna är, i rapportens ordning: kort beskrivning av åtgärden, beräknad klimatnytta, hur åtgärden minskar utsläppen, nyckelantaganden och beräkningsgrund, tidsprofil (när effekten kommer), osäkerhet, QA och beroenden, nästa steg, *Följ upp med* (en eller två indikatorer per bärande drivare, i enheter som antal elbilar eller m² renoverad yta, med dagens värde om underlaget har det och var det hämtas; finns inte i en uppföljning, där *Vad som behöver mätas* står under nästa steg), källor och underlag, den tekniska bilagan och *Talens ursprung*. Löptexten är skriven av språkmodellen. Läs delen om osäkerhet, QA och beroenden: där står varför nivåerna i bedömningen blev som de blev och vad kvalitetsgranskningen anmärkt på.
+Delarna är, i rapportens ordning: kort beskrivning av åtgärden, beräknad klimatnytta, *Vad åtgärden ändrar i verksamheten* (samma förändring som tonnen, i km, liter, m² eller den enhet drivaren räknas i, för målåret och som snitt per år; skrivet av kalkylmotorn), hur åtgärden minskar utsläppen, nyckelantaganden och beräkningsgrund, tidsprofil (när effekten kommer), osäkerhet, QA och beroenden, nästa steg, *Följ upp med* (en eller två indikatorer per bärande drivare, i enheter som antal elbilar eller m² renoverad yta, med dagens värde om underlaget har det och var det hämtas; finns inte i en uppföljning, där *Vad som behöver mätas* står under nästa steg), källor och underlag, den tekniska bilagan och *Talens ursprung*. Löptexten är skriven av språkmodellen. Läs delen om osäkerhet, QA och beroenden: där står varför nivåerna i bedömningen blev som de blev och vad kvalitetsgranskningen anmärkt på.
 
 I den nedladdade texten heter *Nästa steg* *Rekommendation och nästa steg* och börjar med den samlade rekommendationen. På sidan står rekommendationen i bedömningen och inte en gång till i delen.
 

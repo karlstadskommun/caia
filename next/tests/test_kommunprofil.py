@@ -264,7 +264,7 @@ def test_exempel_login_page_names_no_karlstad(use_kommun):
 @pytest.mark.karlstad
 @pytest.mark.parametrize('has_supabase', [True, False])
 def test_the_login_box_carries_the_name_and_no_plan_line(use_kommun, has_supabase):
-    """Henric 2026-10-13: the box says CAIA and what the letters stand for. The
+    """2026-10-13: the box says CAIA and what the letters stand for. The
     line naming the municipality's plan is gone from both login boxes."""
     from flask import render_template_string
     use_kommun('karlstad')
@@ -306,7 +306,7 @@ def test_data_files_are_found_through_the_register(tmp_path, use_kommun):
     (root / 'kommun.toml').write_text(toml, encoding='utf-8')
     (root / 'data' / 'fotavtryck-per-konsumtionskategori.json').write_text(json.dumps([
         {'coicop': '07.D', 'label': 'fordon', 'per100sek': 9.2, 'Göteborg': 512.5,
-         'Sverige': 658.6}]), encoding='utf-8')
+         'Sverige': 640.0}]), encoding='utf-8')
     (root / 'data' / 'energianvandning_bostader.csv').write_text(
         'Kategori,MWh\nSmåhus,1000\n', encoding='utf-8')
     (root / 'data' / 'kommunrapport_vaxthusgaser_totalt.csv').write_text(

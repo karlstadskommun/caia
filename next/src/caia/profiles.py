@@ -65,9 +65,14 @@ FIELD_ORDER = [
     'Målgrupp',
     'Utsläpp som påverkas',
     'Rådighet',
+    'Nivå',
+    'Instrumentkategori',
+    # Before 1.1 the profile had a type list of its own here; saved
+    # analyses still carry it.
     'Typ av åtgärd',
     'Mognad',
     'Tidsram',
+    'Verkningstid',
     'Kommun',
     'Kommentarer',
 ]

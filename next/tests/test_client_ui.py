@@ -254,7 +254,7 @@ def test_two_failed_reruns_leave_one_note_and_approval_removes_it():
 
 
 # ---------- a comment at a gate: the reply in the chat, the version in the panel ----------
-# Henric 2026-10-13: a question at the EMAP gate replaced the analysis with
+# 2026-10-13: a question at the EMAP gate replaced the analysis with
 # CAIA's note about its changes. The server now splits the answer
 # (caia/feedback.py); the page has to put each part where it belongs.
 
@@ -407,7 +407,7 @@ const AVG_WINDOW = [2026, 2030];
 """
 
 
-# ---------- the headline names the year it is for (Henric 2026-10-13) ----------
+# ---------- the headline names the year it is for (2026-10-13) ----------
 
 @pytest.mark.parametrize('km,label', [
     ({'net': 216, 'year': 2030, 'source': 'calc'}, 'Förväntad klimatnytta år 2030'),
@@ -748,7 +748,7 @@ def test_approving_a_step_lets_the_chat_follow_the_run_again():
 
 
 # ---------- baslinje: the talk in the chat, the analysis in the panel ----------
-# Henric 2026-10-13: the baslinje panel opened with what the step does and a
+# 2026-10-13: the baslinje panel opened with what the step does and a
 # summary of EMAP, ended with gaps and "Frågor till miljöstrateg", and showed
 # field names (A0, EF0_enhet) and numbers like 1,36e6. The talk now goes to
 # the chat, the questions are put to "dig", and the panel reads as Swedish.
@@ -921,8 +921,7 @@ def test_the_shares_of_the_effect_read_as_percent(value, shown):
     assert '<div class="ev-factor-val">' + shown + '</div>' in out['h'].replace(' ', ' ')
 
 
-# The code under the name is gone: it told a reader nothing (Henric
-# 2026-10-13, "Undvik variabel-benämningar").
+# The code under the name is gone: it told a reader nothing (2026-10-13).
 @pytest.mark.parametrize('name, detail, title', [
     ('ADOPTION_EXTRA_HANDLARE', 'antal aktiva handlare med cirkulärt erbjudande utöver BAU',
      'Antal aktiva handlare med cirkulärt erbjudande utöver BAU'),
@@ -942,7 +941,7 @@ def test_a_parameter_card_leads_with_what_the_parameter_is(name, detail, title):
 
 
 # ---------- EMAP as a view ----------
-# Henric 2026-10-13: the EMAP panel was the agent's text, "aktivitet_matt" and
+# 2026-10-13: the EMAP panel was the agent's text, "aktivitet_matt" and
 # all, with no real headings. The page reads it into a view; the history
 # keeps the text (the next agents read its field names).
 
@@ -1003,6 +1002,16 @@ _EMAP_HEAD = ('EMAP-analys av åtgärd: Galleri\n\n1. Sammanfattning\nEtt galler
               '- Kort motivering: Byte.\n\n')
 
 
+def test_the_activity_shift_of_din_spec_annex_c_is_drawn_per_driver():
+    md = _EMAP_HEAD + ('4. EMAP-drivare\nDrivare 1: Köp\n  aktivitet_matt: kg/år\n'
+                       '  aktivitetsförändring: minskad användning\n')
+    out = _emap(md)
+    d, = out['view']['profiles'][0]['drivers']
+    assert d['fields']['aktivitetsförändring'] == 'minskad användning' and not d['rest']
+    assert 'Aktivitetsförändring enligt DIN SPEC 91637: minskad användning' in out['html']
+    assert 'aktivitetsförändring:' not in out['html']
+
+
 def test_numbered_items_in_the_uncertainties_stay_items():
     md = _EMAP_HEAD + ('3. Osäkerheter\n- Viktigaste osäkerheter i denna EMAP-bedömning:\n'
                        '    1. Osäkerheter kring tidsprofil är stora.\n    2. Underlaget för drivare saknas.\n'
@@ -1035,7 +1044,7 @@ def test_a_section_heading_without_a_number_is_a_heading():
 # The prompt names the sections; the model writes them as "## X", "**X**" or
 # a bare line. The bare form was drawn as prose, run together with the text
 # under it, and the split that sends "Kort om detta steg" to the chat never
-# found it (Henric 2026-10-14, the morning of the demo).
+# found it (2026-10-14, the morning of the demo).
 
 _SPLIT_STUBS = """
 const readableNumbers = (s) => s;

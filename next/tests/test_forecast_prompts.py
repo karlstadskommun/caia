@@ -65,12 +65,23 @@ def test_the_follow_up_extraction_keeps_the_factor_rule(monkeypatch):
     assert FACTORS in _sent(monkeypatch, KE, KE.run_kalkyl_extract, UPPFOLJNING)
 
 
-def test_the_follow_up_extraction_prompt_is_the_forecast_one_without_two_rules():
+def test_the_follow_up_extraction_prompt_is_the_forecast_one_without_three_rules():
+    """The lifetime rule is the forecast's (1.1); the follow-up block has
+    its own."""
     without = KE.SYSTEM_PROMPT
-    for block in (KE._FLOOR, KE._BASE):
+    for block in (KE._FLOOR, KE._BASE, KE._LIFETIME):
         assert block in without
         without = without.replace(block, '')
     assert without == KE.SYSTEM_PROMPT_UPPFOLJNING
+
+
+def test_a_renewal_cycle_is_not_read_as_the_lifetime(monkeypatch):
+    """1.1 reference run: two of five readouts took the fleet's renewal
+    cycle (three years) as the cars' lifetime, and the whole manufacture
+    landed in 2030 again (net 15 ton)."""
+    forecast = _sent(monkeypatch, KE, KE.run_kalkyl_extract, POTENTIAL)
+    assert 'En förnyelsecykel, en leasingtid eller en\n  avskrivningstid i bokföringen är inte livslängden' in forecast
+    assert 'inte hur länge\n  kommunen eller hushållet behåller den' in forecast
 
 
 def _headline_block(prompt: str) -> list[str]:

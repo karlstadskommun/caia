@@ -10,11 +10,10 @@ Usage:
 
     CAIA_KOMMUN=<profil> OPENROUTER_API_KEY=... python tools/run_batch.py <package.md> [<package.md> ...] --out <dir>
 
-With CAIA_ANTHROPIC_KEYS set (comma-separated, in order; Demi's
-max_credits_run.py sets it), each call tries those Anthropic keys first, the
-API credits included in the Max subscriptions, and OpenRouter last, switching
-the way Aida does (tools/credit_routes.py). CAIA_ANTHROPIC_API_KEY sends every
-call to one Anthropic key with no fallback; set one of the two, not both.
+With CAIA_ANTHROPIC_KEYS set (comma-separated, in order), each call tries
+those Anthropic keys first and OpenRouter last (tools/credit_routes.py).
+CAIA_ANTHROPIC_API_KEY sends every call to one Anthropic key with no
+fallback; set one of the two, not both.
 usage.jsonl then says which route served each call.
 
 Each package becomes <dir>/<stem>/{intake,emap,baslinje,evidens,kalkyl,qa,rapport}.md
@@ -394,14 +393,14 @@ def main() -> int:
         print(e, file=sys.stderr)
         return 2
     if routed and not os.environ.get("OPENROUTER_API_KEY"):
-        print("OPENROUTER_API_KEY saknas: den är sista vägen när Max-krediterna är slut "
+        print("OPENROUTER_API_KEY saknas: den är sista vägen när Anthropic-nycklarna är slut "
               "(sätt i miljön eller via --env)", file=sys.stderr)
         return 2
     if routed:
-        print(f"Max-krediterna först ({len(credit_routes.direct_keys())} nycklar i ordning), "
+        print(f"Anthropic-nycklarna först ({len(credit_routes.direct_keys())} i ordning), "
               "sist OpenRouter", file=sys.stderr)
     elif api_client.direct_key():
-        # Subscription API credits, straight to Anthropic (api_client.py).
+        # One Anthropic key, straight to Anthropic (api_client.py).
         print("Kör direkt mot Anthropic (CAIA_ANTHROPIC_API_KEY), inte via OpenRouter",
               file=sys.stderr)
     elif not os.environ.get("OPENROUTER_API_KEY"):

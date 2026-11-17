@@ -496,14 +496,20 @@ def test_a_climate_factor_as_approved_is_not_marked(client, monkeypatch):
     assert not any(r['godkant'] for r in rows.values()) and 'cons' not in rows
 
 
-def test_the_follow_up_prompt_may_keep_consumption_at_one():
-    """The follow-up extraction prompt is the one from before the rule that
-    lets Konsumtion_faktor stay above 1."""
+def test_a_consumption_factor_above_one_read_as_one_is_marked_in_both_modes():
+    """The follow-up extraction has the rule that keeps a Konsumtion_faktor
+    above 1 since 2026-11-08, so an approved 1,15 read as 1,0 is a misreading
+    in the follow-up mode too, and is marked there as in the forecast mode.
+    Until 1.1 the follow-up mode let it through."""
     model = CalcModel.from_dict({'action_name': 'Elbilar', 'target_year': 2030,
                                  'drivers': [_driver(cons=1.0)]})
     assert [a.falt for a in G.granska(model, _with_factors())] == ['cons']
     follow = SimpleNamespace(mode=UPPFOLJNING, drivers=model.drivers)
-    assert G.granska(follow, _with_factors()) == []
+    assert [a.falt for a in G.granska(follow, _with_factors())] == ['cons']
+    held = SimpleNamespace(mode=UPPFOLJNING,
+                           drivers=CalcModel.from_dict({'action_name': 'Elbilar', 'target_year': 2030,
+                                                        'drivers': [_driver(cons=1.15)]}).drivers)
+    assert G.granska(held, _with_factors()) == []
 
 
 def test_factors_of_another_driver_are_not_compared():

@@ -51,7 +51,8 @@ not pass, and both are misreadings the extraction's own note gives away
 (docs/security-review-2026-10.md, S21). The narrowing has a cost the same
 measurement puts a number on: a derived effect nothing anchors, a sign, a
 change smaller than FACTOR, a zeroed effect, all three scenarios scaled
-together, and terr/cons/overlap (not compared at all) are not caught.
+together, and terr/cons/overlap outside the driver's own evidens block
+are not caught.
 tools/check_godkant.py reruns the measurement.
 
 A number that does not pass is marked for checking in *Talens ursprung*
@@ -84,11 +85,13 @@ _SWAP = {"min": "max", "med": "med", "max": "min"}
 # "1,3 miljoner", "3,0 × 10^6", "6,7·10⁻⁶". Thousands are grouped in threes
 # with a space (or a no-break or thin space); the decimal mark is a comma or
 # a point. "× 10" needs a caret or a superscript: "2 × 100" is a product.
+# "milj." ends in its point, so no word boundary is asked after it: with one,
+# "1,3 milj. ton" was read as 1,3.
 _NUMBER = re.compile(
     r"(?<![\w.,])(\d{1,3}(?:[   ]\d{3})+|\d+)(?:[.,](\d+))?"
     r"(?:[  ]?[eE]([+\-−]?\d{1,2})(?!\d)"
     r"|[  ]?[×x·][  ]?10(?:\^([+\-−]?\d{1,2})(?!\d)|([⁺⁻]?[⁰¹²³⁴⁵⁶⁷⁸⁹]{1,2})(?![⁰¹²³⁴⁵⁶⁷⁸⁹])))?"
-    r"(?:[  ]?(miljoner|miljon|milj\.|tusen)\b)?",
+    r"(?:[  ]?(miljoner\b|miljon\b|milj\.|tusen\b))?",
     re.IGNORECASE)
 _SUPERSCRIPT = str.maketrans("⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹", "+-0123456789")
 _MULT = {"miljoner": 1e6, "miljon": 1e6, "milj.": 1e6, "tusen": 1e3}
@@ -611,16 +614,15 @@ def granska(model: CalcModel, history: list[dict]) -> list[Avvikelse]:
         sure_ev = [b for b in ev_blocks if b.number in sure]
 
         # The climate factors, against the driver's own block only: another
-        # driver's factors are often different on purpose. In the follow-up
-        # mode the extraction prompt is the older one, which keeps a
-        # Konsumtion_faktor above 1 at 1.
+        # driver's factors are often different on purpose. Both modes: the
+        # follow-up extraction has had the rule that keeps a Konsumtion_faktor
+        # above 1 since 2026-11-08 (agents/kalkyl_extract.py), so a 1,1 read
+        # as 1,0 is a misreading there too. Until 1.1 it was let through, as
+        # the follow-up prompt had been the older one.
         stated = _factors(sure_ev)
         for falt, values in stated.items():
             x = getattr(d, falt, None)
             if not isinstance(x, (int, float)) or any(abs(x - v) <= _FACTOR_TOL for v in values):
-                continue
-            if (falt == "cons" and getattr(model, "mode", None) == UPPFOLJNING
-                    and abs(x - 1.0) <= _FACTOR_TOL and any(v > 1 for v in values)):
                 continue
             out.append(Avvikelse(
                 nr, d.name, falt, "", float(x),

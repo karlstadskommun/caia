@@ -1,0 +1,30 @@
+# Kommunprofil för CAIA: Karlstads kommun.
+#
+# Allt som gör en installation till "Karlstad" står i den här mappen:
+# den här filen, parameters_library.md och data/. Koden är densamma för alla
+# kommuner. Mallen för en ny kommun ligger i ../exempel/, och
+# next/INSTALL.md beskriver hur man byter profil.
+
+slug = "karlstad"
+
+# Kommunens namn som det skrivs i löptext ("Utgå ifrån att åtgärden handlar om ...").
+namn = "Karlstads kommun"
+
+# Ortnamnet. Används i "Karlstad-specifika värden", i rubrikerna i datakontexten,
+# och som kolumnnamn i Konsumtionskompassens export (data/fotavtryck-...json,
+# som inte följer med den offentliga utgåvan).
+ort = "Karlstad"
+
+# Länet som det står i den nationella utsläppsexporten (Kommunrapport_...csv).
+# Behövs för att laga å, ä och ö i exportens etiketter.
+lan = "Värmlands län"
+
+# Planen åtgärderna tillhör (startsidan: "... klimatnytta av åtgärder i ...").
+plan = "Karlstads energi- och klimatplan"
+
+# Det agenterna får veta om kommunen. Skrivs in i intake-, baslinje-, evidens-
+# och kalkylagenternas instruktioner. Baslinjeagenten räknar med talen här,
+# till exempel antalet anställda när åtgärden gäller kommunens egen verksamhet.
+lokal_kontext = """
+Alla åtgärder är en del av Karlstads kommuns kommande energi- och klimatplan. Karlstads kommun har 99 000 invånare. Kommunkoncernen omsätter cirka 7 miljarder kronor och har 8000 anställda. Kommunen har höga miljöambitioner och ligger ofta högt upp i Aktuell Hållbarhets rankning över Sveriges kommuners miljöarbete.
+"""

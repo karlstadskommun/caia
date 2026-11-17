@@ -44,6 +44,19 @@ for _name in list(os.environ):
 HAS_KARLSTAD = os.path.isfile(os.path.join(
     os.path.dirname(__file__), '..', 'src', 'caia', 'kommuner', 'karlstad', 'kommun.toml'))
 os.environ['CAIA_KOMMUN'] = 'karlstad' if HAS_KARLSTAD else 'exempel'
+# Konsumtionskompassen's files (SEI, CC BY-NC-ND 4.0) in Karlstad's profile.
+# The public release has the profile without them (publicering/kandidat.toml),
+# and their rows fall back to the standard value there.
+KK_FILES = (
+    'fotavtryck-per-konsumtionskategori.json',
+    'hushållens-totala-utsläpp-över-tid.json',
+    'fördelning-av-utsläpp-per-konsumtionskategori.json',
+    'sammanräknade-utsläpp-i-valda-konsumtionskategorier.json',
+    'utsläpp-och-befolkning-i-karlstads-deso.json',
+)
+KARLSTAD_DATA = os.path.join(os.path.dirname(__file__), '..', 'src', 'caia', 'kommuner',
+                             'karlstad', 'data')
+HAS_KK = HAS_KARLSTAD and all(os.path.isfile(os.path.join(KARLSTAD_DATA, f)) for f in KK_FILES)
 
 from caia import kommun  # noqa: E402
 
@@ -54,6 +67,8 @@ def pytest_configure(config):
     config.addinivalue_line('markers', 'node: runs the page script in Node.js')
     config.addinivalue_line('markers', "karlstad: reads Karlstad's kommunprofil; "
                                        'skipped when the profile is not in the tree')
+    config.addinivalue_line('markers', "konsumtionskompassen: reads Konsumtionskompassen's "
+                                       "files in Karlstad's profile; skipped without them")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -63,6 +78,12 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if 'karlstad' in item.keywords:
                 item.add_marker(no_profile)
+    if not HAS_KK:
+        no_kk = pytest.mark.skip(reason='Konsumtionskompassens filer finns inte i den här utgåvan '
+                                        '(CC BY-NC-ND 4.0); testet läser deras tal.')
+        for item in items:
+            if 'konsumtionskompassen' in item.keywords and 'karlstad' in item.keywords:
+                item.add_marker(no_kk)
     if shutil.which('node') or os.environ.get('CI') == 'true':
         return
     skip = pytest.mark.skip(reason='node saknas, så sidans JavaScript testas inte. '

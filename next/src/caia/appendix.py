@@ -7,12 +7,17 @@ the appendix into the report unchanged, and removes any appendix the model
 wrote itself. When the kalkyl was the language model's fallback there is no
 engine appendix; the report then carries the kalkyl step's own text, labelled
 as such, instead of a rewrite of it.
+
+The kalkyl step also carries "Vad åtgärden ändrar i verksamheten", the
+engine's sentences on what the change is in each driver's own unit
+(calc.engine.render_activity). /api/rapport moves that block, verbatim, into
+the report after the result section, and drops a copy the model made.
 """
 from __future__ import annotations
 
 import re
 
-from .calc.engine import APPENDIX_HEADING, APPENDIX_STAMP
+from .calc.engine import ACTIVITY_HEADING, ACTIVITY_STAMP, APPENDIX_HEADING, APPENDIX_STAMP
 from .pipeline import BRIDGE
 
 FALLBACK_NOTE = ("Kalkylen räknades av språkmodellen, eftersom CAIA:s kalkylmotor inte kunde "
@@ -107,8 +112,96 @@ def strip_handwritten_appendix(text: str) -> tuple[str, bool]:
     return text.rstrip(), False
 
 
+def activity_for_report(history: list[dict]) -> str:
+    """The kalkyl step's "Vad åtgärden ändrar i verksamheten" (calc.engine.
+    render_activity), verbatim, or "" when the step has none: an older run,
+    the language model's fallback, or no driver that changes anything."""
+    kalkyl = kalkyl_output(history)
+    if not kalkyl:
+        return ""
+    start = kalkyl.find(ACTIVITY_HEADING)
+    if start < 0:
+        return ""
+    end = kalkyl.find(APPENDIX_HEADING, start)
+    block = kalkyl[start:end if end >= 0 else len(kalkyl)].strip()
+    return block if ACTIVITY_STAMP in block else ""
+
+
+# The report's section titles (agents/rapport.py, and the page's REPORT_PARTS),
+# written by the model as a heading, a bold line, a numbered line or a bare
+# line. Only a whole line that is exactly a title counts, so a sentence that
+# starts with the same words never moves the engine's block.
+_REPORT_TITLE = re.compile(
+    r'^(?:kort beskrivning av åtgärden|beräknad klimatnytta|vad åtgärden ändrar i verksamheten'
+    r'|uppmätt och antaget|hur åtgärden minskar utsläppen|nyckelantaganden och beräkningsgrund'
+    r'|tidsprofil\s*+[–—:-]?\s*+när kommer effekten\??|osäkerhet, qa och beroenden'
+    r'|rekommendation och nästa steg|följ upp med|källor och underlag)$', re.IGNORECASE)
+_TITLE_MARKUP = re.compile(r'^(?:#{1,6}\s++)?(?:\d+\s*+[.)]\s*+)?(?:\*\*|__)?\s*+(?:\d+\s*+[.)]\s*+)?')
+_TITLE_END = re.compile(r'\s*+(?:\*\*|__)?\s*+:?\s*+(?:\*\*|__)?\s*+$')
+
+
+def _title(line: str) -> str:
+    """The line's text without heading markup, lower-case: "## 3. **Hur
+    åtgärden minskar utsläppen**:" gives "hur åtgärden minskar utsläppen"."""
+    bare = _TITLE_MARKUP.sub('', line.strip(), count=1)
+    return ' '.join(_TITLE_END.sub('', bare).split()).lower()
+
+
+def _is_title(line: str, title: str | None = None) -> bool:
+    t = _title(line)
+    return t == title if title else bool(t and _REPORT_TITLE.match(t))
+
+
+# The block goes in front of the section after "Beräknad klimatnytta", so the
+# units stand beside the tons; in a follow-up report "Uppmätt och antaget"
+# comes first.
+_RESULT = 'beräknad klimatnytta'
+_AFTER_RESULT = ('uppmätt och antaget', 'hur åtgärden minskar utsläppen')
+
+
+def _is_section_start(line: str) -> bool:
+    raw = line.strip()
+    if not raw:
+        return False
+    if _ATX.match(raw) or _is_title(raw):
+        return True
+    bold = _BOLD_LINE.match(_PREFIX.sub('', raw, count=1))
+    return bool(bold and '**' not in bold.group(1) and '__' not in bold.group(1))
+
+
+def _without_copy(body: str) -> str:
+    """The report without a copy of the engine's section the model wrote
+    itself: from its heading to the next section (a heading, a bold line or
+    one of the report's titles on a line of its own)."""
+    lines = body.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if _is_title(line, 'vad åtgärden ändrar i verksamheten'):
+            j = i + 1
+            while j < len(lines) and not _is_section_start(lines[j]):
+                j += 1
+            return "".join(lines[:i] + lines[j:])
+    return body
+
+
+def with_activity(body: str, block: str) -> str:
+    """The engine's activity section placed right after the report's result
+    section, or at the end when the report has no section after it."""
+    if not block:
+        return body
+    body = _without_copy(body)
+    lines = body.splitlines(keepends=True)
+    start = next((i for i, line in enumerate(lines) if _is_title(line, _RESULT)), 0)
+    for i in range(start, len(lines)):
+        if _title(lines[i]) in _AFTER_RESULT:
+            head = "".join(lines[:i]).rstrip()
+            return f"{head}\n\n{block}\n\n{''.join(lines[i:])}".rstrip()
+    return f"{body.rstrip()}\n\n{block}"
+
+
 def with_engine_appendix(report: str, history: list[dict]) -> tuple[str, bool]:
-    """The rapport agent's text without its own appendix, followed by the
-    kalkyl step's. Returns (report, whether a hand-written appendix was cut)."""
+    """The rapport agent's text without its own appendix, with the kalkyl
+    step's activity section beside the result and its appendix last.
+    Returns (report, whether a hand-written appendix was cut)."""
     body, cut = strip_handwritten_appendix(report)
+    body = with_activity(body, activity_for_report(history))
     return f"{body}\n\n{appendix_for_report(history)}\n", cut

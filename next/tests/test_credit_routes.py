@@ -1,7 +1,7 @@
-"""tools/credit_routes.py: the Max credits first in test runs, OpenRouter last (2026-11-06).
+"""tools/credit_routes.py: the Anthropic keys first in batch runs, OpenRouter last.
 
 The calls go through the real api_client.complete and the real _create for
-OpenRouter; only the network is fake. What is pinned: the work account first,
+OpenRouter; only the network is fake. What is pinned: the first key first,
 the second when it is out, OpenRouter when both are, a closed key tried again
 after ten minutes, the route in every usage record, and that nothing changes
 without CAIA_ANTHROPIC_KEYS (the web app never sets it)."""
@@ -48,7 +48,7 @@ class _Net:
     `calls` lists (route, model) in the order they were asked."""
 
     def __init__(self, answers):
-        self.answers, self.calls = answers, []
+        self.answers, self.calls, self.sent = answers, [], []
 
     def client(self, name):
         net = self
@@ -56,6 +56,7 @@ class _Net:
         class _Messages:
             def create(self, **kw):
                 net.calls.append((name, kw['model']))
+                net.sent.append((name, kw))
                 out = net.answers[name]()
                 if isinstance(out, BaseException):
                     raise out
@@ -107,6 +108,24 @@ def test_the_work_account_answers_and_nothing_switches(setup):
     assert net.calls == [('anthropic:1', 'claude-sonnet-5-5')]
     assert [r['route'] for r in records] == ['anthropic:1']
     assert records[0]['model'] == api_client.SONNET  # priced under the table's id
+
+
+def test_the_direct_route_caches_the_system_prompt_and_openrouter_gets_it_untouched(setup):
+    net, _ = setup({'anthropic:1': _out, 'anthropic:2': _out,
+                    'openrouter': lambda: _answer('via')})
+    assert _call() == 'via'
+    sent = dict(net.sent)
+    marked = [{'type': 'text', 'text': 'system', 'cache_control': {'type': 'ephemeral'}}]
+    assert sent['anthropic:1']['system'] == marked
+    assert sent['anthropic:2']['system'] == marked
+    assert sent['openrouter']['system'] == 'system'
+
+
+def test_cached_system_leaves_anything_but_a_string_alone():
+    blocks = [{'type': 'text', 'text': 'a'}]
+    assert credit_routes.cached_system(blocks) is blocks
+    assert credit_routes.cached_system('') == ''
+    assert credit_routes.cached_system(None) is None
 
 
 def test_work_account_out_second_takes_over_and_the_next_call_starts_there(setup):
@@ -222,7 +241,7 @@ def test_no_route_is_tried_with_less_than_ten_seconds_left(setup, monkeypatch):
     clock = {'t': 1000.0}
     monkeypatch.setattr(credit_routes.time, 'monotonic', lambda: clock['t'])
 
-    def slow_out():  # the work account spends the whole budget, then says it is out
+    def slow_out():  # the first key spends the whole budget, then says it is out
         clock['t'] += api_client.REQUEST_TIMEOUT_S
         return _out()
 

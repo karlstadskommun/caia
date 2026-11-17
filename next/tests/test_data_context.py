@@ -20,6 +20,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from caia import kommun  # noqa: E402
 from caia.data import parameters as P  # noqa: E402
+from conftest import HAS_KK  # noqa: E402
 
 REPLACEMENT = '�'
 
@@ -181,6 +182,7 @@ def test_municipal_total_matches_the_source_file():
 # ---------- T2: region labels on the household series ----------
 
 @pytest.mark.karlstad
+@pytest.mark.konsumtionskompassen
 def test_household_series_are_distinguishable_by_region():
     summary = P.load_consumption_data()
     for region in ('Karlstad', 'Värmlands län', 'Sverige'):
@@ -338,7 +340,7 @@ def test_unresolvable_lookup_is_logged_not_silent(missing_lookup_profile, caplog
 # ---------- T1 closed: Karlstad's travel numbers come from RVU 2023 ----------
 #
 # Expected values are read by hand from the report (Resvaneundersökning Region
-# Värmland 2023, kommunrapport Karlstad), the same readings PAC uses, not from
+# Värmland 2023, kommunrapport Karlstad), the same readings Karlstad's plan-analysis tool uses, not from
 # the library under test.
 
 RVU_KOMMUN = {
@@ -366,10 +368,19 @@ def _num(cell: str) -> float:
 
 @pytest.mark.karlstad
 def test_karlstad_has_no_lookup_into_a_missing_file():
-    # Every unresolvable LOOKUP claimed local data that was never there.
-    bad = [(r['id'], r['lookup_source']) for r in _karlstad_rows().values()
-           if r.get('lookup_source') and not r['lookup_resolved']]
+    # Every unresolvable LOOKUP claimed local data that was never there. The
+    # public release leaves Konsumtionskompassen's files out by licence, and
+    # its rows then use the standard value, as the library tells the agents to.
+    rows = _karlstad_rows().values()
+    left_out = set() if HAS_KK else {'DATA_CONSUMPTION_FOOTPRINT', 'DATA_HOUSEHOLD_TIME_SERIES'}
+    bad = [(r['id'], r['lookup_source']) for r in rows
+           if r.get('lookup_source') and not r['lookup_resolved']
+           and r['lookup_source'] not in left_out]
     assert not bad, bad
+    for r in rows:
+        if r.get('lookup_source') in left_out:
+            assert r['provenance'] == 'schablon', r
+            assert r['value_used'] == r['standard'], r
 
 
 @pytest.mark.karlstad

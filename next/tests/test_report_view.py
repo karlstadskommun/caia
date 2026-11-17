@@ -1,4 +1,4 @@
-"""The report in parts (Henric 2026-10-15, after the workshop 14/10): the
+"""The report in parts (2026-10-15, after the workshop 14/10): the
 title, the report's own verdict with three levels under it, and every part of
 the report as a row that opens with one click, with a line saying what is in
 it. Run in node against the saved reports in tests/fixtures, like
@@ -384,3 +384,19 @@ def test_the_follow_up_report_leaves_folj_upp_med_to_vad_som_behover_matas():
     assert len(steps) == len(re.findall(r'<step index=', SYSTEM_PROMPT)) - 1
     # Everything else is the forecast prompt, word for word.
     assert SYSTEM_PROMPT.count('**Källor och underlag**') == SYSTEM_PROMPT_UPPFOLJNING.count('**Källor och underlag**') == 1
+
+
+def test_the_engines_activity_section_is_its_own_part_beside_the_result():
+    """calc.engine.render_activity, moved in by /api/rapport after Beräknad
+    klimatnytta. Without its own entry it would read as part of the result."""
+    md = ('## T\n\n**Kort beskrivning av åtgärden**\n\nA.\n\n**Beräknad klimatnytta**\n\nB.\n\n'
+          '**Vad åtgärden ändrar i verksamheten**\n\nSamma förändring som tonnen.\n\n'
+          '- Bilresor: 100 000 km mindre år 2030 än utan åtgärden.\n'
+          '- Diesel: utsläppen per liter är 60 % lägre år 2030.\n\n'
+          '*Skrivet av CAIA:s kalkylmotor.*\n\n**Hur åtgärden minskar utsläppen**\n\nC.\n')
+    v = _view(md, hero=True)
+    assert [p['key'] for p in v['parts']] == ['beskrivning', 'klimatnytta', 'verksamhet', 'mekanism']
+    part = _part(v, 'verksamhet')
+    assert part['teaser'] == ('Samma förändring som tonnen, i km, liter, m² och andra enheter som '
+                              'går att följa, för 2 utsläppskällor.')
+    assert 'km mindre' not in _part(v, 'klimatnytta')['body']

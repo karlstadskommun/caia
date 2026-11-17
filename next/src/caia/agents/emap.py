@@ -133,9 +133,11 @@ Du sätter inga värden på aktivitetsnivåer, emissionsfaktorer eller scenarier
         Utsläpp som påverkas:
         Omfattning:
         Rådighet:
-        Typ av åtgärd:
+        Nivå:
+        Instrumentkategori:
         Mognad:
         Tidsram:
+        Verkningstid:
         Kommun:
         Kommentarer:
         ---
@@ -146,10 +148,10 @@ Du sätter inga värden på aktivitetsnivåer, emissionsfaktorer eller scenarier
       </description>
       <requiredInformation>
         <item>Åtgärdens namn och beskrivning.</item>
-        <item>Minst en indikation om typ av åtgärd, målgrupp, sektor eller utsläppstyp.</item>
+        <item>Minst en indikation om instrumentkategori, målgrupp, sektor eller utsläppstyp.</item>
       </requiredInformation>
       <optionalInformation>
-        <item>Uppgifter om omfattning, rådighet, typ av åtgärd, mognad, tidsram, kommun och kommentarer.</item>
+        <item>Uppgifter om omfattning, rådighet, nivå, instrumentkategori, mognad, tidsram, verkningstid, kommun och kommentarer.</item>
       </optionalInformation>
     </input>
 
@@ -202,9 +204,27 @@ Du sätter inga värden på aktivitetsnivåer, emissionsfaktorer eller scenarier
           locus: [var utsläppet uppstår: inom kommunen / utanför kommunen / båda]
           sektor: [transport / energi / byggnader / konsumtion / livsmedel / avfall / markanvändning / annan]
           mekanism: [Avoid / Shift / Improve], [ΔA eller ΔEF]: [en mening om vad som ändras, och för indirekt/möjliggörande vilka som ändrar sig]
+          aktivitetsförändring: [en eller flera av: aktivitetsbyte / minskad användning / arbetseffektivitet / resurseffektivitet / resursbyte / kolinlagring, se nedan]
           overlapp_risk: [låg / medel / hög, plus en mening om vilken annan drivare eller åtgärd samma minskning kan räknas i]
 
         ---
+
+        aktivitetsförändring är kategorierna i DIN SPEC 91637 bilaga C. Varje sätt att
+        minska utsläppen ryms i minst en av dem, och en drivare kan ha flera (en elbil i
+        stället för en fossilbil är både aktivitetsbyte och resursbyte):
+        - aktivitetsbyte: en sorts aktivitet byts mot en annan med lägre utsläpp (bil till
+          cykel eller kollektivtrafik, fossilbil till elbil),
+        - minskad användning: mindre av aktiviteten totalt (färre resor, bilpool, mindre
+          matsvinn, begagnat i stället för nytt, ruttoptimering),
+        - arbetseffektivitet: mindre arbete för samma resultat (effektivare processer och
+          motorer),
+        - resurseffektivitet: mindre resurs för samma arbete (värmepumpar, isolering,
+          effektivare belysning),
+        - resursbyte: en resurs byts mot en annan (biodrivmedel i stället för diesel,
+          förnybar el, trä i stället för betong),
+        - kolinlagring: mer kol binds eller används (skog, mark, biokol).
+        För en drivare som ökar utsläppen (tillverkning, ny el) anger du den förändring
+        som drivaren följer av.
 
         Om det finns flera åtgärdsprofiler i input ska du skapa en separat
         EMAP-analys för varje profil, i samma ordning, och tydligt separera dem
@@ -243,12 +263,12 @@ Du sätter inga värden på aktivitetsnivåer, emissionsfaktorer eller scenarier
         Läs igenom den eller de åtgärdsprofiler du får in.
         För varje profil, identifiera:
         • vad åtgärden går ut på (Beskrivning),
-        • vilken typ av insats det liknar (Typ av åtgärd, Sektor, Målgrupp),
+        • vilken typ av insats det liknar (Instrumentkategori, Sektor, Målgrupp),
         • tidsram, rådighet och eventuella kommentarer.
       </step>
       <step index="2">
         Avgör EMAP_Effektkategori för varje profil och motivera kort.
-        Ta typ av åtgärd, mognad och omfattning från profilen; klassa inte om dem.
+        Ta nivå, instrumentkategori, mognad, verkningstid och omfattning från profilen; klassa inte om dem.
       </step>
       <step index="3">
         Skriv avsnittet "1. Sammanfattning" för varje profil (2–4 meningar).
@@ -263,8 +283,8 @@ Du sätter inga värden på aktivitetsnivåer, emissionsfaktorer eller scenarier
       </step>
       <step index="6">
         Skriv avsnittet "4. EMAP-drivare" för varje profil: ett block per drivare
-        med fälten aktivitet_matt, EF_enhet, utsläppstyp, locus, sektor, mekanism
-        och overlapp_risk, utan siffror. Härled drivarna ur profilens fält Drivare,
+        med fälten aktivitet_matt, EF_enhet, utsläppstyp, locus, sektor, mekanism,
+        aktivitetsförändring och overlapp_risk, utan siffror. Härled drivarna ur profilens fält Drivare,
         Sektor och Utsläpp som påverkas, och välj aktivitet_matt så att profilens
         Omfattning går att räkna på (t.ex. antal berörda fordon ger km/år för just
         dem). Dela upp enligt delningsregeln. Anger profilen "okänt" eller ett

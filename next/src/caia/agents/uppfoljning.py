@@ -273,7 +273,8 @@ underlag för dem:
   nettoandelen (den del som faktiskt ersätter nytt) som storlek. Skriv aldrig nettoandelen
   som delta_ef på hela mängden, och höj aldrig a0 med den återbrukade mängden.
 - En drivare som ökar utsläppen har min och max i omvänd ordning mot nyttan: störst
-  mängd, högst faktor, senast end_year och längst lifetime i min; minst och kortast i max.
+  mängd, högst faktor, senast end_year och kortast lifetime i min (en kortare livslängd
+  belastar insatsen med en större andel); det omvända i max.
   Växer kostnaden med nyttan (ersättningsbränsle, laddel), följer dess mängd och
   attribution nyttans ordning; bara faktorn står i omvänd ordning.
 - Ingen drivare med a0 i kronor för pengarnas egna utsläpp. Kalkylen tar en sådan post ur

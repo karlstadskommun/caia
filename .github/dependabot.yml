@@ -8,7 +8,7 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     # pydantic pins pydantic-core to one exact version, so a proposal for
-    # pydantic-core alone cannot be installed (security review S35, PR #23).
+    # pydantic-core alone cannot be installed (security review S35).
     # The two are proposed together.
     groups:
       pydantic:
