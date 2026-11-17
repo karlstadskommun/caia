@@ -5,7 +5,7 @@
 # run the test suite (requirements-dev.txt), then write the result of
 # `pip freeze` back here, minus the test-only packages.
 annotated-types==0.8.0
-anthropic==1.8.0
+anthropic==2.6.0
 anyio==4.15.1
 blinker==1.9.0
 cffi==2.1.1
