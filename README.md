@@ -4,7 +4,7 @@ CAIA estimates the climate effect of a municipal climate action. The user descri
 
 CAIA has two analysis modes, chosen before the analysis starts: *forecast* (potentialläge) for an action that has not been carried out yet, and *follow-up* (uppföljningsläge) for an intervention that has already been made, where the question is what that particular money actually achieved and what remains.
 
-CAIA was developed by Karlstads kommun (the Municipality of Karlstad, Sweden) within Klimatneutrala Karlstad 2030, supported by Viable Cities. Henric Barkman, process manager at Karlstads kommun, brought the tool about: he commissioned it and made the method decisions. The code was written with the AI assistant Demi, which runs on Claude. This is version 1.1.0; the first public release was 1.0.0.
+CAIA was developed by Karlstads kommun (the Municipality of Karlstad, Sweden) within Klimatneutrala Karlstad 2030, supported by Viable Cities. Henric Barkman, process manager at Karlstads kommun, brought the tool about: he commissioned it and made the method decisions. The code was written with the AI assistant Demi, which runs on Claude. This is version 1.1.1; the first public release was 1.0.0.
 
 **Language.** The user interface, the prompts and most of the documentation are in Swedish. This README is also available in Swedish: [README.sv.md](README.sv.md).
 
