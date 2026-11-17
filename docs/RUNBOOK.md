@@ -240,7 +240,7 @@ Sidan hämtar tre bibliotek från jsDelivr i användarens webbläsare: marked (g
 2. Räkna ut filens kontrollsumma och skriv in den: `curl -s <adressen> | openssl dgst -sha384 -binary | openssl base64 -A`, med `sha384-` framför.
 3. Kör testerna. Öppna sedan sidan i en webbläsare, kör en analys till en rapport och se att tabeller, listor och länkar ser ut som förut. Ett bibliotek som tolkar text annorlunda märks där, inte i testerna.
 
-DOMPurify är det som håller modellens text från att köra kod i sidan, så ta dess uppdateringar först. Läget 2026-11-17: DOMPurify 3.4.17 (sedan 2026-11-10), marked 14.1.3 (från 2024) och supabase-js 2.119.0 (uppdaterad 2026-11-17, från 2.45.4).
+DOMPurify är det som håller modellens text från att köra kod i sidan, så ta dess uppdateringar först. Läget 2026-11-17: DOMPurify 3.4.17 (sedan 2026-11-10), marked 18.2.0 och supabase-js 2.119.0 (båda uppdaterade 2026-11-17, från 14.1.3 och 2.45.4). marked har sedan version 16 ingen `marked.min.js`; filen heter `lib/marked.umd.js`.
 
 ## Felsökning
 

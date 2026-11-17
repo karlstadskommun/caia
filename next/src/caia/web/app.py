@@ -86,8 +86,8 @@ LICENSE_NOTE = 'Öppen källkod under EUPL 1.2.'
 # clientlibs/package.json names the same versions for Dependabot, and a test
 # holds the two together.
 PAGE_LIBS = {
-    'marked': ('https://cdn.jsdelivr.net/npm/marked@14.1.3/marked.min.js',
-               'sha384-k8o8HikHweyzW55Wd3wl18ovJj6vHVYNQeQbeSM0fxx+0WiH4TcccOG9uz8Xd2JR'),
+    'marked': ('https://cdn.jsdelivr.net/npm/marked@18.2.0/lib/marked.umd.js',
+               'sha384-DDYDxilZ1LlqPSbaRHlrwh12h+3fUewuQj7HjscrZIWt5bGyQ+n0DHtIoZE3i3zU'),
     'dompurify': ('https://cdn.jsdelivr.net/npm/dompurify@3.4.17/dist/purify.min.js',
                   'sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx'),
     '@supabase/supabase-js': (
